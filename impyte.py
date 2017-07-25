@@ -5,7 +5,8 @@ author: Andreas Rubin-Schwarz
 
 import pandas as pd
 
-class Imputer():
+
+class Imputer:
     """
     Value imputation class.
     
@@ -17,6 +18,7 @@ class Imputer():
     ----------
     Importing DataFrame from numpy ndarray:
     
+    >>> import numpy as np
     >>> imputer = Imputer(np.random.randint(low=0, high=10, size=(4,4)))
     >>> imputer
        0  1  2  3
@@ -33,7 +35,12 @@ class Imputer():
         if isinstance(data, pd.DataFrame):
             self.data = data
         else:
-            self.data = pd.DataFrame(data)
+            try:
+                self.data = pd.DataFrame(data)
+            except ValueError as e:
+                print "Value Error: {}".format(e)
+                pass
 
     def __str__(self):
-        return str(self.data)
+        if self.data is not None:
+            return str(self.data)
