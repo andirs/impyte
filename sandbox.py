@@ -31,5 +31,6 @@ imputer = Imputer(np.random.randint(low=0, high=10, size=(4, 4)))
 print imputer
 imputer = Imputer(data)
 print imputer
-imputer = Imputer("String")
+#imputer = Imputer("String")
+imputer.load_model("anything")
 
