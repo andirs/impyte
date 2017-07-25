@@ -15,6 +15,7 @@ class Imputer:
     Parameters
     ----------
     data = pandas DataFrame
+    clf = machine learning estimator 
     
     Examples
     ----------
@@ -31,20 +32,27 @@ class Imputer:
     """
 
     def __init__(self, data=None):
+        # check if data is set in constructor otherwise load empty set.
         if data is None:
             self.data = {}
+        # initialize machine learning estimator
         self.clf = {}
 
+        # perform instance check on data if available in constructor
         if isinstance(data, pd.DataFrame):
             self.data = data
+        # if data is not a DataFrame, try turning it into one
         else:
             try:
                 self.data = pd.DataFrame(data)
             except ValueError as e:
                 print "Value Error: {}".format(e)
-                pass
 
     def __str__(self):
+        """
+        String representation of Imputer class.
+        :return: stored DataFrame
+        """
         if self.data is not None:
             return str(self.data)
 
