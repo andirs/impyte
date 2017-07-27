@@ -3,6 +3,7 @@ Module to impute missing values using machine learning algorithms.
 author: Andreas Rubin-Schwarz
 """
 
+import math
 import pandas as pd
 from sklearn.externals import joblib
 from datetime import date
@@ -55,6 +56,67 @@ class Imputer:
         """
         if self.data is not None:
             return str(self.data)
+
+    def is_nan(self,
+               data,
+               nan_vals=None,
+               recursive=True):
+        """
+        Detect missing values (NaN in numeric arrays, empty strings in string arrays)
+        
+        Parameters
+        ----------
+        data : ndarray
+        nan_vals : array of NaN values
+        recursive : handle lists in recursive manner
+
+        Returns
+        -------
+        result : array-like of bool or bool
+            Array or bool indicating whether an object is null or if an array is
+            given which of the element is null.
+        """
+
+        # Use immutable object as standard object
+        if nan_vals is None:
+            nan_vals = ["", None]
+
+        result = []
+        # if data is a list, evaluate all objects
+        if isinstance(data, list) or hasattr(data, '__array__') and not np.isscalar(data):
+            for item in data:
+                # if item is a list, call function recursively
+                if isinstance(item, list) or hasattr(item, '__array__'):
+                    if recursive:
+                        result.append(self.is_nan(item))
+                    else:
+                        raise ValueError("List in a list detected. Set recursive to True.")
+                # If item is string, evaluate if empty
+                elif isinstance(item, basestring):
+                    if item in nan_vals:
+                        result.append(True)
+                    else:
+                        result.append(False)
+                # Check for None value explicitly
+                elif item is None:
+                    result.append(True)
+                # Check if NaN when float
+                elif isinstance(item, float) and math.isnan(item):
+                    result.append(True)
+                else:
+                    result.append(False)
+            # if result is not a list, turn into a list
+            if isinstance(result, list):
+                return result
+            else:
+                return np.array(result)
+        # if data is not a list, evaluate single value
+        elif isinstance(data, basestring):
+            return data in nan_vals
+        elif data is None:
+            return True
+        else:
+            return math.isnan(data)
 
     def load_model(self, model):
         """
