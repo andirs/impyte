@@ -34,5 +34,13 @@ print imputer
 #imputer = Imputer("String")
 imputer.load_model("anything")
 
+# Tests for is_nan()
+nan_test = ['test', '', None, '5', 7]
 
+# [False, True, True, False, False]
+print imputer.is_nan(nan_test)
 
+nan_test2 = [['test', '', None, '5', 7], None, 'Test']
+
+# [[False, True, True, False, False], True, False]
+print imputer.is_nan(nan_test2)
