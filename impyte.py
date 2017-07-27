@@ -4,6 +4,7 @@ author: Andreas Rubin-Schwarz
 """
 
 import math
+import numpy as np
 import pandas as pd
 from sklearn.externals import joblib
 from datetime import date
@@ -22,7 +23,6 @@ class Imputer:
     ----------
     Importing DataFrame from numpy ndarray:
     
-    >>> import numpy as np
     >>> imputer = Imputer(np.random.randint(low=0, high=10, size=(4,4)))
     >>> imputer
        0  1  2  3
@@ -30,6 +30,15 @@ class Imputer:
     1  1  9  9  4
     2  5  7  2  1
     3  9  7  5  3
+    
+    Testing list for NaN values
+    
+    >>> nan_array = ["Test", None, '', 23, [None, "42"]]
+    >>> imputer = Imputer()
+    >>> print imputer.is_nan(nan_array)
+    
+    [False, True, True, False, [True, False]]
+    
     """
 
     def __init__(self, data=None):
@@ -62,12 +71,12 @@ class Imputer:
                nan_vals=None,
                recursive=True):
         """
-        Detect missing values (NaN in numeric arrays, empty strings in string arrays)
+        Detect missing values (NaN in numeric arrays, empty strings in string arrays).
         
         Parameters
         ----------
         data : ndarray
-        nan_vals : array of NaN values
+        nan_vals : array of values that count as NaN values - if empty, "" and None are being used
         recursive : handle lists in recursive manner
 
         Returns
