@@ -44,19 +44,27 @@ class Imputer:
     def __init__(self, data=None):
         # check if data is set in constructor otherwise load empty set.
         if data is None:
-            self.data = {}
+            self.data = pd.DataFrame()
+        else:
+            self.data = self._data_check(data)
         # initialize machine learning estimator
         self.clf = {}
 
+
+    @staticmethod
+    def _data_check(data):
         # perform instance check on data if available in constructor
         if isinstance(data, pd.DataFrame):
-            self.data = data
+            return data
         # if data is not a DataFrame, try turning it into one
         else:
             try:
-                self.data = pd.DataFrame(data)
+                return_data = pd.DataFrame(data)
+                return return_data
             except ValueError as e:
                 print "Value Error: {}".format(e)
+                return pd.DataFrame()
+
 
     def __str__(self):
         """
@@ -65,6 +73,15 @@ class Imputer:
         """
         if self.data is not None:
             return str(self.data)
+
+    def load_data(self, data):
+        """
+        Function to load data into Imputer class.
+        
+        :param data: preferably pandas DataFrame 
+        :return: pandas DataFrame
+        """
+        self.data = self._data_check(data)
 
     def is_nan(self,
                data,

@@ -44,3 +44,5 @@ nan_test2 = [['test', '', None, '5', 7], None, 'Test']
 
 # [[False, True, True, False, False], True, False]
 print imputer.is_nan(nan_test2)
+
+imputer.load_data(pd.DataFrame(np.random.randint(low=0, high=10, size=(4, 4)), columns=['W', 'X', 'Y', 'Z']))
