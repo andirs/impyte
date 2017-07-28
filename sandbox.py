@@ -1,35 +1,32 @@
 from impyte import Imputer
 import pandas as pd
 import numpy as np
+from tools.data_prep import remove_random
 
 # Import data sets
 from sklearn import datasets
 
+## generate toy data set
+data_toy = pd.DataFrame(np.random.randint(low=0, high=10, size=(4, 4)), columns=['W', 'X', 'Y', 'Z'])
+
+## load iris_data set
 raw_data = datasets.load_iris()
 iris_X = raw_data.data
 iris_y = raw_data.target
-data = pd.DataFrame(iris_X)
-data['target'] = iris_y
-data['target'] = data['target'].astype('category')
+data_iris = pd.DataFrame(iris_X)
+data_iris['target'] = iris_y
+data_iris['target'] = data_iris['target'].astype('category')
 
 # Shuffle data and replace 20 % of first column with NaN values
-data = data.sample(frac=1).reset_index(drop=True)
 
-# Adding 20 % of NaN Values
-frac = int(.2 * len(data)) / 3
+data_iris = remove_random(data_iris, .2)
+data_iris.columns = ['Test 1', 'Test 2', 'Test 3', 'Test 4', 'target']
 
-data.loc[0:frac-1,0] = None
-data.loc[frac:frac*2-1,1] = None
-data.loc[frac*2:frac*3-1,2] = None
-data.loc[frac*2+5:frac*3-1+5,3] = None
-
-data.columns = ['Test 1', 'Test 2', 'Test 3', 'Test 4', 'target']
-
-imputer = Imputer(data=pd.DataFrame(np.random.randint(low=0, high=10, size=(4, 4)), columns=['W', 'X', 'Y', 'Z']))
+imputer = Imputer(data=data_toy)
 print imputer
 imputer = Imputer(np.random.randint(low=0, high=10, size=(4, 4)))
 print imputer
-imputer = Imputer(data)
+imputer = Imputer(data_iris)
 print imputer
 #imputer = Imputer("String")
 imputer.load_model("anything")
