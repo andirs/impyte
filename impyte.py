@@ -145,7 +145,7 @@ class Imputer:
             return math.isnan(data)
 
     @staticmethod
-    def nan_check(row):
+    def row_nan_pattern(row):
         """
         Function to evaluate row on its NaN value patterns.
         Works with is_nan function to determine whether a value is empty or not.
