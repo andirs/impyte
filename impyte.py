@@ -144,6 +144,33 @@ class Imputer:
         else:
             return math.isnan(data)
 
+
+    @staticmethod
+    def nan_check(row):
+        """
+        Function to evaluate row on its NaN value patterns.
+        Works with is_nan function to determine whether a value is empty or not.
+
+        Parameters
+        ----------
+        row: any row of a data set
+
+        Returns
+        -------
+        tuple with pattern indicator
+        """
+        tmp_label = []
+        for idx, value in enumerate(row):
+            # For each value, check if NaN
+            if self.is_nan(value):
+                # Add NaN-indicator to label
+                tmp_label.append('NaN')
+            else:
+                # Add complete-indicator to label
+                tmp_label.append(1)
+
+        return tuple(tmp_label)
+
     def load_model(self, model):
         """
         Load a stored machine learning model to perform value imputation.
