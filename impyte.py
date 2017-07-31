@@ -83,8 +83,8 @@ class Imputer:
         """
         self.data = self._data_check(data)
 
-    def is_nan(self,
-               data,
+    @staticmethod
+    def is_nan(data,
                nan_vals=None,
                recursive=True):
         """
@@ -114,7 +114,7 @@ class Imputer:
                 # if item is a list, call function recursively
                 if isinstance(item, list) or hasattr(item, '__array__'):
                     if recursive:
-                        result.append(self.is_nan(item))
+                        result.append(Imputer.is_nan(item))
                     else:
                         raise ValueError("List in a list detected. Set recursive to True.")
                 # If item is string, evaluate if empty
@@ -144,7 +144,6 @@ class Imputer:
         else:
             return math.isnan(data)
 
-
     @staticmethod
     def nan_check(row):
         """
@@ -153,6 +152,7 @@ class Imputer:
 
         Parameters
         ----------
+        self: reference to class
         row: any row of a data set
 
         Returns
@@ -162,7 +162,7 @@ class Imputer:
         tmp_label = []
         for idx, value in enumerate(row):
             # For each value, check if NaN
-            if self.is_nan(value):
+            if Imputer.is_nan(value):
                 # Add NaN-indicator to label
                 tmp_label.append('NaN')
             else:
