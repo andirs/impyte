@@ -12,24 +12,10 @@ from datetime import date
 
 
 class NanChecker:
-    @staticmethod
-    def _data_check(data):
-        # perform instance check on data if available in constructor
-        if isinstance(data, pd.DataFrame):
-            return data
-        # if data is not a DataFrame, try turning it into one
-        else:
-            try:
-                return_data = pd.DataFrame(data)
-                return return_data
-            except ValueError as e:
-                print "Value Error: {}".format(e)
-                return pd.DataFrame()
-
-    @staticmethod
-    def data_check(data):
-        return NanChecker._data_check(data)
-
+    """
+    Class that checks data set, lists or single
+    values for NaN occurrences. 
+    """
     @staticmethod
     def is_nan(data,
                nan_vals=None,
@@ -92,21 +78,119 @@ class NanChecker:
             return math.isnan(data)
 
 
-class PatternLogger:
+class Pattern:
     """
-    Class that stores pattern and their indices.
-    
-    Parameters
-    ----------
-    data = pandas DataFrame
-    clf = machine learning estimator 
+    Class that calculates, stores and visualizes 
+    NaN patterns and their indices. 
     """
-    def __init__(self, data=None):
+    def __init__(self):
         self.nan_checker = NanChecker()
-        if data is None:
-            self.data = pd.DataFrame()
-        else:
-            self.data = self.nan_checker.data_check(data)
+        self.pattern_store = {}
+        self.pattern_index_store = {}
+
+    def pattern(self, data, nan_values="", verbose=False):
+        """
+        Function that checks for missing values and prints out 
+        a quick table of a summary of missing values.
+        Includes pattern overview and counts of missing values by column  
+
+        Parameters
+        ----------
+        data: pandas DataFrame
+
+        Returns
+        -------
+        return_dict: dict with keys 'table' and 'indices'
+                    'table': pandas DataFrame with pattern overview
+                    'indices': dict with indices list
+        """
+        data_cols = data.columns
+
+        # Stores the NaN pattern
+        result_pattern = {}
+
+        # Stores the count of NaN values per column
+        result_columns = {}
+
+        # Initialize storage for col
+        for column in data_cols:
+            result_columns[column] = 0
+
+        # NaN Values
+        nan_vals = [""]
+
+        # Add additional custom NaN Values
+        # Check first if entry is list, otherwise turn into list
+        if not isinstance(nan_values, list):
+            nan_values = [nan_values]
+        # Iterate over nan_values parameter and add to list of nan-values
+        for nv in nan_values:
+            nan_vals.append(nv)
+
+        pattern_index_store = {}
+        tuple_counter = 0
+        tuple_counter_dict = {}
+
+        # Iterate over every row
+        for row_idx, row in data.iterrows():
+            tmp_label = []
+            for idx, value in enumerate(row):
+                # For each value, check if NaN
+                if self.nan_checker.is_nan(value):
+                    # Add true-indicator to label
+                    tmp_label.append('NaN')
+                    # Count appearance for column
+                    result_columns[data_cols[idx]] += 1
+                else:
+                    # Add false-indicator to label
+                    tmp_label.append(1)
+            # Check if tuple already exists, if so: increase count for label
+            if tuple(tmp_label) in result_pattern:
+                result_pattern[tuple(tmp_label)] += 1
+                # Get corresponding label number from dict
+                tuple_label = tuple_counter_dict[tuple(tmp_label)]
+                pattern_index_store[tuple_label].append(row_idx)
+            # else: tuple hasn't been seen yet
+            else:
+                result_pattern[tuple(tmp_label)] = 1
+                tuple_counter_dict[tuple(tmp_label)] = tuple_counter
+                # Add first row id to patern_index_store
+                pattern_index_store[tuple_counter] = [row_idx]
+                tuple_counter += 1
+
+        # Transform dict into DataFrame
+        result_pattern = pd.DataFrame.from_dict(result_pattern, orient='index')
+        final_result = []
+        index_list = []
+        for tuple_val in result_pattern.index:
+            # Get index label from tuple_counter_dict
+            index_list.append(tuple_counter_dict[tuple_val])
+            # Store pattern as list per column
+            final_result.append(list(tuple_val))
+        final_result = pd.DataFrame(final_result)
+        final_result.columns = data_cols
+        final_result['Count'] = result_pattern.values
+        final_result.index = index_list
+
+        final_result = final_result.sort_values('Count', ascending=False)
+        if verbose:
+            print final_result
+            print "\n"
+            print "Column \t\t NaN Count"
+            print "-" * 30
+            for col in data_cols:
+                print "{}: \t {}".format(col, result_columns[col])
+
+        # Store in object
+        self.pattern_store["result"] = final_result
+        self.pattern_store["columns"] = result_columns
+        self.pattern_index_store = pattern_index_store
+
+        return_dict = {}
+        return_dict['table'] = final_result
+        return_dict['indices'] = pattern_index_store
+
+        return return_dict
 
     def row_nan_pattern(self, row):
         """
@@ -133,13 +217,11 @@ class PatternLogger:
 
         return tuple(tmp_label)
 
-    def print_pattern(self, data=None):
+    def print_pattern(self, data):
         """
         Counts individual NaN patterns and returns them in a dictionary.
         :return: dict
         """
-        if data is None:
-            data = self.data
 
         return Counter(data.apply(self.row_nan_pattern, axis=1))
 
@@ -183,7 +265,7 @@ class Imputer:
             self.data = self._data_check(data)
         # initialize machine learning estimator
         self.clf = {}
-        self.pattern_logger = PatternLogger(self.data)
+        self.pattern = Pattern()
 
     def __str__(self):
         """
