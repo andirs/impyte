@@ -6,8 +6,143 @@ author: Andreas Rubin-Schwarz
 import math
 import numpy as np
 import pandas as pd
+from collections import Counter
 from sklearn.externals import joblib
 from datetime import date
+
+
+class NanChecker:
+    @staticmethod
+    def _data_check(data):
+        # perform instance check on data if available in constructor
+        if isinstance(data, pd.DataFrame):
+            return data
+        # if data is not a DataFrame, try turning it into one
+        else:
+            try:
+                return_data = pd.DataFrame(data)
+                return return_data
+            except ValueError as e:
+                print "Value Error: {}".format(e)
+                return pd.DataFrame()
+
+    @staticmethod
+    def data_check(data):
+        return NanChecker._data_check(data)
+
+    @staticmethod
+    def is_nan(data,
+               nan_vals=None,
+               recursive=True):
+        """
+        Detect missing values (NaN in numeric arrays, empty strings in string arrays).
+
+        Parameters
+        ----------
+        data : ndarray
+        nan_vals : array of values that count as NaN values - if empty, "" and None are being used
+        recursive : handle lists in recursive manner
+
+        Returns
+        -------
+        result : array-like of bool or bool
+            Array or bool indicating whether an object is null or if an array is
+            given which of the element is null.
+        """
+
+        # Use immutable object as standard object
+        if nan_vals is None:
+            nan_vals = ["", None]
+
+        result = []
+        # if data is a list, evaluate all objects
+        if isinstance(data, list) or hasattr(data, '__array__') and not np.isscalar(data):
+            for item in data:
+                # if item is a list, call function recursively
+                if isinstance(item, list) or hasattr(item, '__array__'):
+                    if recursive:
+                        result.append(NanChecker.is_nan(item))
+                    else:
+                        raise ValueError("List in a list detected. Set recursive to True.")
+                # If item is string, evaluate if empty
+                elif isinstance(item, basestring):
+                    if item in nan_vals:
+                        result.append(True)
+                    else:
+                        result.append(False)
+                # Check for None value explicitly
+                elif item is None:
+                    result.append(True)
+                # Check if NaN when float
+                elif isinstance(item, float) and math.isnan(item):
+                    result.append(True)
+                else:
+                    result.append(False)
+            # if result is not a list, turn into a list
+            if isinstance(result, list):
+                return result
+            else:
+                return np.array(result)
+        # if data is not a list, evaluate single value
+        elif isinstance(data, basestring):
+            return data in nan_vals
+        elif data is None:
+            return True
+        else:
+            return math.isnan(data)
+
+    @staticmethod
+    def row_nan_pattern(row):
+        """
+        Function to evaluate row on its NaN value patterns.
+        Works with is_nan function to determine whether a value is empty or not.
+
+        Parameters
+        ----------
+        row: any row of a data set
+
+        Returns
+        -------
+        tuple with pattern indicator
+        """
+        tmp_label = []
+        for idx, value in enumerate(row):
+            # For each value, check if NaN
+            if NanChecker.is_nan(value):
+                # Add NaN-indicator to label
+                tmp_label.append('NaN')
+            else:
+                # Add complete-indicator to label
+                tmp_label.append(1)
+
+        return tuple(tmp_label)
+
+
+class PatternLogger:
+    """
+    Class that stores pattern and their indices.
+    
+    Parameters
+    ----------
+    data = pandas DataFrame
+    clf = machine learning estimator 
+    """
+    def __init__(self, data=None):
+        self.nan_checker = NanChecker()
+        if data is None:
+            self.data = pd.DataFrame()
+        else:
+            self.data = self.nan_checker.data_check(data)
+
+    def print_pattern(self, data=None):
+        """
+        Counts individual NaN patterns and returns them in a dictionary.
+        :return: dict
+        """
+        if data is None:
+            data = self.data
+
+        return Counter(data.apply(self.nan_checker.row_nan_pattern, axis=1))
 
 
 class Imputer:
@@ -49,10 +184,19 @@ class Imputer:
             self.data = self._data_check(data)
         # initialize machine learning estimator
         self.clf = {}
+        self.nan_checker = NanChecker()
+        self.pattern_logger = PatternLogger(self.data)
 
+    def __str__(self):
+        """
+        String representation of Imputer class.
+        :return: stored DataFrame
+        """
+        if self.data is not None:
+            return str(self.data)
 
     @staticmethod
-    def _data_check(data):
+    def _data_check(self, data):
         # perform instance check on data if available in constructor
         if isinstance(data, pd.DataFrame):
             return data
@@ -65,15 +209,6 @@ class Imputer:
                 print "Value Error: {}".format(e)
                 return pd.DataFrame()
 
-
-    def __str__(self):
-        """
-        String representation of Imputer class.
-        :return: stored DataFrame
-        """
-        if self.data is not None:
-            return str(self.data)
-
     def load_data(self, data):
         """
         Function to load data into Imputer class.
@@ -83,12 +218,12 @@ class Imputer:
         """
         self.data = self._data_check(data)
 
-    @staticmethod
-    def is_nan(data,
+    def is_nan(self,
+               data,
                nan_vals=None,
                recursive=True):
         """
-        Detect missing values (NaN in numeric arrays, empty strings in string arrays).
+        Calls nan_checker function is_nan for better incapsulation.
         
         Parameters
         ----------
@@ -102,74 +237,17 @@ class Imputer:
             Array or bool indicating whether an object is null or if an array is
             given which of the element is null.
         """
+        return self.nan_checker.is_nan(data, nan_vals, recursive)
 
-        # Use immutable object as standard object
-        if nan_vals is None:
-            nan_vals = ["", None]
-
-        result = []
-        # if data is a list, evaluate all objects
-        if isinstance(data, list) or hasattr(data, '__array__') and not np.isscalar(data):
-            for item in data:
-                # if item is a list, call function recursively
-                if isinstance(item, list) or hasattr(item, '__array__'):
-                    if recursive:
-                        result.append(Imputer.is_nan(item))
-                    else:
-                        raise ValueError("List in a list detected. Set recursive to True.")
-                # If item is string, evaluate if empty
-                elif isinstance(item, basestring):
-                    if item in nan_vals:
-                        result.append(True)
-                    else:
-                        result.append(False)
-                # Check for None value explicitly
-                elif item is None:
-                    result.append(True)
-                # Check if NaN when float
-                elif isinstance(item, float) and math.isnan(item):
-                    result.append(True)
-                else:
-                    result.append(False)
-            # if result is not a list, turn into a list
-            if isinstance(result, list):
-                return result
-            else:
-                return np.array(result)
-        # if data is not a list, evaluate single value
-        elif isinstance(data, basestring):
-            return data in nan_vals
-        elif data is None:
-            return True
-        else:
-            return math.isnan(data)
-
-    @staticmethod
-    def row_nan_pattern(row):
+    def print_pattern(self, data=None):
         """
-        Function to evaluate row on its NaN value patterns.
-        Works with is_nan function to determine whether a value is empty or not.
-
-        Parameters
-        ----------
-        self: reference to class
-        row: any row of a data set
-
-        Returns
-        -------
-        tuple with pattern indicator
+        Counts individual NaN patterns and returns them in a dictionary.
+        :return: dict
         """
-        tmp_label = []
-        for idx, value in enumerate(row):
-            # For each value, check if NaN
-            if Imputer.is_nan(value):
-                # Add NaN-indicator to label
-                tmp_label.append('NaN')
-            else:
-                # Add complete-indicator to label
-                tmp_label.append(1)
+        if data is None:
+            data = self.data
 
-        return tuple(tmp_label)
+        return self.pattern_logger.print_pattern(data)
 
     def load_model(self, model):
         """
