@@ -91,32 +91,6 @@ class NanChecker:
         else:
             return math.isnan(data)
 
-    @staticmethod
-    def row_nan_pattern(row):
-        """
-        Function to evaluate row on its NaN value patterns.
-        Works with is_nan function to determine whether a value is empty or not.
-
-        Parameters
-        ----------
-        row: any row of a data set
-
-        Returns
-        -------
-        tuple with pattern indicator
-        """
-        tmp_label = []
-        for idx, value in enumerate(row):
-            # For each value, check if NaN
-            if NanChecker.is_nan(value):
-                # Add NaN-indicator to label
-                tmp_label.append('NaN')
-            else:
-                # Add complete-indicator to label
-                tmp_label.append(1)
-
-        return tuple(tmp_label)
-
 
 class PatternLogger:
     """
@@ -134,6 +108,31 @@ class PatternLogger:
         else:
             self.data = self.nan_checker.data_check(data)
 
+    def row_nan_pattern(self, row):
+        """
+        Function to evaluate row on its NaN value patterns.
+        Works with is_nan function to determine whether a value is empty or not.
+
+        Parameters
+        ----------
+        row: any row of a data set
+
+        Returns
+        -------
+        tuple with pattern indicator
+        """
+        tmp_label = []
+        for idx, value in enumerate(row):
+            # For each value, check if NaN
+            if self.nan_checker.is_nan(value):
+                # Add NaN-indicator to label
+                tmp_label.append('NaN')
+            else:
+                # Add complete-indicator to label
+                tmp_label.append(1)
+
+        return tuple(tmp_label)
+
     def print_pattern(self, data=None):
         """
         Counts individual NaN patterns and returns them in a dictionary.
@@ -142,7 +141,7 @@ class PatternLogger:
         if data is None:
             data = self.data
 
-        return Counter(data.apply(self.nan_checker.row_nan_pattern, axis=1))
+        return Counter(data.apply(self.row_nan_pattern, axis=1))
 
 
 class Imputer:
@@ -184,7 +183,6 @@ class Imputer:
             self.data = self._data_check(data)
         # initialize machine learning estimator
         self.clf = {}
-        self.nan_checker = NanChecker()
         self.pattern_logger = PatternLogger(self.data)
 
     def __str__(self):
@@ -196,7 +194,7 @@ class Imputer:
             return str(self.data)
 
     @staticmethod
-    def _data_check(self, data):
+    def _data_check(data):
         # perform instance check on data if available in constructor
         if isinstance(data, pd.DataFrame):
             return data
@@ -217,27 +215,6 @@ class Imputer:
         :return: pandas DataFrame
         """
         self.data = self._data_check(data)
-
-    def is_nan(self,
-               data,
-               nan_vals=None,
-               recursive=True):
-        """
-        Calls nan_checker function is_nan for better incapsulation.
-        
-        Parameters
-        ----------
-        data : ndarray
-        nan_vals : array of values that count as NaN values - if empty, "" and None are being used
-        recursive : handle lists in recursive manner
-
-        Returns
-        -------
-        result : array-like of bool or bool
-            Array or bool indicating whether an object is null or if an array is
-            given which of the element is null.
-        """
-        return self.nan_checker.is_nan(data, nan_vals, recursive)
 
     def print_pattern(self, data=None):
         """
