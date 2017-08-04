@@ -4,7 +4,8 @@ with the core library in general but with operations that might
 happen more than once.
 """
 
-def remove_random(data, percentage=.2):
+
+def remove_random(data, percentage=.2, randomize_index=False):
     """
     Helper function to remove percentage data points from a data frame.
     The NaN values are distributed equally over the whole data set.
@@ -22,4 +23,6 @@ def remove_random(data, percentage=.2):
         hi = (counter * frac) - 1
         data.loc[lo:hi, column] = None
         counter += 1
+    if randomize_index: # if indices should be reshuffled again
+        data = data.sample(frac=1).reset_index(drop=True)
     return data
