@@ -2692,7 +2692,7 @@
 					"_parent": {
 						"$ref": "AAAAAAFF+qBWK6M3Z8Y="
 					},
-					"name": "UseCaseDiagram1",
+					"name": "DataScientistUseCase",
 					"ownedElements": [
 						{
 							"_type": "UMLActor",
@@ -2846,11 +2846,11 @@
 											"containerExtending": false,
 											"left": 288,
 											"top": 368,
-											"width": 146,
+											"width": 169,
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
-											"text": "(from UseCaseDiagram1)",
+											"text": "(from DataScientistUseCase)",
 											"horizontalAlignment": 2,
 											"verticalAlignment": 5,
 											"wordWrap": false
