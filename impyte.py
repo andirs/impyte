@@ -88,7 +88,7 @@ class Pattern:
         self.pattern_store = {}
         self.pattern_index_store = {}
 
-    def pattern(self, data, nan_values="", verbose=False):
+    def compute_pattern(self, data, nan_values="", verbose=False):
         """
         Function that checks for missing values and prints out 
         a quick table of a summary of missing values.
@@ -132,6 +132,9 @@ class Pattern:
         tuple_counter_dict = {}
 
         # Iterate over every row
+        # TODO: Work with apply and row_nan_pattern function
+        #data.apply(self.row_nan_pattern)
+
         for row_idx, row in data.iterrows():
             tmp_label = []
             for idx, value in enumerate(row):
@@ -217,6 +220,26 @@ class Pattern:
 
         return tuple(tmp_label)
 
+    def get_pattern_indices(self, pattern_no):
+        """
+        Returns data points for a specific pattern_no for further
+        investigation.
+
+        Parameters
+        ----------
+        pattern_no: index int value that indicates pattern
+
+        Returns
+        -------
+        self.data: data points that have a certain pattern
+        """
+        if not self.pattern_index_store:
+            raise ValueError("Pattern needs to be computed first.")
+        if pattern_no not in self.pattern_index_store:
+            raise ValueError("Pattern index not in store.")
+
+        return self.pattern_index_store[pattern_no]
+
     def print_pattern(self, data):
         """
         Counts individual NaN patterns and returns them in a dictionary.
@@ -265,7 +288,7 @@ class Imputer:
             self.data = self._data_check(data)
         # initialize machine learning estimator
         self.clf = {}
-        self.pattern = Pattern()
+        self.pattern_log = Pattern()
 
     def __str__(self):
         """
@@ -298,6 +321,28 @@ class Imputer:
         """
         self.data = self._data_check(data)
 
+    def pattern(self):
+        if self.data.empty:
+            raise ValueError("Error: Load data first.")
+        else:
+            return self.pattern_log.compute_pattern(self.data)['table']
+
+    def get_pattern(self, pattern_no):
+        """
+        Returns data points for a specific pattern_no for further
+        investigation.
+
+        Parameters
+        ----------
+        pattern_no: index int value that indicates pattern
+
+        Returns
+        -------
+        self.data: data points that have a certain pattern
+        """
+        return self.data[self.data.index.isin(
+            self.pattern_log.get_pattern_indices(pattern_no))]
+
     def print_pattern(self, data=None):
         """
         Counts individual NaN patterns and returns them in a dictionary.
@@ -306,7 +351,7 @@ class Imputer:
         if data is None:
             data = self.data
 
-        return self.pattern_logger.print_pattern(data)
+        return self.pattern_log.print_pattern(data)
 
     def load_model(self, model):
         """
