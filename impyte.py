@@ -240,6 +240,10 @@ class Pattern:
 
         return self.pattern_index_store[pattern_no]
 
+    def remove_pattern(self, pattern_no):
+        del(self.pattern_index_store[pattern_no])
+        #del(self.pattern_index_store[pattern_no])
+
     def print_pattern(self, data):
         """
         Counts individual NaN patterns and returns them in a dictionary.
@@ -319,7 +323,8 @@ class Imputer:
         :param data: preferably pandas DataFrame 
         :return: pandas DataFrame
         """
-        self.data = self._data_check(data)
+        self.__init__(data)
+        #self.data = self._data_check(data)
 
     def pattern(self):
         if self.data.empty:
@@ -342,6 +347,17 @@ class Imputer:
         """
         return self.data[self.data.index.isin(
             self.pattern_log.get_pattern_indices(pattern_no))]
+
+    def drop_pattern(self, pattern_no):
+
+        # Drop self.data with overwrite function
+        temp_patterns = self.pattern_log.get_pattern_indices(pattern_no)
+        self.data = self.data[~self.data.index.isin(temp_patterns)]
+
+        # Delete indices in pattern_log
+        self.pattern_log.remove_pattern(pattern_no)
+
+        return self.data
 
     def print_pattern(self, data=None):
         """
