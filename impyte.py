@@ -242,6 +242,7 @@ class Pattern:
 
     def remove_pattern(self, pattern_no):
         del(self.pattern_index_store[pattern_no])
+        # TODO: alter pattern_store results so it doesn't need to be recomputed
         #del(self.pattern_index_store[pattern_no])
 
     def print_pattern(self, data):
@@ -260,7 +261,6 @@ class Imputer:
     Parameters
     ----------
     data = pandas DataFrame
-    clf = machine learning estimator 
     
     Examples
     ----------
@@ -285,11 +285,7 @@ class Imputer:
     """
 
     def __init__(self, data=None):
-        # check if data is set in constructor otherwise load empty set.
-        if data is None:
-            self.data = pd.DataFrame()
-        else:
-            self.data = self._data_check(data)
+        self.data = self.load_data(data)
         # initialize machine learning estimator
         self.clf = {}
         self.pattern_log = Pattern()
@@ -319,12 +315,19 @@ class Imputer:
     def load_data(self, data):
         """
         Function to load data into Imputer class.
+        to reload and erase not needed information.
         
         :param data: preferably pandas DataFrame 
-        :return: pandas DataFrame
         """
-        self.__init__(data)
-        #self.data = self._data_check(data)
+        # check if data is set in constructor otherwise load empty set.
+        if data is None:
+            data = pd.DataFrame()
+        else:
+            data = self._data_check(data)
+
+        self.data = data
+        self.pattern_log = Pattern()
+        return data
 
     def pattern(self):
         if self.data.empty:
