@@ -391,3 +391,23 @@ class Imputer:
             name = str(date.today()) + "-impyte-mdl.pkl"
             print name
         joblib.dump(self.clf, name)
+
+    def impute(self,
+               data=None,
+               cv=None,
+               verbose=True,
+               classifier=None):
+
+        if data is None:
+            data = self.data
+
+        # Logic
+        # Split into categorical and none categorical variables
+
+        # Get complete cases
+        # drop multi-nans (for now)
+        # Get patterns
+
+        # Call impute cat or impute cont
+        
+        return data
