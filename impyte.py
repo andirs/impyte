@@ -7,8 +7,15 @@ import math
 import numpy as np
 import pandas as pd
 from collections import Counter
-from sklearn.externals import joblib
 from datetime import date
+from sklearn.externals import joblib
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, RandomForestClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.svm import SVR
+from sklearn.linear_model import SGDRegressor, BayesianRidge
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.neural_network import MLPRegressor
 
 
 class NanChecker:
@@ -400,7 +407,7 @@ class Imputer:
 
         """
         data : data to be imputed
-        cv : Amont of cross-validation runs.
+        cv : Amount of cross-validation runs.
         verbose: Boolean value, whether prediction results should be printed out.
         classifier : 'rf: Random Forest', 
                      'svr: Support Vector Regression', 
@@ -409,11 +416,33 @@ class Imputer:
                      'bayes: Bayesian Ridge Regressor',
                      'dt: Decision Tree Regressor',
                      'gbr: Gradient Boosting Regressor',
-                     'mlp: Multi-layer Perceptron regressor (neural network)'
+                     'mlp: Multi-layer Perceptron Regressor (neural network)'
         multi_nans : Boolean indicator if data points with multiple NaN values should be kept
         """
         if data is None:
             data = self.data
+
+        # Decide which classifier to use and initialize
+        if classifier is not None:
+            if classifier == 'rf':
+                self.clf = RandomForestRegressor()
+            elif classifier == 'bayes':
+                self.clf = BayesianRidge()
+            elif classifier == 'dt':
+                self.clf = DecisionTreeRegressor()
+            elif classifier == 'gbr':
+                self.clf = GradientBoostingRegressor()
+            elif classifier == 'knn':
+                self.clf = KNeighborsRegressor()
+            elif classifier == 'mlp':
+                self.clf = MLPRegressor()
+            elif classifier == 'sgd':
+                self.clf = SGDRegressor()
+            elif classifier == 'svr':
+                self.clf = SVR()
+            else:
+                raise ValueError('Classifier unknown')
+
 
         # Logic
         # Split into categorical and none categorical variables
