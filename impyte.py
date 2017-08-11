@@ -398,6 +398,20 @@ class Imputer:
                verbose=True,
                classifier=None):
 
+        """
+        data : data to be imputed
+        cv : Amont of cross-validation runs.
+        verbose: Boolean value, whether prediction results should be printed out.
+        classifier : 'rf: Random Forest', 
+                     'svr: Support Vector Regression', 
+                     'sgd: Stochastic Gradient Descent'
+                     'knn: KNearest Neighbor Regressor'
+                     'bayes: Bayesian Ridge Regressor',
+                     'dt: Decision Tree Regressor',
+                     'gbr: Gradient Boosting Regressor',
+                     'mlp: Multi-layer Perceptron regressor (neural network)'
+        multi_nans : Boolean indicator if data points with multiple NaN values should be kept
+        """
         if data is None:
             data = self.data
 
@@ -409,5 +423,5 @@ class Imputer:
         # Get patterns
 
         # Call impute cat or impute cont
-        
+
         return data
