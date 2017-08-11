@@ -421,6 +421,8 @@ class Imputer:
         """
         if data is None:
             data = self.data
+        if data is not isinstance(pd.DataFrame):
+            raise ValueError('Input data has wrong format. pd.DataFrame expected.')
 
         # Decide which classifier to use and initialize
         if classifier is not None:
@@ -446,6 +448,15 @@ class Imputer:
 
         # Logic
         # Split into categorical and none categorical variables
+        # TODO: Check for object and category classes for discrete variable distinguization
+        categorical_selector = []
+        continuous_selector = []
+        for col in data.columns:
+            if data[col].dtypes == 'category':
+                categorical_selector.append(col)
+            else:
+                continuous_selector.append(col)
+
 
         # Get complete cases
         # drop multi-nans (for now)
@@ -453,4 +464,4 @@ class Imputer:
 
         # Call impute cat or impute cont
 
-        return data
+        return {'cat': categorical_selector, 'cont': continuous_selector}
