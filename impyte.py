@@ -421,7 +421,7 @@ class Imputer:
         """
         if data is None:
             data = self.data
-        if data is not isinstance(pd.DataFrame):
+        if not isinstance(data, pd.DataFrame):
             raise ValueError('Input data has wrong format. pd.DataFrame expected.')
 
         # Decide which classifier to use and initialize
@@ -448,11 +448,11 @@ class Imputer:
 
         # Logic
         # Split into categorical and none categorical variables
-        # TODO: Check for object and category classes for discrete variable distinguization
+        # TODO: Check for object and category classes to distinguish discrete variables
         categorical_selector = []
         continuous_selector = []
         for col in data.columns:
-            if data[col].dtypes == 'category':
+            if data[col].dtypes == 'object':
                 categorical_selector.append(col)
             else:
                 continuous_selector.append(col)
