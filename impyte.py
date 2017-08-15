@@ -449,13 +449,16 @@ class Imputer:
         # Logic
         # Split into categorical and none categorical variables
         # TODO: Check for object and category classes to distinguish discrete variables
-        categorical_selector = []
-        continuous_selector = []
-        for col in data.columns:
-            if data[col].dtypes == 'object':
-                categorical_selector.append(col)
-            else:
-                continuous_selector.append(col)
+        def _get_discrete_and_continuous(tmpdata):
+            discrete_selector = []
+            continuous_selector = []
+            for col in tmpdata.columns:
+                if tmpdata[col].dtypes == 'object':
+                    discrete_selector.append(col)
+                else:
+                    continuous_selector.append(col)
+            return {'discrete': discrete_selector,
+                    'continuous': continuous_selector}
 
 
         # Get complete cases
@@ -464,4 +467,4 @@ class Imputer:
 
         # Call impute cat or impute cont
 
-        return {'cat': categorical_selector, 'cont': continuous_selector}
+        return _get_discrete_and_continuous(data)
