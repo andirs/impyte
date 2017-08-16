@@ -94,6 +94,20 @@ class Pattern:
         self.nan_checker = NanChecker()
         self.pattern_store = {}
         self.pattern_index_store = {}
+        self.discrete_variables = []
+        self.continuous_variables = []
+
+    @staticmethod
+    def _get_discrete_and_continuous(tmpdata):
+        discrete_selector = []
+        continuous_selector = []
+        for col in tmpdata.columns:
+            if tmpdata[col].dtypes == 'object':
+                discrete_selector.append(col)
+            else:
+                continuous_selector.append(col)
+        return {'discrete': discrete_selector,
+                'continuous': continuous_selector}
 
     def compute_pattern(self, data, nan_values="", verbose=False):
         """
@@ -200,6 +214,9 @@ class Pattern:
         return_dict['table'] = final_result
         return_dict['indices'] = pattern_index_store
 
+        variable_store = self._get_discrete_and_continuous(data)
+        self.discrete_variables, self.continuous_variables = variable_store['discrete'], variable_store['continuous']
+
         return return_dict
 
     def row_nan_pattern(self, row):
@@ -259,6 +276,14 @@ class Pattern:
         """
 
         return Counter(data.apply(self.row_nan_pattern, axis=1))
+
+    def get_continuous(self):
+        # TODO: Failsafes and checks
+        return list(self.continuous_variables)
+
+    def get_discrete(self):
+        # TODO: Failsafes and checks
+        return list(self.discrete_variables)
 
 
 class Imputer:
@@ -449,16 +474,8 @@ class Imputer:
         # Logic
         # Split into categorical and none categorical variables
         # TODO: Check for object and category classes to distinguish discrete variables
-        def _get_discrete_and_continuous(tmpdata):
-            discrete_selector = []
-            continuous_selector = []
-            for col in tmpdata.columns:
-                if tmpdata[col].dtypes == 'object':
-                    discrete_selector.append(col)
-                else:
-                    continuous_selector.append(col)
-            return {'discrete': discrete_selector,
-                    'continuous': continuous_selector}
+        variable_store_cont = self.pattern_log.get_continuous()
+        variable_store_disc = self.pattern_log.get_discrete()
 
 
         # Get complete cases
@@ -467,4 +484,4 @@ class Imputer:
 
         # Call impute cat or impute cont
 
-        return _get_discrete_and_continuous(data)
+        return variable_store_cont, variable_store_disc
