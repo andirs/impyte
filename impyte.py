@@ -109,6 +109,12 @@ class Pattern:
         return {'discrete': discrete_selector,
                 'continuous': continuous_selector}
 
+    def get_pattern(self, data):
+        if self.pattern_store:
+            return self.pattern_store["result"]
+        else:
+            return self.compute_pattern(data)['table']
+
     def compute_pattern(self, data, nan_values="", verbose=False):
         """
         Function that checks for missing values and prints out 
@@ -266,6 +272,7 @@ class Pattern:
 
     def remove_pattern(self, pattern_no):
         del(self.pattern_index_store[pattern_no])
+        self.pattern_store["result"].drop(pattern_no, axis=0, inplace=True)
         # TODO: alter pattern_store results so it doesn't need to be recomputed
         #del(self.pattern_index_store[pattern_no])
 
@@ -365,7 +372,7 @@ class Imputer:
         if self.data.empty:
             raise ValueError("Error: Load data first.")
         else:
-            return self.pattern_log.compute_pattern(self.data)['table']
+            return self.pattern_log.get_pattern(self.data)
 
     def get_pattern(self, pattern_no):
         """
@@ -383,16 +390,17 @@ class Imputer:
         return self.data[self.data.index.isin(
             self.pattern_log.get_pattern_indices(pattern_no))]
 
-    def drop_pattern(self, pattern_no):
-
-        # Drop self.data with overwrite function
+    def drop_pattern(self, pattern_no, inplace=False):
         temp_patterns = self.pattern_log.get_pattern_indices(pattern_no)
-        self.data = self.data[~self.data.index.isin(temp_patterns)]
 
-        # Delete indices in pattern_log
-        self.pattern_log.remove_pattern(pattern_no)
+        if inplace:
+            # Drop self.data with overwrite function
+            self.data = self.data[~self.data.index.isin(temp_patterns)]
+            # Delete indices in pattern_log
+            self.pattern_log.remove_pattern(pattern_no)
+            return self.data
 
-        return self.data
+        return self.data[~self.data.index.isin(temp_patterns)].copy()
 
     def print_pattern(self, data=None):
         """
