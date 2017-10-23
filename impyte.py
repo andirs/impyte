@@ -14,14 +14,14 @@ from sklearn.model_selection import cross_val_score
 from sklearn.svm import SVR
 from sklearn.linear_model import SGDRegressor, BayesianRidge
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.neural_network import MLPRegressor
 
 
 class NanChecker:
     """
     Class that checks data set, lists or single
-    values for NaN occurrences. 
+    values for NaN occurrence. 
     """
     @staticmethod
     def is_nan(data,
