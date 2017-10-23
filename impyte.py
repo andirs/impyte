@@ -109,13 +109,23 @@ class Pattern:
         return {'discrete': discrete_selector,
                 'continuous': continuous_selector}
 
-    def get_pattern(self, data):
+    def get_pattern(self, data=None):
+        """
+        Returns NaN-patterns based on primary computation or
+        initiates new computation of NaN-patterns.
+        :param data: pd.DataFrame
+        :return: pd.DataFrame with NaN-pattern overview
+        """
+        # If pattern is already computed, return stored result
         if self.pattern_store:
             return self.pattern_store["result"]
+        # compute new pattern analysis
+        elif data:
+            return self._compute_pattern(data)['table']
         else:
-            return self.compute_pattern(data)['table']
+            raise ValueError("No pattern stored and missing data to compute pattern.")
 
-    def compute_pattern(self, data, nan_values="", verbose=False):
+    def _compute_pattern(self, data, nan_values="", verbose=False):
         """
         Function that checks for missing values and prints out 
         a quick table of a summary of missing values.
