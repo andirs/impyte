@@ -9,13 +9,15 @@ import pandas as pd
 from collections import Counter
 from datetime import date
 from sklearn.externals import joblib
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, \
+    GradientBoostingRegressor, GradientBoostingClassifier
 from sklearn.model_selection import cross_val_score
-from sklearn.svm import SVR
-from sklearn.linear_model import SGDRegressor, BayesianRidge
-from sklearn.neighbors import KNeighborsRegressor
+from sklearn.svm import SVR, SVC
+from sklearn.linear_model import SGDRegressor, SGDClassifier, BayesianRidge
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
-from sklearn.neural_network import MLPRegressor
+from sklearn.neural_network import MLPRegressor, MLPClassifier
 
 
 class NanChecker:
@@ -97,6 +99,15 @@ class Pattern:
         self.discrete_variables = []
         self.continuous_variables = []
 
+    def __str__(self):
+        """
+        String representation of Pattern class.
+        :return: stored DataFrame
+        """
+        if self.pattern_store:
+            return str(self.pattern_store["result"])
+
+
     @staticmethod
     def _get_discrete_and_continuous(tmpdata):
         discrete_selector = []
@@ -106,6 +117,7 @@ class Pattern:
                 discrete_selector.append(col)
             else:
                 continuous_selector.append(col)
+
         return {'discrete': discrete_selector,
                 'continuous': continuous_selector}
 
@@ -120,7 +132,7 @@ class Pattern:
         if self.pattern_store:
             return self.pattern_store["result"]
         # compute new pattern analysis
-        elif data:
+        elif not data.empty:
             return self._compute_pattern(data)['table']
         else:
             raise ValueError("No pattern stored and missing data to compute pattern.")
@@ -470,21 +482,29 @@ class Imputer:
         # Decide which classifier to use and initialize
         if classifier is not None:
             if classifier == 'rf':
-                self.clf = RandomForestRegressor()
+                self.clf["Regression"] = RandomForestRegressor()
+                self.clg["Classification"] = RandomForestClassifier()
             elif classifier == 'bayes':
-                self.clf = BayesianRidge()
+                self.clf["Regression"] = BayesianRidge()
+                self.clg["Classification"] = GaussianNB()
             elif classifier == 'dt':
-                self.clf = DecisionTreeRegressor()
+                self.clf["Regression"] = DecisionTreeRegressor()
+                self.clg["Classification"] = DecisionTreeClassifier()
             elif classifier == 'gbr':
-                self.clf = GradientBoostingRegressor()
+                self.clf["Regression"] = GradientBoostingRegressor()
+                self.clg["Classification"] = GradientBoostingClassifier()
             elif classifier == 'knn':
-                self.clf = KNeighborsRegressor()
+                self.clf["Regression"] = KNeighborsRegressor()
+                self.clg["Classification"] = KNeighborsClassifier()
             elif classifier == 'mlp':
-                self.clf = MLPRegressor()
+                self.clf["Regression"] = MLPRegressor()
+                self.clg["Classification"] = MLPClassifier()
             elif classifier == 'sgd':
-                self.clf = SGDRegressor()
+                self.clf["Regression"] = SGDRegressor()
+                self.clg["Classification"] = SGDClassifier()
             elif classifier == 'svr':
-                self.clf = SVR()
+                self.clf["Regression"] = SVR()
+                self.clg["Classification"] = SVC()
             else:
                 raise ValueError('Classifier unknown')
 
