@@ -104,6 +104,8 @@ class Pattern:
         self.pattern_index_store_temp = {}
         self.tuple_counter_temp = 0
         self.pattern_store_temp = {}
+        self.pattern_col_names = {}
+        self.store_tuple_colums = {}
 
     def __str__(self):
         """
@@ -211,6 +213,8 @@ class Pattern:
             new_indices[new] = old_indices[old]
         self.pattern_index_store_temp = new_indices
         final_result.reset_index(inplace=True, drop=True)
+
+        # Store variable names for each pattern
 
         # Store result in object
         self.pattern_store_temp["result"] = final_result
@@ -346,7 +350,7 @@ class Pattern:
 
         return return_dict
 
-    def store_tuple(self, tup, row_idx):
+    def _store_tuple(self, tup, row_idx):
         if tup in self.result_pattern_temp:
             self.result_pattern_temp[tup] += 1
             # Get corresponding label number from dict
@@ -374,16 +378,22 @@ class Pattern:
         tuple with pattern indicator
         """
         tmp_label = []
+        tmp_nan_col_idc = []
+        tmp_counter = 0
         for idx, value in enumerate(row):
             # For each value, check if NaN
             if self.nan_checker.is_nan(value):
                 # Add NaN-indicator to label
                 tmp_label.append('NaN')
+                # Store column indicators
+                tmp_nan_col_idc.append(tmp_counter)
             else:
                 # Add complete-indicator to label
                 tmp_label.append(1)
+            tmp_counter += 1
         try:
-            self.store_tuple(tuple(tmp_label), row.name)
+            self.store_tuple_colums[tuple(tmp_label)] = tmp_nan_col_idc
+            self._store_tuple(tuple(tmp_label), row.name)
         # in case of list
         except AttributeError:
             return tuple(tmp_label)
@@ -421,7 +431,7 @@ class Pattern:
         return list(self.discrete_variables)
 
 
-class Imputer:
+class Impyter:
     """
     Value imputation class.
     
@@ -433,7 +443,7 @@ class Imputer:
     ----------
     Importing DataFrame from numpy ndarray:
     
-    >>> imputer = Imputer(np.random.randint(low=0, high=10, size=(4,4)))
+    >>> imputer = Impyter(np.random.randint(low=0, high=10, size=(4,4)))
     >>> imputer
        0  1  2  3
     0  1  5  1  1
@@ -444,7 +454,7 @@ class Imputer:
     Testing list for NaN values
     
     >>> nan_array = ["Test", None, '', 23, [None, "42"]]
-    >>> imputer = Imputer()
+    >>> imputer = Impyter()
     >>> print imputer.is_nan(nan_array)
     
     [False, True, True, False, [True, False]]
@@ -459,7 +469,7 @@ class Imputer:
 
     def __str__(self):
         """
-        String representation of Imputer class.
+        String representation of Impyter class.
         :return: stored DataFrame
         """
         if self.data is not None:
@@ -481,7 +491,7 @@ class Imputer:
 
     def load_data(self, data):
         """
-        Function to load data into Imputer class.
+        Function to load data into Impyter class.
         to reload and erase not needed information.
         
         :param data: preferably pandas DataFrame 
