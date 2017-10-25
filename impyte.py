@@ -105,7 +105,7 @@ class Pattern:
         self.tuple_counter_temp = 0
         self.pattern_store_temp = {}
         self.pattern_col_names = {}
-        self.store_tuple_colums = {}
+        self.store_tuple_columns = {}
 
     def __str__(self):
         """
@@ -115,52 +115,6 @@ class Pattern:
         if self.pattern_store:
             return str(self.pattern_store["result"])
 
-
-    @staticmethod
-    def _get_discrete_and_continuous(tmpdata):
-        discrete_selector = []
-        continuous_selector = []
-        for col in tmpdata.columns:
-            if tmpdata[col].dtypes == 'object':
-                discrete_selector.append(col)
-            else:
-                continuous_selector.append(col)
-
-        return {'discrete': discrete_selector,
-                'continuous': continuous_selector}
-
-    def get_pattern(self, data=None):
-        """
-        Returns NaN-patterns based on primary computation or
-        initiates new computation of NaN-patterns.
-        :param data: pd.DataFrame
-        :return: pd.DataFrame with NaN-pattern overview
-        """
-        # If pattern is already computed, return stored result
-        if self.pattern_store_temp:
-            return self.pattern_store_temp["result"]
-        # compute new pattern analysis
-        elif not data.empty:
-            return self._compute_pattern(data)['table']
-        else:
-            raise ValueError("No pattern stored and missing data to compute pattern.")
-
-    @staticmethod
-    def _get_index_and_pattern(row):
-        tmplabel = []
-        rowidx = row.index
-        for cell_idx, cell_value in enumerate(row):
-            print cell_idx, cell_value
-            # For each value, check if NaN
-            if NanChecker.is_nan(cell_value):
-                # Add true-indicator to label
-                tmplabel.append('NaN')
-                # Count appearance for column (not needed right now)
-                # result_columns[data_cols[cell_idx]] += 1
-            else:
-                # Add false-indicator to label
-                tmplabel.append(1)
-        return rowidx[0], tmplabel
 
     def _compute_pattern(self, data, nan_values="", verbose=False):
         """
@@ -213,8 +167,6 @@ class Pattern:
             new_indices[new] = old_indices[old]
         self.pattern_index_store_temp = new_indices
         final_result.reset_index(inplace=True, drop=True)
-
-        # Store variable names for each pattern
 
         # Store result in object
         self.pattern_store_temp["result"] = final_result
@@ -350,6 +302,36 @@ class Pattern:
 
         return return_dict
 
+    @staticmethod
+    def _get_discrete_and_continuous(tmpdata):
+        discrete_selector = []
+        continuous_selector = []
+        for col in tmpdata.columns:
+            if tmpdata[col].dtypes == 'object':
+                discrete_selector.append(col)
+            else:
+                continuous_selector.append(col)
+
+        return {'discrete': discrete_selector,
+                'continuous': continuous_selector}
+
+    @staticmethod
+    def _get_index_and_pattern(row):
+        tmplabel = []
+        rowidx = row.index
+        for cell_idx, cell_value in enumerate(row):
+            print cell_idx, cell_value
+            # For each value, check if NaN
+            if NanChecker.is_nan(cell_value):
+                # Add true-indicator to label
+                tmplabel.append('NaN')
+                # Count appearance for column (not needed right now)
+                # result_columns[data_cols[cell_idx]] += 1
+            else:
+                # Add false-indicator to label
+                tmplabel.append(1)
+        return rowidx[0], tmplabel
+
     def _store_tuple(self, tup, row_idx):
         if tup in self.result_pattern_temp:
             self.result_pattern_temp[tup] += 1
@@ -363,6 +345,77 @@ class Pattern:
             # Add first row id to pattern_index_store
             self.pattern_index_store_temp[self.tuple_counter_temp] = [row_idx]
             self.tuple_counter_temp += 1
+
+    def get_continuous(self):
+        # TODO: Failsafes and checks
+        if self.continuous_variables:
+            return list(self.continuous_variables)
+        else:
+            raise ValueError("Variables aren't analzed yet.")
+
+    def get_discrete(self):
+        # TODO: Failsafes and checks
+        if self.discrete_variables:
+            return list(self.discrete_variables)
+        else:
+            raise ValueError("Variables aren't analzed yet.")
+
+    def get_pattern(self, data=None):
+        """
+        Returns NaN-patterns based on primary computation or
+        initiates new computation of NaN-patterns.
+        
+        Parameters
+        ----------
+        data: pd.DataFrame
+        
+        Returns
+        -------
+        pd.DataFrame with NaN-pattern overview
+        """
+        # If pattern is already computed, return stored result
+        if self.pattern_store_temp:
+            return self.pattern_store_temp["result"]
+        # compute new pattern analysis
+        elif not data.empty:
+            return self._compute_pattern(data)['table']
+        else:
+            raise ValueError("No pattern stored and missing data to compute pattern.")
+
+    def get_pattern_indices(self, pattern_no):
+        """
+        Returns data points for a specific pattern_no for further
+        investigation.
+
+        Parameters
+        ----------
+        pattern_no: index int value that indicates pattern
+
+        Returns
+        -------
+        self.data: data points that have a certain pattern
+        """
+        if not self.pattern_index_store_temp:
+            raise ValueError("Pattern needs to be computed first.")
+        if pattern_no not in self.pattern_index_store_temp:
+            raise ValueError("Pattern index not in store.")
+
+        return self.pattern_index_store_temp[pattern_no]
+
+    def remove_pattern(self, pattern_no):
+        """ Removes a certain pattern. Deletes dictionary entry in the pattern index store
+        as well as drops the entry in the results table.
+        
+        Parameters
+        ----------
+        pattern_no: index int value that indicates pattern
+        
+        Returns
+        -------
+        None
+        """
+        del(self.pattern_index_store_temp[pattern_no])
+        self.pattern_store_temp["result"].drop(pattern_no, axis=0, inplace=True)
 
     def row_nan_pattern(self, row):
         """
@@ -392,43 +445,11 @@ class Pattern:
                 tmp_label.append(1)
             tmp_counter += 1
         try:
-            self.store_tuple_colums[tuple(tmp_label)] = tmp_nan_col_idc
+            self.store_tuple_columns[tuple(tmp_label)] = tmp_nan_col_idc
             self._store_tuple(tuple(tmp_label), row.name)
         # in case of list
         except AttributeError:
             return tuple(tmp_label)
-
-    def get_pattern_indices(self, pattern_no):
-        """
-        Returns data points for a specific pattern_no for further
-        investigation.
-
-        Parameters
-        ----------
-        pattern_no: index int value that indicates pattern
-
-        Returns
-        -------
-        self.data: data points that have a certain pattern
-        """
-        if not self.pattern_index_store_temp:
-            raise ValueError("Pattern needs to be computed first.")
-        if pattern_no not in self.pattern_index_store_temp:
-            raise ValueError("Pattern index not in store.")
-
-        return self.pattern_index_store_temp[pattern_no]
-
-    def remove_pattern(self, pattern_no):
-        del(self.pattern_index_store_temp[pattern_no])
-        self.pattern_store_temp["result"].drop(pattern_no, axis=0, inplace=True)
-
-    def get_continuous(self):
-        # TODO: Failsafes and checks
-        return list(self.continuous_variables)
-
-    def get_discrete(self):
-        # TODO: Failsafes and checks
-        return list(self.discrete_variables)
 
 
 class Impyter:
