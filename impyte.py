@@ -115,6 +115,26 @@ class Pattern:
         if self.pattern_store:
             return str(self.pattern_store["result"])
 
+    def _check_complete_row(self, row):
+        """
+        Determines whether a row consists out of only 1s.
+        
+        Parameters
+        ----------
+        row: row of pandas DataFrame (i.e. results table)
+        
+        Returns
+        -------
+        int: index if all 0; -1 otherwise
+        """
+        counter = 0
+        break_val = len(row) - 1
+        for val in row:
+            if val == 1:
+                counter += 1
+        if counter == break_val:
+            return int(row.name)
+        return -1
 
     def _compute_pattern(self, data, nan_values="", verbose=False):
         """
@@ -162,6 +182,7 @@ class Pattern:
         final_result.sort_values("Count", ascending=False, inplace=True)
         old_indices = self.pattern_index_store_temp
         new_indices = {}
+        new_tuple_dict = {}
         # Rearrange values for better ordering (from 0 to n)
         for old, new in zip(final_result.index, range(len(final_result))):
             new_indices[new] = old_indices[old]
@@ -346,15 +367,28 @@ class Pattern:
             self.pattern_index_store_temp[self.tuple_counter_temp] = [row_idx]
             self.tuple_counter_temp += 1
 
+    def get_complete_indices(self):
+        """
+        Function to determine complete cases based on results table. 
+        Leverages pre-computed information and is quicker than dropna method.
+        
+        Returns
+        -------
+        array : indices list of complete cases
+        """
+        complete_pattern_no = self.get_pattern().apply(self._check_complete_row, axis=1).max()
+        if complete_pattern_no >= 0:
+            return self.get_pattern_indices(complete_pattern_no)
+        else:
+            raise ValueError("All instances seem to have missing values.")
+
     def get_continuous(self):
-        # TODO: Failsafes and checks
         if self.continuous_variables:
             return list(self.continuous_variables)
         else:
             raise ValueError("Variables aren't analzed yet.")
 
     def get_discrete(self):
-        # TODO: Failsafes and checks
         if self.discrete_variables:
             return list(self.discrete_variables)
         else:
@@ -549,6 +583,12 @@ class Impyter:
         return self.data[self.data.index.isin(
             self.pattern_log.get_pattern_indices(pattern_no))]
 
+    def get_complete_old(self):
+        """
+        Old but easy to read method to get complete indices. 
+        """
+        return self.data.dropna().index
+
     def drop_pattern(self, pattern_no, inplace=False):
         temp_patterns = self.pattern_log.get_pattern_indices(pattern_no)
 
@@ -620,40 +660,44 @@ class Impyter:
         if classifier is not None:
             if classifier == 'rf':
                 self.clf["Regression"] = RandomForestRegressor()
-                self.clg["Classification"] = RandomForestClassifier()
+                self.clf["Classification"] = RandomForestClassifier()
             elif classifier == 'bayes':
                 self.clf["Regression"] = BayesianRidge()
-                self.clg["Classification"] = GaussianNB()
+                self.clf["Classification"] = GaussianNB()
             elif classifier == 'dt':
                 self.clf["Regression"] = DecisionTreeRegressor()
-                self.clg["Classification"] = DecisionTreeClassifier()
+                self.clf["Classification"] = DecisionTreeClassifier()
             elif classifier == 'gbr':
                 self.clf["Regression"] = GradientBoostingRegressor()
-                self.clg["Classification"] = GradientBoostingClassifier()
+                self.clf["Classification"] = GradientBoostingClassifier()
             elif classifier == 'knn':
                 self.clf["Regression"] = KNeighborsRegressor()
-                self.clg["Classification"] = KNeighborsClassifier()
+                self.clf["Classification"] = KNeighborsClassifier()
             elif classifier == 'mlp':
                 self.clf["Regression"] = MLPRegressor()
-                self.clg["Classification"] = MLPClassifier()
+                self.clf["Classification"] = MLPClassifier()
             elif classifier == 'sgd':
                 self.clf["Regression"] = SGDRegressor()
-                self.clg["Classification"] = SGDClassifier()
+                self.clf["Classification"] = SGDClassifier()
             elif classifier == 'svr':
                 self.clf["Regression"] = SVR()
-                self.clg["Classification"] = SVC()
+                self.clf["Classification"] = SVC()
             else:
                 raise ValueError('Classifier unknown')
 
 
         # Logic
         # Split into categorical and none categorical variables
+
         # TODO: Check for object and category classes to distinguish discrete variables
         variable_store_cont = self.pattern_log.get_continuous()
         variable_store_disc = self.pattern_log.get_discrete()
 
 
         # Get complete cases
+
+        # There could be non-complete cases
+
         # drop multi-nans (for now)
         # Get patterns
 
