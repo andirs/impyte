@@ -695,8 +695,7 @@ class Impyter:
 
 
         # Get complete cases
-
-        # There could be non-complete cases
+        complete_cases = self.data[self.data.index.isin(self.pattern_log.get_complete_indices())]
 
         # drop multi-nans (for now)
         # Get patterns
