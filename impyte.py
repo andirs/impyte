@@ -108,6 +108,8 @@ class Pattern:
         self.pattern_col_names = {}
         self.store_tuple_columns = {}
         self.easy_access = {}
+        self.complete_idx = None
+        self.tuple_dict = {}
 
     def __str__(self):
         """
@@ -189,8 +191,12 @@ class Pattern:
         new_indices = {}
         new_tuple_dict = {}
         # Rearrange values for better ordering (from 0 to n)
+        tuple_list = [tuple(x) for x in final_result.drop('Count', axis=1).values]
         for old, new in zip(final_result.index, range(len(final_result))):
             new_indices[new] = old_indices[old]
+            new_tuple_dict[new] = tuple_list[new]
+
+        self.tuple_dict = new_tuple_dict
         self.pattern_index_store_temp = new_indices
         final_result.reset_index(inplace=True, drop=True)
 
@@ -375,6 +381,12 @@ class Pattern:
             self.pattern_index_store_temp[self.tuple_counter_temp] = [row_idx]
             self.tuple_counter_temp += 1
 
+    def get_complete_id(self):
+        return self.complete_idx
+
+    def get_column_name(self, patter_no):
+        return self.easy_access[self.tuple_dict[patter_no]]
+
     def get_complete_indices(self):
         """
         Function to determine complete cases based on results table. 
@@ -385,6 +397,7 @@ class Pattern:
         array : indices list of complete cases
         """
         complete_pattern_no = self.get_pattern().apply(self._check_complete_row, axis=1).max()
+        self.complete_idx = complete_pattern_no
         if complete_pattern_no >= 0:
             return self.get_pattern_indices(complete_pattern_no)
         else:
@@ -423,6 +436,17 @@ class Pattern:
             return self._compute_pattern(data)['table']
         else:
             raise ValueError("No pattern stored and missing data to compute pattern.")
+
+    def get_single_nan_idx(self):
+        """
+        Returns all pattern indices of single nans
+        :return: 
+        """
+        tmp = self.get_pattern().drop('Count', axis=1)
+        tmp[tmp == 'NaN'] = 0
+        tmp = 10 - tmp.sum(axis=1)
+        tmp = tmp[tmp == 1]
+        return tmp.index
 
     def get_pattern_indices(self, pattern_no):
         """
@@ -577,6 +601,10 @@ class Impyter:
         else:
             return self.pattern_log.get_pattern(self.data)
 
+    def get_pattern_column_name(self, pattern_no):
+        tmp = self.pattern()
+        return tmp[tmp.index == pattern_no]
+
     def get_pattern(self, pattern_no):
         """
         Returns data points for a specific pattern_no for further
@@ -700,12 +728,24 @@ class Impyter:
         # Split into categorical and none categorical variables
 
         # TODO: Check for object and category classes to distinguish discrete variables
+        # TODO: Error handling: If data has no pattern yet, simply compute it
         variable_store_cont = self.pattern_log.get_continuous()
         variable_store_disc = self.pattern_log.get_discrete()
 
 
         # Get complete cases
         complete_cases = self.data[self.data.index.isin(self.pattern_log.get_complete_indices())]
+        complete_idx = self.pattern_log.get_complete_id()
+
+        # impute single nan patterns
+        for pattern in self.pattern_log.get_single_nan_idx():
+            # filter out complete cases
+            if complete_idx != pattern:
+                X_pred = complete_cases.drop(self.pattern_log.get_column_name(pattern), axis=1)
+                y_pred = complete_cases[self.pattern_log.get_column_name(pattern)]
+                #print "Using columns {} to predict {}".format(X_pred.columns.values, y_pred.columns.values)
+                # This is where the imputation happens
+                #print "Imputing on pattern {}".format(pattern)
 
         # drop multi-nans (for now)
         # Get patterns
