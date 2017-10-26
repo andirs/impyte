@@ -99,6 +99,7 @@ class Pattern:
         self.discrete_variables = []
         self.continuous_variables = []
         # tryout
+        self.column_names = []
         self.result_pattern_temp = {}
         self.tuple_counter_dict_temp = {}
         self.pattern_index_store_temp = {}
@@ -106,6 +107,7 @@ class Pattern:
         self.pattern_store_temp = {}
         self.pattern_col_names = {}
         self.store_tuple_columns = {}
+        self.easy_access = {}
 
     def __str__(self):
         """
@@ -162,6 +164,9 @@ class Pattern:
         # Iterate over nan_values parameter and add to list of nan-values
         for nv in nan_values:
             nan_vals.append(nv)
+
+        # Store column names of data set for later use
+        self.column_names = data.columns
 
         # Iteration via apply - stores results in self.result_pattern_temp
         data.apply(self.row_nan_pattern, axis=1)
@@ -353,7 +358,7 @@ class Pattern:
                 tmplabel.append(1)
         return rowidx[0], tmplabel
 
-    def _store_tuple(self, tup, row_idx):
+    def _store_tuple(self, tup, row_idx, tmp_col_names):
         if tup in self.result_pattern_temp:
             self.result_pattern_temp[tup] += 1
             # Get corresponding label number from dict
@@ -361,6 +366,9 @@ class Pattern:
             self.pattern_index_store_temp[tuple_label].append(row_idx)
         # else: tuple hasn't been seen yet
         else:
+            # Enter only if variable exists
+            if tmp_col_names:
+                self.easy_access[tup] = tmp_col_names
             self.result_pattern_temp[tup] = 1
             self.tuple_counter_dict_temp[tup] = self.tuple_counter_temp
             # Add first row id to pattern_index_store
@@ -467,6 +475,7 @@ class Pattern:
         tmp_label = []
         tmp_nan_col_idc = []
         tmp_counter = 0
+        tmp_col_lists = []
         for idx, value in enumerate(row):
             # For each value, check if NaN
             if self.nan_checker.is_nan(value):
@@ -474,13 +483,14 @@ class Pattern:
                 tmp_label.append('NaN')
                 # Store column indicators
                 tmp_nan_col_idc.append(tmp_counter)
+                tmp_col_lists.append(self.column_names[tmp_counter])
             else:
                 # Add complete-indicator to label
                 tmp_label.append(1)
             tmp_counter += 1
         try:
             self.store_tuple_columns[tuple(tmp_label)] = tmp_nan_col_idc
-            self._store_tuple(tuple(tmp_label), row.name)
+            self._store_tuple(tuple(tmp_label), row.name, tmp_col_lists)
         # in case of list
         except AttributeError:
             return tuple(tmp_label)
