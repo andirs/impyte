@@ -749,19 +749,19 @@ class Impyter:
             # filter out complete cases
             if complete_idx != pattern:
                 X_pred = complete_cases.drop(self.pattern_log.get_column_name(pattern), axis=1)
+                X_pred = X_pred[X_pred.corr().columns] # TODO: Normalize and one-hot-encoding to leverage all features
                 col_name = self.pattern_log.get_column_name(pattern)[0]
                 y_pred = complete_cases[col_name]
 
-                if col_name in self.pattern_log.get_continuous(): # TODO: protected member access needs to change
-                    print "Label: {} \t Fitting {}".format(col_name, self.clf["Regression"].__class__.__name__)
-                    #self.clf["Regression"].fit(X_pred, y_pred)
-                else:
-                    print "Label: {} \t Fitting {}".format(col_name, self.clf["Classification"].__class__.__name__)
-                    #self.clf["Classification"].fit(X_pred, y_pred)
-                #
-                #print "Using columns {} to predict {}".format(X_pred.columns.values, y_pred.columns.values)
                 # This is where the imputation happens
-                #print "Imputing on pattern {}".format(pattern)
+                if col_name in self.pattern_log.get_continuous(): # TODO: protected member access needs to change
+                    # use regressor
+                    print "Label: {} \t Fitting {}".format(col_name, self.clf["Regression"].__class__.__name__)
+                    self.clf["Regression"].fit(X_pred, y_pred)
+                else:
+                    # use classifier
+                    print "Label: {} \t Fitting {}".format(col_name, self.clf["Classification"].__class__.__name__)
+                    self.clf["Classification"].fit(X_pred, y_pred)
 
         # drop multi-nans (for now)
         # Get patterns
