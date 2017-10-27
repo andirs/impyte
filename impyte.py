@@ -756,11 +756,15 @@ class Impyter:
                     # use regressor
                     print "Label: {} \t Fitting {}".format(col_name, self.clf["Regression"].__class__.__name__)
                     self.clf["Regression"].fit(X_pred, y_pred)
+                    scores = cross_val_score(self.clf["Regression"], X_pred, y_pred, cv=5)
+                    print "CV-Scores: {}".format(scores)
                     to_append = self.clf["Regression"].predict(X_test)
                 else:
                     # use classifier
                     print "Label: {} \t Fitting {}".format(col_name, self.clf["Classification"].__class__.__name__)
                     self.clf["Classification"].fit(X_pred, y_pred)
+                    scores = cross_val_score(self.clf["Classification"], X_pred, y_pred, cv=5)
+                    print "CV-Scores: {}".format(scores)
                     to_append = self.clf["Classification"].predict(X_test)
                 print to_append[:2]
 
