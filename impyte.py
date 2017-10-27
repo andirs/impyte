@@ -335,11 +335,18 @@ class Pattern:
         return return_dict
 
     @staticmethod
+    def _is_discrete(tmpdata):
+        if tmpdata.dtypes == 'object':
+            return True
+        else:
+            return False
+
+    @staticmethod
     def _get_discrete_and_continuous(tmpdata):
         discrete_selector = []
         continuous_selector = []
         for col in tmpdata.columns:
-            if tmpdata[col].dtypes == 'object':
+            if Pattern._is_discrete(tmpdata[col]):
                 discrete_selector.append(col)
             else:
                 continuous_selector.append(col)
@@ -673,7 +680,7 @@ class Impyter:
                data=None,
                cv=None,
                verbose=True,
-               classifier=None):
+               classifier='rf'):
 
         """
         data : data to be imputed
@@ -742,7 +749,16 @@ class Impyter:
             # filter out complete cases
             if complete_idx != pattern:
                 X_pred = complete_cases.drop(self.pattern_log.get_column_name(pattern), axis=1)
-                y_pred = complete_cases[self.pattern_log.get_column_name(pattern)]
+                col_name = self.pattern_log.get_column_name(pattern)[0]
+                y_pred = complete_cases[col_name]
+
+                if col_name in self.pattern_log.get_continuous(): # TODO: protected member access needs to change
+                    print "Label: {} \t Fitting {}".format(col_name, self.clf["Regression"].__class__.__name__)
+                    #self.clf["Regression"].fit(X_pred, y_pred)
+                else:
+                    print "Label: {} \t Fitting {}".format(col_name, self.clf["Classification"].__class__.__name__)
+                    #self.clf["Classification"].fit(X_pred, y_pred)
+                #
                 #print "Using columns {} to predict {}".format(X_pred.columns.values, y_pred.columns.values)
                 # This is where the imputation happens
                 #print "Imputing on pattern {}".format(pattern)
