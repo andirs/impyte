@@ -681,7 +681,6 @@ class Impyter:
                cv=None,
                verbose=True,
                classifier='rf'):
-
         """
         data : data to be imputed
         cv : Amount of cross-validation runs.
@@ -730,15 +729,11 @@ class Impyter:
             else:
                 raise ValueError('Classifier unknown')
 
-
         # Logic
         # Split into categorical and none categorical variables
-
-        # TODO: Check for object and category classes to distinguish discrete variables
         # TODO: Error handling: If data has no pattern yet, simply compute it
         variable_store_cont = self.pattern_log.get_continuous()
         variable_store_disc = self.pattern_log.get_discrete()
-
 
         # Get complete cases
         complete_cases = self.data[self.data.index.isin(self.pattern_log.get_complete_indices())]
@@ -752,20 +747,21 @@ class Impyter:
                 X_pred = X_pred[X_pred.corr().columns] # TODO: Normalize and one-hot-encoding to leverage all features
                 col_name = self.pattern_log.get_column_name(pattern)[0]
                 y_pred = complete_cases[col_name]
+                # Get data of pattern for prediction
+                X_test = self.get_pattern(pattern).drop(col_name, axis=1)
+                X_test = X_test[X_test.corr().columns]
 
                 # This is where the imputation happens
                 if col_name in self.pattern_log.get_continuous(): # TODO: protected member access needs to change
                     # use regressor
                     print "Label: {} \t Fitting {}".format(col_name, self.clf["Regression"].__class__.__name__)
                     self.clf["Regression"].fit(X_pred, y_pred)
+                    to_append = self.clf["Regression"].predict(X_test)
                 else:
                     # use classifier
                     print "Label: {} \t Fitting {}".format(col_name, self.clf["Classification"].__class__.__name__)
                     self.clf["Classification"].fit(X_pred, y_pred)
-
-        # drop multi-nans (for now)
-        # Get patterns
-
-        # Call impute cat or impute cont
+                    to_append = self.clf["Classification"].predict(X_test)
+                print to_append[:2]
 
         return variable_store_cont, variable_store_disc
