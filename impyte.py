@@ -13,6 +13,7 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, \
     GradientBoostingRegressor, GradientBoostingClassifier
 from sklearn.model_selection import cross_val_score
 from sklearn.svm import SVR, SVC
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import SGDRegressor, SGDClassifier, BayesianRidge
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
@@ -743,27 +744,43 @@ class Impyter:
         for pattern in self.pattern_log.get_single_nan_idx():
             # filter out complete cases
             if complete_idx != pattern:
-                X_pred = complete_cases.drop(self.pattern_log.get_column_name(pattern), axis=1)
-                X_pred = X_pred[X_pred.corr().columns] # TODO: Normalize and one-hot-encoding to leverage all features
+                X_train = complete_cases.drop(self.pattern_log.get_column_name(pattern), axis=1)
+                X_train = X_train[X_train.corr().columns] # TODO: Normalize and one-hot-encoding to leverage all features
+
+                # Scaling for ml preprocessing X_train
+                X_scaler = StandardScaler()
+                y_scaler = StandardScaler()
+                X_train = X_scaler.fit_transform(X_train)
+
                 col_name = self.pattern_log.get_column_name(pattern)[0]
-                y_pred = complete_cases[col_name]
+                y_train = complete_cases[col_name]
+
+                # Scaling for ml preprocessing y_train
+                # TODO: make scaling more efficient - do it once for all continuous variables
+
                 # Get data of pattern for prediction
                 X_test = self.get_pattern(pattern).drop(col_name, axis=1)
+
+                # scale X_test
                 X_test = X_test[X_test.corr().columns]
+                X_test = X_scaler.fit_transform(X_test)
 
                 # This is where the imputation happens
                 if col_name in self.pattern_log.get_continuous(): # TODO: protected member access needs to change
                     # use regressor
+                    y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1)) # scale continuous
+                    y_train = y_train.ravel() # turn 1d array back into matchin format
                     print "Label: {} \t Fitting {}".format(col_name, self.clf["Regression"].__class__.__name__)
-                    self.clf["Regression"].fit(X_pred, y_pred)
-                    scores = cross_val_score(self.clf["Regression"], X_pred, y_pred, cv=5)
+                    self.clf["Regression"].fit(X_train, y_train)
+                    scores = cross_val_score(self.clf["Regression"], X_train, y_train, cv=5)
                     print "CV-Scores: {}".format(scores)
                     to_append = self.clf["Regression"].predict(X_test)
+                    to_append = y_scaler.inverse_transform(to_append) # unscale continuous
                 else:
                     # use classifier
                     print "Label: {} \t Fitting {}".format(col_name, self.clf["Classification"].__class__.__name__)
-                    self.clf["Classification"].fit(X_pred, y_pred)
-                    scores = cross_val_score(self.clf["Classification"], X_pred, y_pred, cv=5)
+                    self.clf["Classification"].fit(X_train, y_train)
+                    scores = cross_val_score(self.clf["Classification"], X_train, y_train, cv=5)
                     print "CV-Scores: {}".format(scores)
                     to_append = self.clf["Classification"].predict(X_test)
                 print to_append[:2]
