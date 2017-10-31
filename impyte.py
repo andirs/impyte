@@ -714,11 +714,13 @@ class Impyter:
         except IOError as e:
             print "File not found: {}".format(e)
 
-    def one_hot_encode(self):
-        output = pd.DataFrame(index=self.data.index)
+    def one_hot_encode(self, data=None):
+        if data is None:
+            data = self.data
+        output = pd.DataFrame(index=data.index)
 
         # Investigate each feature column for the data
-        for col, col_data in self.data.iteritems():
+        for col, col_data in data.iteritems():
 
             # If data type is non-numeric, replace all yes/no values with 1/0
             if col_data.dtype == object:
@@ -730,7 +732,10 @@ class Impyter:
 
                 # Collect the revised columns
             output = output.join(col_data)
+        if data is None:
             self.data = output
+        else:
+            return output
 
     def one_hot_decode(self):
         all_columns = self.data.columns
@@ -835,6 +840,7 @@ class Impyter:
 
         # Get complete cases
         complete_cases = self.data[self.data.index.isin(self.pattern_log.get_complete_indices())]
+        # complete_cases_ohe = self.one_hot_encode(complete_cases)
         complete_idx = self.pattern_log.get_complete_id()
 
         # impute single nan patterns
@@ -842,15 +848,20 @@ class Impyter:
             # filter out complete cases
             if complete_idx != pattern:
                 X_train = complete_cases.drop(self.pattern_log.get_column_name(pattern), axis=1)
-                X_train = X_train[X_train.corr().columns] # TODO: Normalize and one-hot-encoding to leverage all features
+                X_train = self.one_hot_encode(X_train)
+                #print X_train.head()
+                #X_train = X_train[X_train.corr().columns] # TODO: Normalize and one-hot-encoding to leverage all features
 
                 # Scaling for ml preprocessing X_train
                 X_scaler = StandardScaler()
                 y_scaler = StandardScaler()
-                X_train = X_scaler.fit_transform(X_train)
+                #X_train = X_scaler.fit_transform(X_train)
+                #print X_train.head()
 
                 col_name = self.pattern_log.get_column_name(pattern)[0]
                 y_train = complete_cases[col_name]
+                #print y_train
+                #break
 
                 # Scaling for ml preprocessing y_train
                 # TODO: make scaling more efficient - do it once for all continuous variables
@@ -859,7 +870,8 @@ class Impyter:
                 X_test = self.get_pattern(pattern).drop(col_name, axis=1)
 
                 # scale X_test
-                X_test = X_test[X_test.corr().columns]
+                X_test = self.one_hot_encode(X_test)
+                #X_test = X_test[X_test.corr().columns]
                 X_test = X_scaler.fit_transform(X_test)
 
                 # This is where the imputation happens
