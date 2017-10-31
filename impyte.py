@@ -714,36 +714,36 @@ class Impyter:
         except IOError as e:
             print "File not found: {}".format(e)
 
-    def one_hot_encode(self, data=None):
-        if data is None:
-            data = self.data
-        output = pd.DataFrame(index=data.index)
+    def one_hot_encode(self, data):
+        """
+        Uses pandas get_dummies method to return a one-hot-encoded
+        DataFrame.
+        :param data: 
+        :return: pd.DataFrame - with one-hot-encoded categorical values
+        """
+        return_table = pd.DataFrame(index=data.index)
 
-        # Investigate each feature column for the data
         for col, col_data in data.iteritems():
-
-            # If data type is non-numeric, replace all yes/no values with 1/0
-            if col_data.dtype == object:
-                col_data = col_data.replace(['yes', 'no'], [1, 0])
-
             # If data type is categorical, convert to dummy variables
             if col_data.dtype == object:
                 col_data = pd.get_dummies(col_data, prefix=col + "_ohe")
 
-                # Collect the revised columns
-            output = output.join(col_data)
-        if data is None:
-            self.data = output
-        else:
-            return output
+            # Collect the revised columns
+            return_table = return_table.join(col_data)
+        return return_table
 
-    def one_hot_decode(self):
-        all_columns = self.data.columns
+    def one_hot_decode(self, data):
+        """
+        Decodes one-hot-encoded features into single column again.
+        Generally speaking, this function inverses the one-hot-encode function. 
+        :return: pd.DataFrame - data set with collapsed information.
+        """
+        all_columns = data.columns
         ohe_selector = []
         for col in all_columns:
             if '_ohe_' in col:
                 ohe_selector.append(col)
-        encoded_data = self.data[ohe_selector].copy()
+        encoded_data = data[ohe_selector].copy()
 
         ohe_columns = ohe_selector
         unique_cols = []
@@ -764,8 +764,9 @@ class Impyter:
             list_of_lists.append(tmp_list)
         return_table = pd.DataFrame(list_of_lists)
         return_table.columns = unique_cols
-        self.data.drop(ohe_selector, inplace=True, axis=1)
-        self.data = pd.concat([self.data, return_table], axis=1)
+        data.drop(ohe_selector, inplace=True, axis=1)
+        data = pd.concat([data, return_table], axis=1)
+        return data
 
 
     def save_model(self, name=None):
@@ -851,7 +852,7 @@ class Impyter:
                 X_train = self.one_hot_encode(X_train)
                 #print X_train.head()
                 #X_train = X_train[X_train.corr().columns] # TODO: Normalize and one-hot-encoding to leverage all features
-
+                #break
                 # Scaling for ml preprocessing X_train
                 X_scaler = StandardScaler()
                 y_scaler = StandardScaler()
