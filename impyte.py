@@ -714,6 +714,55 @@ class Impyter:
         except IOError as e:
             print "File not found: {}".format(e)
 
+    def one_hot_encode(self):
+        output = pd.DataFrame(index=self.data.index)
+
+        # Investigate each feature column for the data
+        for col, col_data in self.data.iteritems():
+
+            # If data type is non-numeric, replace all yes/no values with 1/0
+            if col_data.dtype == object:
+                col_data = col_data.replace(['yes', 'no'], [1, 0])
+
+            # If data type is categorical, convert to dummy variables
+            if col_data.dtype == object:
+                col_data = pd.get_dummies(col_data, prefix=col + "_ohe")
+
+                # Collect the revised columns
+            output = output.join(col_data)
+            self.data = output
+
+    def one_hot_decode(self):
+        all_columns = self.data.columns
+        ohe_selector = []
+        for col in all_columns:
+            if '_ohe_' in col:
+                ohe_selector.append(col)
+        encoded_data = self.data[ohe_selector].copy()
+
+        ohe_columns = ohe_selector
+        unique_cols = []
+        ohe_column_transform_val = []
+        for col in ohe_columns:
+            if '_ohe_' in col:
+                column_split = col.split('_ohe_')
+                if column_split[0] not in unique_cols:
+                    unique_cols.append(column_split[0])
+                ohe_column_transform_val.append(column_split[1])
+
+        list_of_lists = []
+        for idx, row in encoded_data.iterrows():
+            tmp_list = []
+            for value in range(len(row)):
+                if row[value] == 1:
+                    tmp_list.append(ohe_column_transform_val[value])
+            list_of_lists.append(tmp_list)
+        return_table = pd.DataFrame(list_of_lists)
+        return_table.columns = unique_cols
+        self.data.drop(ohe_selector, inplace=True, axis=1)
+        self.data = pd.concat([self.data, return_table], axis=1)
+
+
     def save_model(self, name=None):
         """
         Save a learned machine learning model to disk.
@@ -814,7 +863,7 @@ class Impyter:
                 X_test = X_scaler.fit_transform(X_test)
 
                 # This is where the imputation happens
-                if col_name in self.pattern_log.get_continuous(): # TODO: protected member access needs to change
+                if col_name in self.pattern_log.get_continuous():  # TODO: protected member access needs to change
                     # use regressor
                     y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1)) # scale continuous
                     y_train = y_train.ravel() # turn 1d array back into matchin format
