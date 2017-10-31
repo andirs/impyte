@@ -100,6 +100,7 @@ class Pattern:
         self.discrete_variables = []
         self.continuous_variables = []
         # tryout
+        self.missing_per_column = None
         self.column_names = []
         self.result_pattern_temp = {}
         self.tuple_counter_dict_temp = {}
@@ -170,6 +171,7 @@ class Pattern:
 
         # Store column names of data set for later use
         self.column_names = data.columns
+        self.missing_per_column = [0] * len(self.column_names)
 
         # Iteration via apply - stores results in self.result_pattern_temp
         data.apply(self.row_nan_pattern, axis=1)
@@ -372,6 +374,19 @@ class Pattern:
                 tmplabel.append(1)
         return rowidx[0], tmplabel
 
+    def _get_missing_value_percentage(self, data, importance_filter=False):
+        return_table = pd.DataFrame(self.missing_per_column)
+        return_table.index = self.column_names
+        return_table.columns = ["Missing"]
+        return_table["Complete"] = len(data) - return_table["Missing"]
+        return_table["Percentage"] = (return_table["Missing"] / len(data))
+        return_table["Percentage"] = pd.Series(
+            ["{0:.2f} %".format(val * 100) for val in return_table["Percentage"]], index=return_table.index)
+        return_table.sort_values("Missing", inplace=True)
+        if importance_filter:
+            return_table = return_table[return_table["Missing"] > 0]
+        return return_table[["Complete", "Missing", "Percentage"]]
+
     def _store_tuple(self, tup, row_idx, tmp_col_names):
         if tup in self.result_pattern_temp:
             self.result_pattern_temp[tup] += 1
@@ -528,6 +543,7 @@ class Pattern:
         for idx, value in enumerate(row):
             # For each value, check if NaN
             if self.nan_checker.is_nan(value):
+                self.missing_per_column[idx] += 1
                 # Add NaN-indicator to label
                 tmp_label.append('NaN')
                 # Store column indicators
@@ -651,6 +667,14 @@ class Impyter:
         """
         return self.data[self.data.index.isin(
             self.pattern_log.get_pattern_indices(pattern_no))]
+
+    def get_missing_summary(self, importance_filter=False):
+        """
+        Shows simple overview of missing values.
+        :param importance_filter: Show only features with at least one missing value.
+        :return: pd.DataFrame
+        """
+        return self.pattern_log._get_missing_value_percentage(self.data, importance_filter)
 
     def get_complete_old(self):
         """
