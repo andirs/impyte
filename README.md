@@ -10,3 +10,8 @@ One essential problem for any person dealing with data are missing values. There
 
 ## Limits and Notes
 The current version is a work in progress.
+
+## Functions
+impyter focuses on two main goals: 
+1) Easy to interpret visualization of missing patterns
+2) Easy imputation of missing values
