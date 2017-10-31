@@ -390,9 +390,18 @@ class Pattern:
             self.tuple_counter_temp += 1
 
     def get_complete_id(self):
+        """
+        Returns all ids that are complete.
+        :return: list - indices of complete cases
+        """
         return self.complete_idx
 
     def get_column_name(self, patter_no):
+        """
+        Return the column name(s) of a certain NaN-pattern.
+        :param patter_no: int - index of pattern
+        :return: list
+        """
         return self.easy_access[self.tuple_dict[patter_no]]
 
     def get_complete_indices(self):
@@ -412,12 +421,20 @@ class Pattern:
             raise ValueError("All instances seem to have missing values.")
 
     def get_continuous(self):
+        """
+        Returns copy of continuous variable names. 
+        :return: list
+        """
         if self.continuous_variables:
             return list(self.continuous_variables)
         else:
             raise ValueError("Variables aren't analzed yet.")
 
     def get_discrete(self):
+        """
+        Returns copy of discrete variable names. 
+        :return: list
+        """
         if self.discrete_variables:
             return list(self.discrete_variables)
         else:
@@ -574,6 +591,9 @@ class Impyter:
 
     @staticmethod
     def _data_check(data):
+        """
+        Checks if data is pandas DataFrame. Otherwise the data will be transformed.
+        """
         # perform instance check on data if available in constructor
         if isinstance(data, pd.DataFrame):
             return data
@@ -604,6 +624,9 @@ class Impyter:
         return data
 
     def pattern(self):
+        """
+        Returns missing value patterns of data set.
+        """
         if self.data.empty:
             raise ValueError("Error: Load data first.")
         else:
@@ -681,7 +704,8 @@ class Impyter:
                data=None,
                cv=None,
                verbose=True,
-               classifier='rf'):
+               classifier='rf',
+               multi_nans=False):
         """
         data : data to be imputed
         cv : Amount of cross-validation runs.
@@ -694,7 +718,7 @@ class Impyter:
                      'dt: Decision Tree Regressor',
                      'gbr: Gradient Boosting Regressor',
                      'mlp: Multi-layer Perceptron Regressor (neural network)'
-        multi_nans : Boolean indicator if data points with multiple NaN values should be kept
+        multi_nans : Boolean indicator if data points with multiple NaN values should be imputed as well
         """
         if data is None:
             data = self.data
