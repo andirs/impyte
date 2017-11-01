@@ -692,6 +692,9 @@ class Impyter:
         """
         return self.pattern_log._get_missing_value_percentage(self.data, importance_filter)
 
+    def get_model(self, model_no):
+        return self.model_log[model_no]
+
     def get_complete_old(self):
         """
         Old but easy to read method to get complete indices. 
@@ -897,18 +900,21 @@ class Impyter:
                 if col_name in self.pattern_log.get_continuous():
                     regressor = True
                     # use regressor
+                    scoring = "r2"
                     if auto_scale:
-                        y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1)) # scale continuous
-                        y_train = y_train.ravel() # turn 1d array back into matchin format
+                        y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1))  # scale continuous
+                        y_train = y_train.ravel() # turn 1d array back into matching format
                     model = self.clf["Regression"]
                 else:
                     # use classifier
+                    scoring = "f1_macro"
                     model = self.clf["Classification"]
 
                 # This is where the imputation happens
                 print "Label: {} \t Fitting {}".format(col_name, model.__class__.__name__)
                 model.fit(X_train, y_train)
-                scores = cross_val_score(model, X_train, y_train, cv=cv)
+                scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
+                #scores = abs(scores)
                 print "CV-Scores: {}".format(scores)
                 to_append = model.predict(X_test)
                 if regressor and auto_scale:
@@ -916,7 +922,7 @@ class Impyter:
                 self.model_log[pattern] = ImpyterModel(
                     estimator_name=model.__class__.__name__,
                     model=model,
-                    pattern=pattern,
+                    pattern_no=pattern,
                     feature_name=col_name,
                     accuracy=scores)
                 indices = self.pattern_log.get_pattern_indices(pattern)
@@ -934,9 +940,9 @@ class Impyter:
 
 
 class ImpyterModel:
-    def __init__(self, estimator_name, model=None, pattern=None, feature_name=None, accuracy=None):
+    def __init__(self, estimator_name, model=None, pattern_no=None, feature_name=None, accuracy=None):
         self.model = model
-        self.pattern = pattern
+        self.pattern_no = pattern_no
         self.feature_name = feature_name
         self.accuracy = accuracy
         self.estimator_name = estimator_name
@@ -956,8 +962,8 @@ class ImpyterModel:
     def get_model(self):
         return self.model
 
-    def get_pattern(self):
-        return self.pattern
+    def get_pattern_no(self):
+        return self.pattern_no
 
     def get_feature_name(self):
         return self.feature_name
