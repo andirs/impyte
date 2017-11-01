@@ -850,19 +850,13 @@ class Impyter:
             if complete_idx != pattern:
                 X_train = complete_cases.drop(self.pattern_log.get_column_name(pattern), axis=1)
                 X_train = self.one_hot_encode(X_train)
-                #print X_train.head()
-                #X_train = X_train[X_train.corr().columns] # TODO: Normalize and one-hot-encoding to leverage all features
-                #break
+
                 # Scaling for ml preprocessing X_train
                 X_scaler = StandardScaler()
                 y_scaler = StandardScaler()
-                #X_train = X_scaler.fit_transform(X_train)
-                #print X_train.head()
 
                 col_name = self.pattern_log.get_column_name(pattern)[0]
                 y_train = complete_cases[col_name]
-                #print y_train
-                #break
 
                 # Scaling for ml preprocessing y_train
                 # TODO: make scaling more efficient - do it once for all continuous variables
@@ -872,11 +866,11 @@ class Impyter:
 
                 # scale X_test
                 X_test = self.one_hot_encode(X_test)
-                #X_test = X_test[X_test.corr().columns]
+                # X_test = X_test[X_test.corr().columns]
                 X_test = X_scaler.fit_transform(X_test)
 
                 # This is where the imputation happens
-                if col_name in self.pattern_log.get_continuous():  # TODO: protected member access needs to change
+                if col_name in self.pattern_log.get_continuous():
                     # use regressor
                     y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1)) # scale continuous
                     y_train = y_train.ravel() # turn 1d array back into matchin format
