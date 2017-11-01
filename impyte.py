@@ -100,6 +100,7 @@ class Pattern:
         self.pattern_index_store = {}
         self.discrete_variables = []
         self.continuous_variables = []
+        self.unique_instances = 10
         # tryout
         self.missing_per_column = None
         self.column_names = []
@@ -143,7 +144,7 @@ class Pattern:
             return int(row.name)
         return -1
 
-    def _compute_pattern(self, data, nan_values="", verbose=False):
+    def _compute_pattern(self, data, nan_values="", verbose=False, unique_instances=10):
         """
         Function that checks for missing values and prints out 
         a quick table of a summary of missing values.
@@ -210,7 +211,7 @@ class Pattern:
         return_dict = {"table": final_result,
                        "indices": self.pattern_index_store_temp}
 
-        variable_store = self._get_discrete_and_continuous(data)
+        variable_store = self._get_discrete_and_continuous(data, unique_instances)
         self.discrete_variables, self.continuous_variables = variable_store['discrete'], variable_store['continuous']
 
         return return_dict
@@ -339,18 +340,24 @@ class Pattern:
         return return_dict
 
     @staticmethod
-    def _is_discrete(tmpdata):
+    def _is_discrete(tmpdata, unique_instances):
+        """
+        Determines on dtype and by counting unique instances whether a column 
+        contains categorical or continuous values.
+        """
         if tmpdata.dtypes == 'object':
+            return True
+        elif len(tmpdata.unique()) < unique_instances:
             return True
         else:
             return False
 
     @staticmethod
-    def _get_discrete_and_continuous(tmpdata):
+    def _get_discrete_and_continuous(tmpdata, unique_instances):
         discrete_selector = []
         continuous_selector = []
         for col in tmpdata.columns:
-            if Pattern._is_discrete(tmpdata[col]):
+            if Pattern._is_discrete(tmpdata[col], unique_instances):
                 discrete_selector.append(col)
             else:
                 continuous_selector.append(col)
@@ -456,7 +463,7 @@ class Pattern:
         else:
             raise ValueError("Variables aren't analzed yet.")
 
-    def get_pattern(self, data=None):
+    def get_pattern(self, data=None, unique_instances=10):
         """
         Returns NaN-patterns based on primary computation or
         initiates new computation of NaN-patterns.
@@ -474,7 +481,7 @@ class Pattern:
             return self.pattern_store_temp["result"]
         # compute new pattern analysis
         elif not data.empty:
-            return self._compute_pattern(data)['table']
+            return self._compute_pattern(data, unique_instances)['table']
         else:
             raise ValueError("No pattern stored and missing data to compute pattern.")
 
@@ -598,6 +605,7 @@ class Impyter:
         self.clf = {}
         self.pattern_log = Pattern()
         self.model_log = {}
+        self.result = None
 
     def __str__(self):
         """
@@ -669,6 +677,12 @@ class Impyter:
         """
         return self.data[self.data.index.isin(
             self.pattern_log.get_pattern_indices(pattern_no))]
+
+    def get_result(self):
+        if self.result is not None:
+            return self.result.copy()
+        else:
+            raise ValueError("Need to impute values first.")
 
     def get_missing_summary(self, importance_filter=False):
         """
@@ -839,6 +853,8 @@ class Impyter:
                 self.clf["Classification"] = SVC()
             else:
                 raise ValueError('Classifier unknown')
+        # for debugging purposes
+        result_data = self.data.copy()
 
         # Logic
         # Split into categorical and none categorical variables
@@ -903,9 +919,18 @@ class Impyter:
                     pattern=pattern,
                     feature_name=col_name,
                     accuracy=scores)
-                print to_append[:2]
+                indices = self.pattern_log.get_pattern_indices(pattern)
+                for pointer, idx in enumerate(indices):
+                    #print idx
+                    #print pointer
+                    #print to_append[pointer]
+                    result_data.at[idx, col_name] = to_append[pointer]
+                #print indices[:2]
+                #print to_append[:2]
 
-        return variable_store_cont, variable_store_disc
+        self.result = result_data
+
+        return result_data
 
 
 class ImpyterModel:
