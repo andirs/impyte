@@ -19,6 +19,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.neural_network import MLPRegressor, MLPClassifier
+from sklearn.base import clone
 
 
 class NanChecker:
@@ -596,6 +597,7 @@ class Impyter:
         # initialize machine learning estimator
         self.clf = {}
         self.pattern_log = Pattern()
+        self.model_log = {}
 
     def __str__(self):
         """
@@ -781,23 +783,28 @@ class Impyter:
 
     def impute(self,
                data=None,
-               cv=None,
+               cv=5,
                verbose=True,
                classifier='rf',
-               multi_nans=False):
+               multi_nans=False,
+               one_hot_encode=True,
+               auto_scale=True):
         """
-        data : data to be imputed
-        cv : Amount of cross-validation runs.
+        data: data to be imputed
+        cv: Amount of cross-validation runs.
         verbose: Boolean value, whether prediction results should be printed out.
-        classifier : 'rf: Random Forest', 
-                     'svr: Support Vector Regression', 
-                     'sgd: Stochastic Gradient Descent'
-                     'knn: KNearest Neighbor Regressor'
-                     'bayes: Bayesian Ridge Regressor',
-                     'dt: Decision Tree Regressor',
-                     'gbr: Gradient Boosting Regressor',
-                     'mlp: Multi-layer Perceptron Regressor (neural network)'
-        multi_nans : Boolean indicator if data points with multiple NaN values should be imputed as well
+        classifier: 'rf: Random Forest', 
+                    'svr: Support Vector Regression', 
+                    'sgd: Stochastic Gradient Descent'
+                    'knn: KNearest Neighbor Regressor'
+                    'bayes: Bayesian Ridge Regressor',
+                    'dt: Decision Tree Regressor',
+                    'gbr: Gradient Boosting Regressor',
+                    'mlp: Multi-layer Perceptron Regressor (neural network)'
+        multi_nans: Boolean indicator if data points with multiple NaN values should be imputed as well
+        one_hoe_encode: Boolean - if set to True one-hot-encoding of categorical variables happens
+        auto_scale: Boolean - if set to True continuous variables are automatically scaled 
+                    and transformed back after imputation.
         """
         if data is None:
             data = self.data
@@ -841,52 +848,94 @@ class Impyter:
 
         # Get complete cases
         complete_cases = self.data[self.data.index.isin(self.pattern_log.get_complete_indices())]
-        # complete_cases_ohe = self.one_hot_encode(complete_cases)
         complete_idx = self.pattern_log.get_complete_id()
 
         # impute single nan patterns
         for pattern in self.pattern_log.get_single_nan_idx():
             # filter out complete cases
             if complete_idx != pattern:
-                X_train = complete_cases.drop(self.pattern_log.get_column_name(pattern), axis=1)
-                X_train = self.one_hot_encode(X_train)
+                # regressor flag
+                regressor = False
 
-                # Scaling for ml preprocessing X_train
-                X_scaler = StandardScaler()
-                y_scaler = StandardScaler()
+                X_train = complete_cases.drop(self.pattern_log.get_column_name(pattern), axis=1)
+                if one_hot_encode:
+                    X_train = self.one_hot_encode(X_train)
 
                 col_name = self.pattern_log.get_column_name(pattern)[0]
                 y_train = complete_cases[col_name]
 
-                # Scaling for ml preprocessing y_train
-                # TODO: make scaling more efficient - do it once for all continuous variables
-
                 # Get data of pattern for prediction
                 X_test = self.get_pattern(pattern).drop(col_name, axis=1)
 
-                # scale X_test
-                X_test = self.one_hot_encode(X_test)
-                # X_test = X_test[X_test.corr().columns]
-                X_test = X_scaler.fit_transform(X_test)
+                # Pre-processing of data
+                if one_hot_encode:
+                    X_test = self.one_hot_encode(X_test)
+                if auto_scale:
+                    # Scaling for ml pre-processing X_train
+                    X_scaler = StandardScaler()
+                    y_scaler = StandardScaler()
+                    X_train = X_scaler.fit_transform(X_train)
+                    X_test = X_scaler.fit_transform(X_test)
 
-                # This is where the imputation happens
+                # Select appropriate estimator
                 if col_name in self.pattern_log.get_continuous():
+                    regressor = True
                     # use regressor
-                    y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1)) # scale continuous
-                    y_train = y_train.ravel() # turn 1d array back into matchin format
-                    print "Label: {} \t Fitting {}".format(col_name, self.clf["Regression"].__class__.__name__)
-                    self.clf["Regression"].fit(X_train, y_train)
-                    scores = cross_val_score(self.clf["Regression"], X_train, y_train, cv=5)
-                    print "CV-Scores: {}".format(scores)
-                    to_append = self.clf["Regression"].predict(X_test)
-                    to_append = y_scaler.inverse_transform(to_append) # unscale continuous
+                    if auto_scale:
+                        y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1)) # scale continuous
+                        y_train = y_train.ravel() # turn 1d array back into matchin format
+                    model = self.clf["Regression"]
                 else:
                     # use classifier
-                    print "Label: {} \t Fitting {}".format(col_name, self.clf["Classification"].__class__.__name__)
-                    self.clf["Classification"].fit(X_train, y_train)
-                    scores = cross_val_score(self.clf["Classification"], X_train, y_train, cv=5)
-                    print "CV-Scores: {}".format(scores)
-                    to_append = self.clf["Classification"].predict(X_test)
+                    model = self.clf["Classification"]
+
+                # This is where the imputation happens
+                print "Label: {} \t Fitting {}".format(col_name, model.__class__.__name__)
+                model.fit(X_train, y_train)
+                scores = cross_val_score(model, X_train, y_train, cv=cv)
+                print "CV-Scores: {}".format(scores)
+                to_append = model.predict(X_test)
+                if regressor and auto_scale:
+                    to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
+                self.model_log[pattern] = ImpyterModel(
+                    estimator_name=model.__class__.__name__,
+                    model=model,
+                    pattern=pattern,
+                    feature_name=col_name,
+                    accuracy=scores)
                 print to_append[:2]
 
         return variable_store_cont, variable_store_disc
+
+
+class ImpyterModel:
+    def __init__(self, estimator_name, model=None, pattern=None, feature_name=None, accuracy=None):
+        self.model = model
+        self.pattern = pattern
+        self.feature_name = feature_name
+        self.accuracy = accuracy
+        self.estimator_name = estimator_name
+
+    def set_model(self, model):
+        self.model = model
+
+    def set_pattern(self, pattern):
+        self.pattern = pattern
+
+    def set_feature_name(self, feature_name):
+        self.feature_name = feature_name
+
+    def set_accuracy(self, accuracy):
+        self.accuracy = accuracy
+
+    def get_model(self):
+        return self.model
+
+    def get_pattern(self):
+        return self.pattern
+
+    def get_feature_name(self):
+        return self.feature_name
+
+    def get_accuracy(self):
+        return self.accuracy
