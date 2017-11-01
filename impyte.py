@@ -528,6 +528,16 @@ class Pattern:
         -------
         None
         """
+        for col in self.get_column_name(pattern_no):
+            # search for index of column in missing summary list
+            decrease_pointer = 0
+            for pointer in range(len(self.column_names)):
+                if self.column_names[pointer] == col:
+                    # decrease missing values by count of pattern values
+                    decrease_pointer = pointer
+                    pattern_table = self.pattern_store_temp["result"]
+                    decrease_value = pattern_table[pattern_table.index == pattern_no]["Count"]
+                    self.missing_per_column[decrease_pointer] -= int(decrease_value)
         del(self.pattern_index_store_temp[pattern_no])
         self.pattern_store_temp["result"].drop(pattern_no, axis=0, inplace=True)
 
@@ -600,7 +610,8 @@ class Impyter:
     """
 
     def __init__(self, data=None):
-        self.data = self.load_data(data)
+        self.data = None
+        self.load_data(data)
         # initialize machine learning estimator
         self.clf = {}
         self.pattern_log = Pattern()
@@ -645,9 +656,9 @@ class Impyter:
         else:
             data = self._data_check(data)
 
-        self.data = data
+        self.data = data.copy()
         self.pattern_log = Pattern()
-        return data
+        #return data
 
     def pattern(self):
         """
@@ -677,6 +688,9 @@ class Impyter:
         """
         return self.data[self.data.index.isin(
             self.pattern_log.get_pattern_indices(pattern_no))]
+
+    def get_data(self):
+        return self.data
 
     def get_result(self):
         if self.result is not None:
@@ -805,7 +819,8 @@ class Impyter:
                classifier='rf',
                multi_nans=False,
                one_hot_encode=True,
-               auto_scale=True):
+               auto_scale=True,
+               recursive=False):
         """
         data: data to be imputed
         cv: Amount of cross-validation runs.
@@ -822,6 +837,7 @@ class Impyter:
         one_hoe_encode: Boolean - if set to True one-hot-encoding of categorical variables happens
         auto_scale: Boolean - if set to True continuous variables are automatically scaled 
                     and transformed back after imputation.
+        recursive: Boolean - if set to True predicted values are being used to further train and predict multi-nans
         """
         if data is None:
             data = self.data
