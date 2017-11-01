@@ -610,13 +610,13 @@ class Impyter:
     """
 
     def __init__(self, data=None):
-        self.data = None
-        self.load_data(data)
-        # initialize machine learning estimator
-        self.clf = {}
-        self.pattern_log = Pattern()
-        self.model_log = {}
-        self.result = None
+        self.data = None  # stores original data
+        self.load_data(data)  # loads or initializes data set
+        self.clf = {}  # stores classifier - deprecated
+        self.pattern_log = Pattern()  # stores Pattern() object for data set
+        self.model_log = {}  # stores all models once impute has been run
+        self.result = None  # stores result data set
+        self.column_to_model = {}  # stores information on which column can be predicted through what model
 
     def __str__(self):
         """
@@ -943,12 +943,9 @@ class Impyter:
                     accuracy=scores)
                 indices = self.pattern_log.get_pattern_indices(pattern)
                 for pointer, idx in enumerate(indices):
-                    #print idx
-                    #print pointer
-                    #print to_append[pointer]
                     result_data.at[idx, col_name] = to_append[pointer]
-                #print indices[:2]
-                #print to_append[:2]
+                if col_name not in self.column_to_model:
+                    self.column_to_model[col_name] = self.model_log[pattern]
 
         self.result = result_data
 
