@@ -485,7 +485,7 @@ class Pattern:
         else:
             raise ValueError("No pattern stored and missing data to compute pattern.")
 
-    def get_single_nan_idx(self):
+    def get_single_nan_pattern_nos(self):
         """
         Returns all pattern indices of single nans
         :return: 
@@ -494,6 +494,13 @@ class Pattern:
         tmp[tmp == 'NaN'] = 0
         tmp = 10 - tmp.sum(axis=1)
         tmp = tmp[tmp == 1]
+        return tmp.index
+
+    def get_multi_nan_pattern_nos(self):
+        tmp = self.get_pattern().drop('Count', axis=1)
+        tmp[tmp == 'NaN'] = 0
+        tmp = 10 - tmp.sum(axis=1)
+        tmp = tmp[tmp > 1]
         return tmp.index
 
     def get_pattern_indices(self, pattern_no):
@@ -530,14 +537,12 @@ class Pattern:
         """
         for col in self.get_column_name(pattern_no):
             # search for index of column in missing summary list
-            decrease_pointer = 0
             for pointer in range(len(self.column_names)):
                 if self.column_names[pointer] == col:
                     # decrease missing values by count of pattern values
-                    decrease_pointer = pointer
                     pattern_table = self.pattern_store_temp["result"]
                     decrease_value = pattern_table[pattern_table.index == pattern_no]["Count"]
-                    self.missing_per_column[decrease_pointer] -= int(decrease_value)
+                    self.missing_per_column[pointer] -= int(decrease_value)
         del(self.pattern_index_store_temp[pattern_no])
         self.pattern_store_temp["result"].drop(pattern_no, axis=0, inplace=True)
 
@@ -801,7 +806,6 @@ class Impyter:
         data = pd.concat([data, return_table], axis=1)
         return data
 
-
     def save_model(self, name=None):
         """
         Save a learned machine learning model to disk.
@@ -872,21 +876,16 @@ class Impyter:
                 self.clf["Classification"] = SVC()
             else:
                 raise ValueError('Classifier unknown')
-        # for debugging purposes
         result_data = self.data.copy()
 
-        # Logic
-        # Split into categorical and none categorical variables
         # TODO: Error handling: If data has no pattern yet, simply compute it
-        variable_store_cont = self.pattern_log.get_continuous()
-        variable_store_disc = self.pattern_log.get_discrete()
 
         # Get complete cases
         complete_cases = self.data[self.data.index.isin(self.pattern_log.get_complete_indices())]
         complete_idx = self.pattern_log.get_complete_id()
 
         # impute single nan patterns
-        for pattern in self.pattern_log.get_single_nan_idx():
+        for pattern in self.pattern_log.get_single_nan_pattern_nos():
             # filter out complete cases
             if complete_idx != pattern:
                 # regressor flag
@@ -927,11 +926,14 @@ class Impyter:
                     model = self.clf["Classification"]
 
                 # This is where the imputation happens
-                print "Label: {} \t Fitting {}".format(col_name, model.__class__.__name__)
                 model.fit(X_train, y_train)
                 scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
-                #scores = abs(scores)
-                print "CV-Scores: {}".format(scores)
+                if verbose:
+                    print "Label: {} \t Fitting {} \t Avg score: {:.3f} ({})".format(
+                        col_name,
+                        model.__class__.__name__,
+                        (sum(scores) / float(len(scores))),
+                        scoring)
                 to_append = model.predict(X_test)
                 if regressor and auto_scale:
                     to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
@@ -940,25 +942,81 @@ class Impyter:
                     model=model,
                     pattern_no=pattern,
                     feature_name=col_name,
-                    accuracy=scores)
+                    accuracy=scores,
+                    scoring=scoring)
                 indices = self.pattern_log.get_pattern_indices(pattern)
                 for pointer, idx in enumerate(indices):
                     result_data.at[idx, col_name] = to_append[pointer]
                 if col_name not in self.column_to_model:
                     self.column_to_model[col_name] = self.model_log[pattern]
 
+        # Multi-Nan
+        multi_nan_patterns = self.pattern_log.get_multi_nan_pattern_nos()
+        if multi_nans and not multi_nan_patterns.empty:
+            print "Multi nans\n"
+            for pattern_no in multi_nan_patterns:
+                print pattern_no, self.pattern_log.get_column_name(pattern_no)
+                multi_nan_columns = self.pattern_log.get_column_name(pattern_no)
+                for col in multi_nan_columns:
+                    model = clone(self.column_to_model[col].get_model()) # get model
+
+                    X_train = complete_cases.drop(multi_nan_columns, axis=1)
+                    if one_hot_encode:
+                        X_train = self.one_hot_encode(X_train)
+
+                    y_train = complete_cases[col]
+                    # retrain model
+
+
+                    # Get data of pattern for prediction
+                    X_test = self.get_pattern(pattern_no).drop(multi_nan_columns, axis=1)
+
+                    # Pre-processing of data
+                    if one_hot_encode:
+                        X_test = self.one_hot_encode(X_test)
+                    if auto_scale:
+                        # Scaling for ml pre-processing X_train
+                        X_scaler = StandardScaler()
+                        y_scaler = StandardScaler()
+                        X_test = X_scaler.fit_transform(X_test)
+
+                    if col in self.pattern_log.get_continuous():
+                        if auto_scale:
+                            y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1))  # scale continuous
+                            y_train = y_train.ravel()  # turn 1d array back into matching format
+                    model.fit(X_train, y_train)
+                    scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
+                    if verbose:
+                        print "Label: {} \t Fitting {} \t Avg score: {:.3f} ({})".format(
+                            col,
+                            model.__class__.__name__,
+                            (sum(scores) / float(len(scores))),
+                            scoring)
+                    to_append = model.predict(X_test)
+                    if col in self.pattern_log.get_continuous() and auto_scale:
+                        to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
+
+                    indices = self.pattern_log.get_pattern_indices(pattern_no)
+                    for pointer, idx in enumerate(indices):
+                        result_data.at[idx, col] = to_append[pointer]
+
+                    print to_append[:2]
         self.result = result_data
 
         return result_data
 
 
 class ImpyterModel:
-    def __init__(self, estimator_name, model=None, pattern_no=None, feature_name=None, accuracy=None):
+    """
+    Stores computed Impyter machine learning models.
+    """
+    def __init__(self, estimator_name, model=None, pattern_no=None, feature_name=None, accuracy=None, scoring=None):
         self.model = model
         self.pattern_no = pattern_no
         self.feature_name = feature_name
         self.accuracy = accuracy
         self.estimator_name = estimator_name
+        self.scoring = scoring
 
     def set_model(self, model):
         self.model = model
@@ -983,3 +1041,9 @@ class ImpyterModel:
 
     def get_accuracy(self):
         return self.accuracy
+
+    def get_scoring(self):
+        return self.scoring
+
+    def get_estimator_name(self):
+        return self.estimator_name
