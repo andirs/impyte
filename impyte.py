@@ -6,7 +6,6 @@ author: Andreas Rubin-Schwarz
 import math
 import numpy as np
 import pandas as pd
-from collections import Counter
 from datetime import date
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, \
@@ -748,7 +747,7 @@ class Impyter:
         :param model: pickle object or filename of model. 
         """
         try:
-            self.clf = joblib.load(model)
+            self.model_log = joblib.load(model)
         except IOError as e:
             print "File not found: {}".format(e)
 
@@ -814,7 +813,7 @@ class Impyter:
         if name is None:
             name = str(date.today()) + "-impyte-mdl.pkl"
             print name
-        joblib.dump(self.clf, name)
+        joblib.dump(self.model_log, name)
 
     def impute(self,
                data=None,
@@ -939,11 +938,11 @@ class Impyter:
                     to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
                 self.model_log[pattern] = ImpyterModel(
                     estimator_name=model.__class__.__name__,
-                    model=model,
+                    model=[model],
                     pattern_no=pattern,
                     feature_name=col_name,
-                    accuracy=scores,
-                    scoring=scoring)
+                    accuracy=[scores],
+                    scoring=[scoring])
                 indices = self.pattern_log.get_pattern_indices(pattern)
                 for pointer, idx in enumerate(indices):
                     result_data.at[idx, col_name] = to_append[pointer]
@@ -955,10 +954,15 @@ class Impyter:
         if multi_nans and not multi_nan_patterns.empty:
             print "Multi nans\n"
             for pattern_no in multi_nan_patterns:
+                store_models = []
+                store_scores = []
+                store_scoring = []
+                store_estimator_names = []
+
                 print pattern_no, self.pattern_log.get_column_name(pattern_no)
                 multi_nan_columns = self.pattern_log.get_column_name(pattern_no)
                 for col in multi_nan_columns:
-                    model = clone(self.column_to_model[col].get_model()) # get model
+                    model = clone(self.column_to_model[col].get_model()[0])  # get model
 
                     X_train = complete_cases.drop(multi_nan_columns, axis=1)
                     if one_hot_encode:
@@ -966,8 +970,6 @@ class Impyter:
 
                     y_train = complete_cases[col]
                     # retrain model
-
-
                     # Get data of pattern for prediction
                     X_test = self.get_pattern(pattern_no).drop(multi_nan_columns, axis=1)
 
@@ -986,6 +988,11 @@ class Impyter:
                             y_train = y_train.ravel()  # turn 1d array back into matching format
                     model.fit(X_train, y_train)
                     scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
+
+                    store_models.append(model)
+                    store_scores.append(scores)
+                    store_scoring.append(scoring)
+
                     if verbose:
                         print "Label: {} \t Fitting {} \t Avg score: {:.3f} ({})".format(
                             col,
@@ -1001,6 +1008,15 @@ class Impyter:
                         result_data.at[idx, col] = to_append[pointer]
 
                     print to_append[:2]
+                    store_estimator_names.append(model.__class__.__name__)
+
+                self.model_log[pattern_no] = ImpyterModel(
+                    estimator_name=store_estimator_names,
+                    model=store_models,
+                    pattern_no=pattern_no,
+                    feature_name=multi_nan_columns,
+                    accuracy=store_scores,
+                    scoring=store_scoring)
         self.result = result_data
 
         return result_data
