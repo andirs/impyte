@@ -499,17 +499,21 @@ class Pattern:
         Returns all pattern indices of single nans
         :return: 
         """
-        tmp = self.get_pattern().drop('Count', axis=1)
-        tmp[tmp == 'NaN'] = 0
-        tmp = 10 - tmp.sum(axis=1)
-        tmp = tmp[tmp == 1]
-        return tmp.index
+        return self.get_multi_nan_pattern_nos(multi=False)
 
-    def get_multi_nan_pattern_nos(self):
+    def get_multi_nan_pattern_nos(self, multi=True):
+        """
+        Returns all pattern indices of multi-nans or single-nans
+        :return: 
+        """
+        # TODO: More beautiful way of refactoring with get_single_nan_pattern_nos
         tmp = self.get_pattern().drop('Count', axis=1)
-        tmp[tmp == 'NaN'] = 0
-        tmp = 10 - tmp.sum(axis=1)
-        tmp = tmp[tmp > 1]
+        tmp.replace('NaN', 0, inplace=True)
+        tmp = len(tmp.columns) - tmp.sum(axis=1)
+        if multi:
+            tmp = tmp[tmp > 1]
+        else:
+            tmp = tmp[tmp == 1]
         return tmp.index
 
     def get_pattern_indices(self, pattern_no):
@@ -704,12 +708,14 @@ class Impyter:
         else:
             raise ValueError("Need to impute values first.")
 
-    def get_missing_summary(self, importance_filter=False):
+    def get_missing_summary(self, importance_filter=True):
         """
         Shows simple overview of missing values.
         :param importance_filter: Show only features with at least one missing value.
         :return: pd.DataFrame
         """
+        if not self.pattern_log.pattern_store_temp:
+            self.pattern()
         return self.pattern_log._get_missing_value_percentage(self.data, importance_filter)
 
     def get_model(self, model_no):
@@ -817,11 +823,26 @@ class Impyter:
             print name
         joblib.dump(self.model_log, name)
 
+    def ensemble(self, estimator_list=["rf", "dt"]):
+        """
+        Exhaustive search for best estimator to predict a certain feature. 
+        Work in progress and beta method. Needs further work on summaries and plotting.
+        :return: 
+        """
+
+        imp = Impyter()
+        imp.load_data(self.data.copy())
+        # ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
+        if not estimator_list:
+            estimator_list = ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
+        for estimator in estimator_list:
+            _ = self.impute(estimator=estimator)
+
     def impute(self,
                data=None,
                cv=5,
                verbose=True,
-               classifier='rf',
+               estimator='rf',
                multi_nans=False,
                one_hot_encode=True,
                auto_scale=True,
@@ -852,7 +873,7 @@ class Impyter:
             raise ValueError('Input data has wrong format. pd.DataFrame expected.')
 
         # print accuracy:
-        print "{:<30}{:<30}{:<30}".format("Accuracy Level", "Classification", "Regression")
+        print "{:<30}{:<30}{:<30}".format("Scoring Threshold", "Classification", "Regression")
         print "=" * 90
         print "{:<30}{:<30}{:<30}".format("", accuracy[0], accuracy[1])
         print ""
@@ -863,29 +884,29 @@ class Impyter:
         print "=" * 90
 
         # Decide which classifier to use and initialize
-        if classifier is not None:
-            if classifier == 'rf':
+        if estimator is not None:
+            if estimator == 'rf':
                 self.clf["Regression"] = RandomForestRegressor()
                 self.clf["Classification"] = RandomForestClassifier()
-            elif classifier == 'bayes':
+            elif estimator == 'bayes':
                 self.clf["Regression"] = BayesianRidge()
                 self.clf["Classification"] = GaussianNB()
-            elif classifier == 'dt':
+            elif estimator == 'dt':
                 self.clf["Regression"] = DecisionTreeRegressor()
                 self.clf["Classification"] = DecisionTreeClassifier()
-            elif classifier == 'gb':
+            elif estimator == 'gb':
                 self.clf["Regression"] = GradientBoostingRegressor()
                 self.clf["Classification"] = GradientBoostingClassifier()
-            elif classifier == 'knn':
+            elif estimator == 'knn':
                 self.clf["Regression"] = KNeighborsRegressor()
                 self.clf["Classification"] = KNeighborsClassifier()
-            elif classifier == 'mlp':
+            elif estimator == 'mlp':
                 self.clf["Regression"] = MLPRegressor()
                 self.clf["Classification"] = MLPClassifier()
-            elif classifier == 'sgd':
+            elif estimator == 'sgd':
                 self.clf["Regression"] = SGDRegressor()
                 self.clf["Classification"] = SGDClassifier()
-            elif classifier == 'svm':
+            elif estimator == 'svm':
                 self.clf["Regression"] = SVR()
                 self.clf["Classification"] = SVC()
             else:
@@ -949,7 +970,7 @@ class Impyter:
                 if verbose:
                     score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
                     col_temp = "{}: {}".format(pattern, col_name)
-                    verbose_string += "{:<30}{:<30} {:<30} ".format(
+                    verbose_string += "{:<30}{:<30}{:<30} ".format(
                         col_temp,
                         score_temp,
                         model.__class__.__name__)
@@ -991,8 +1012,18 @@ class Impyter:
                 for col in multi_nan_columns:
                     # Message for verbose output
                     verbose_string = ""
-
-                    model = clone(self.column_to_model[col].get_model()[0])  # get model
+                    if col in self.column_to_model:
+                        model = clone(self.column_to_model[col].get_model()[0])  # get model
+                    else:
+                        # Select appropriate estimator
+                        if col in self.pattern_log.get_continuous():
+                            # use regressor
+                            scoring = "r2"
+                            model = self.clf["Regression"]
+                        else:
+                            # use classifier
+                            scoring = "f1_macro"
+                            model = self.clf["Classification"]
 
                     X_train = complete_cases.drop(multi_nan_columns, axis=1)
                     if one_hot_encode:
@@ -1020,7 +1051,14 @@ class Impyter:
                     else:
                         tmp_accuracy_cutoff = accuracy[1]  # get classification accuracy
                     model.fit(X_train, y_train)
-                    scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
+                    try:
+                        scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
+                    except ValueError as e:
+                        # in case of split error, cross_val_score won't give a proper result
+                        # determine scores as 0 for f1 and r2 because there is too few information
+                        # to return proper scoring results
+                        if "All the n_groups for individual classes are less than" in e:
+                            scores = [0., 0., 0., 0., 0.]
 
                     store_models.append(model)
                     store_scores.append(scores)
@@ -1029,7 +1067,7 @@ class Impyter:
                     if verbose:
                         score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
                         col_temp = "{}: {}".format(pattern_no, col)
-                        verbose_string += "{:<30}{:<30} {:<30} ".format(
+                        verbose_string += "{:<30}{:<30}{:<30} ".format(
                             col_temp,
                             score_temp,
                             model.__class__.__name__)
