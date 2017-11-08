@@ -852,9 +852,12 @@ class Impyter:
             raise ValueError('Input data has wrong format. pd.DataFrame expected.')
 
         # print accuracy:
-        print "Min accuracy \t Classification: {} \t Regression: {}".format(accuracy[0], accuracy[1])
-        print "{:<30}{:<30} {:<30} ".format(
-                        "Label",
+        print "{:<30}{:<30}{:<30}".format("Accuracy Level", "Classification", "Regression")
+        print "=" * 90
+        print "{:<30}{:<30}{:<30}".format("", accuracy[0], accuracy[1])
+        print ""
+        print "{:<30}{:<30}{:<30}".format(
+                        "Pattern: Label",
                         "Score",
                         "Estimator")
         print "=" * 90
@@ -945,11 +948,11 @@ class Impyter:
                 scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
                 if verbose:
                     score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
+                    col_temp = "{}: {}".format(pattern, col_name)
                     verbose_string += "{:<30}{:<30} {:<30} ".format(
-                        col_name,
+                        col_temp,
                         score_temp,
-                        model.__class__.__name__
-                        )
+                        model.__class__.__name__)
                 to_append = model.predict(X_test)
                 if regressor and auto_scale:
                     to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
@@ -975,16 +978,20 @@ class Impyter:
         # Multi-Nan
         multi_nan_patterns = self.pattern_log.get_multi_nan_pattern_nos()
         if multi_nans and not multi_nan_patterns.empty:
-            print "Multi nans\n"
+            print ""
+            print "Multi nans"
+            print "=" * 90
             for pattern_no in multi_nan_patterns:
                 store_models = []
                 store_scores = []
                 store_scoring = []
                 store_estimator_names = []
 
-                print pattern_no, self.pattern_log.get_column_name(pattern_no)
                 multi_nan_columns = self.pattern_log.get_column_name(pattern_no)
                 for col in multi_nan_columns:
+                    # Message for verbose output
+                    verbose_string = ""
+
                     model = clone(self.column_to_model[col].get_model()[0])  # get model
 
                     X_train = complete_cases.drop(multi_nan_columns, axis=1)
@@ -1020,23 +1027,28 @@ class Impyter:
                     store_scoring.append(scoring)
 
                     if verbose:
-                        print "Label: {} \t Fitting {} \t Avg score: {:.3f} ({})".format(
-                            col,
-                            model.__class__.__name__,
-                            (sum(scores) / float(len(scores))),
-                            scoring)
+                        score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
+                        col_temp = "{}: {}".format(pattern_no, col)
+                        verbose_string += "{:<30}{:<30} {:<30} ".format(
+                            col_temp,
+                            score_temp,
+                            model.__class__.__name__)
                     to_append = model.predict(X_test)
                     if col in self.pattern_log.get_continuous() and auto_scale:
                         to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
 
                     indices = self.pattern_log.get_pattern_indices(pattern_no)
                     if not tmp_accuracy_cutoff or tmp_accuracy_cutoff <= np.mean(scores):
-                        print "Appending {} \t (Accuracy cutoff: {})".format(col_name, tmp_accuracy_cutoff)
+                        verbose_string += " filled..."
                         for pointer, idx in enumerate(indices):
-                            result_data.at[idx, col_name] = to_append[pointer]
+                            result_data.at[idx, col] = to_append[pointer]
+                    else:
+                        verbose_string += " dropped..."
 
-                    print to_append[:2]
                     store_estimator_names.append(model.__class__.__name__)
+
+                    if verbose:
+                        print verbose_string
 
                 self.model_log[pattern_no] = ImpyterModel(
                     estimator_name=store_estimator_names,
@@ -1045,6 +1057,7 @@ class Impyter:
                     feature_name=multi_nan_columns,
                     accuracy=store_scores,
                     scoring=store_scoring)
+
         self.result = result_data
 
         return result_data
