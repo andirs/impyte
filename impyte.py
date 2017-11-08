@@ -25,6 +25,16 @@ class NanChecker:
     """
     Class that checks data set, lists or single
     values for NaN occurrence. 
+    
+    Examples
+    ----------
+    Testing list for NaN values
+    
+    >>> nan_array = ["Test", None, '', 23, [None, "42"]]
+    >>> nan_checker = impyte.NanChecker()
+    >>> print nan_checker.is_nan(nan_array)
+    
+    [False, True, True, False, [True, False]]
     """
     @staticmethod
     def is_nan(data,
@@ -603,14 +613,6 @@ class Impyter:
     2  5  7  2  1
     3  9  7  5  3
     
-    Testing list for NaN values
-    
-    >>> nan_array = ["Test", None, '', 23, [None, "42"]]
-    >>> imputer = Impyter()
-    >>> print imputer.is_nan(nan_array)
-    
-    [False, True, True, False, [True, False]]
-    
     """
 
     def __init__(self, data=None):
@@ -823,29 +825,39 @@ class Impyter:
                multi_nans=False,
                one_hot_encode=True,
                auto_scale=True,
-               recursive=False):
+               recursive=False,
+               accuracy=[None, None]):
         """
         data: data to be imputed
         cv: Amount of cross-validation runs.
         verbose: Boolean value, whether prediction results should be printed out.
-        classifier: 'rf: Random Forest', 
-                    'svr: Support Vector Regression', 
+        estimator:  'rf: Random Forest', 
+                    'svm: Support Vector Machine', 
                     'sgd: Stochastic Gradient Descent'
-                    'knn: KNearest Neighbor Regressor'
-                    'bayes: Bayesian Ridge Regressor',
-                    'dt: Decision Tree Regressor',
-                    'gbr: Gradient Boosting Regressor',
-                    'mlp: Multi-layer Perceptron Regressor (neural network)'
+                    'knn: KNearest Neighbor'
+                    'bayes: (Naive) Bayes',
+                    'dt: Decision Tree',
+                    'gb: Gradient Boosting',
+                    'mlp: Multi-layer Perceptron (neural network)'
         multi_nans: Boolean indicator if data points with multiple NaN values should be imputed as well
         one_hoe_encode: Boolean - if set to True one-hot-encoding of categorical variables happens
         auto_scale: Boolean - if set to True continuous variables are automatically scaled 
                     and transformed back after imputation.
         recursive: Boolean - if set to True predicted values are being used to further train and predict multi-nans
+        accuracy: list - classification and regression accuracy cut-offs. At this point f1 score and R2.
         """
         if data is None:
             data = self.data
         if not isinstance(data, pd.DataFrame):
             raise ValueError('Input data has wrong format. pd.DataFrame expected.')
+
+        # print accuracy:
+        print "Min accuracy \t Classification: {} \t Regression: {}".format(accuracy[0], accuracy[1])
+        print "{:<30}{:<30} {:<30} ".format(
+                        "Label",
+                        "Score",
+                        "Estimator")
+        print "=" * 90
 
         # Decide which classifier to use and initialize
         if classifier is not None:
@@ -858,7 +870,7 @@ class Impyter:
             elif classifier == 'dt':
                 self.clf["Regression"] = DecisionTreeRegressor()
                 self.clf["Classification"] = DecisionTreeClassifier()
-            elif classifier == 'gbr':
+            elif classifier == 'gb':
                 self.clf["Regression"] = GradientBoostingRegressor()
                 self.clf["Classification"] = GradientBoostingClassifier()
             elif classifier == 'knn':
@@ -870,7 +882,7 @@ class Impyter:
             elif classifier == 'sgd':
                 self.clf["Regression"] = SGDRegressor()
                 self.clf["Classification"] = SGDClassifier()
-            elif classifier == 'svr':
+            elif classifier == 'svm':
                 self.clf["Regression"] = SVR()
                 self.clf["Classification"] = SVC()
             else:
@@ -885,6 +897,8 @@ class Impyter:
 
         # impute single nan patterns
         for pattern in self.pattern_log.get_single_nan_pattern_nos():
+            # Message for verbose output
+            verbose_string = ""
             # filter out complete cases
             if complete_idx != pattern:
                 # regressor flag
@@ -919,20 +933,23 @@ class Impyter:
                         y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1))  # scale continuous
                         y_train = y_train.ravel() # turn 1d array back into matching format
                     model = self.clf["Regression"]
+                    tmp_accuracy_cutoff = accuracy[1]  # for regression
                 else:
                     # use classifier
                     scoring = "f1_macro"
                     model = self.clf["Classification"]
+                    tmp_accuracy_cutoff = accuracy[0]  # for classification
 
                 # This is where the imputation happens
                 model.fit(X_train, y_train)
                 scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
                 if verbose:
-                    print "Label: {} \t Fitting {} \t Avg score: {:.3f} ({})".format(
+                    score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
+                    verbose_string += "{:<30}{:<30} {:<30} ".format(
                         col_name,
-                        model.__class__.__name__,
-                        (sum(scores) / float(len(scores))),
-                        scoring)
+                        score_temp,
+                        model.__class__.__name__
+                        )
                 to_append = model.predict(X_test)
                 if regressor and auto_scale:
                     to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
@@ -944,10 +961,16 @@ class Impyter:
                     accuracy=[scores],
                     scoring=[scoring])
                 indices = self.pattern_log.get_pattern_indices(pattern)
-                for pointer, idx in enumerate(indices):
-                    result_data.at[idx, col_name] = to_append[pointer]
+                if not tmp_accuracy_cutoff or tmp_accuracy_cutoff <= np.mean(scores):
+                    verbose_string += " filled..."
+                    for pointer, idx in enumerate(indices):
+                        result_data.at[idx, col_name] = to_append[pointer]
+                else:
+                    verbose_string += " dropped..."
                 if col_name not in self.column_to_model:
                     self.column_to_model[col_name] = self.model_log[pattern]
+                if verbose:
+                    print verbose_string
 
         # Multi-Nan
         multi_nan_patterns = self.pattern_log.get_multi_nan_pattern_nos()
@@ -983,9 +1006,12 @@ class Impyter:
                         X_test = X_scaler.fit_transform(X_test)
 
                     if col in self.pattern_log.get_continuous():
+                        tmp_accuracy_cutoff = accuracy[1]  # get regression accuracy
                         if auto_scale:
                             y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1))  # scale continuous
                             y_train = y_train.ravel()  # turn 1d array back into matching format
+                    else:
+                        tmp_accuracy_cutoff = accuracy[1]  # get classification accuracy
                     model.fit(X_train, y_train)
                     scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
 
@@ -1004,8 +1030,10 @@ class Impyter:
                         to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
 
                     indices = self.pattern_log.get_pattern_indices(pattern_no)
-                    for pointer, idx in enumerate(indices):
-                        result_data.at[idx, col] = to_append[pointer]
+                    if not tmp_accuracy_cutoff or tmp_accuracy_cutoff <= np.mean(scores):
+                        print "Appending {} \t (Accuracy cutoff: {})".format(col_name, tmp_accuracy_cutoff)
+                        for pointer, idx in enumerate(indices):
+                            result_data.at[idx, col_name] = to_append[pointer]
 
                     print to_append[:2]
                     store_estimator_names.append(model.__class__.__name__)
