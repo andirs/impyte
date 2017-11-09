@@ -20,9 +20,6 @@ from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.base import clone
 
-pd.options.display.max_columns = 500
-pd.options.display.max_rows = 500
-
 
 class NanChecker:
     """
@@ -640,21 +637,34 @@ class Impyter:
             return str(self.data)
 
     @staticmethod
+    def _set_display_options(length, cols=True):
+        if cols:
+            pd.set_option("display.max_columns", length)
+        else:
+            pd.set_option("display.max_rows", length)
+
+    @staticmethod
+    def _get_display_options(cols=True):
+        if cols:
+            return pd.get_option("display.max_columns")
+        else:
+            return pd.get_option("display.max_rows")
+
+    @staticmethod
     def _data_check(data):
         """
         Checks if data is pandas DataFrame. Otherwise the data will be transformed.
         """
         # perform instance check on data if available in constructor
-        if isinstance(data, pd.DataFrame):
-            return data
-        # if data is not a DataFrame, try turning it into one
-        else:
+        if not isinstance(data, pd.DataFrame):
+            # if data is not a DataFrame, try turning it into one
             try:
                 return_data = pd.DataFrame(data)
                 return return_data
             except ValueError as e:
                 print "Value Error: {}".format(e)
                 return pd.DataFrame()
+        return data
 
     def load_data(self, data):
         """
@@ -670,8 +680,8 @@ class Impyter:
             data = self._data_check(data)
 
         self.data = data.copy()
+
         self.pattern_log = Pattern()
-        #return data
 
     def pattern(self):
         """
@@ -680,7 +690,12 @@ class Impyter:
         if self.data.empty:
             raise ValueError("Error: Load data first.")
         else:
-            return self.pattern_log.get_pattern(self.data)
+            return_table = self.pattern_log.get_pattern(self.data)
+            if len(return_table.columns) > Impyter._get_display_options():
+                Impyter._set_display_options(len(return_table.columns))
+            if len(return_table) > Impyter._get_display_options(False):  # check if too many rows to display
+                Impyter._set_display_options(len(return_table), False)
+        return return_table
 
     def get_pattern_column_name(self, pattern_no):
         tmp = self.pattern()
@@ -931,19 +946,19 @@ class Impyter:
                 # regressor flag
                 regressor = False
 
-                X_train = complete_cases.drop(self.pattern_log.get_column_name(pattern), axis=1)
-                if one_hot_encode:
-                    X_train = self.one_hot_encode(X_train)
-
                 col_name = self.pattern_log.get_column_name(pattern)[0]
-                y_train = complete_cases[col_name]
 
                 # Get data of pattern for prediction
+                X_train = complete_cases.drop(col_name, axis=1)
                 X_test = self.get_pattern(pattern).drop(col_name, axis=1)
 
                 # Pre-processing of data
                 if one_hot_encode:
+                    X_train = self.one_hot_encode(X_train)
                     X_test = self.one_hot_encode(X_test)
+
+                y_train = complete_cases[col_name]
+
                 if auto_scale:
                     # Scaling for ml pre-processing X_train
                     X_scaler = StandardScaler()
@@ -975,8 +990,12 @@ class Impyter:
                 try:
                     scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
                 except ValueError as e:
+                    print e
+                    scores = [0.] * cv
                     if "All the n_groups for individual classes are less than" in e:
+                        print "True"
                         scores = [0.] * cv
+
                 if verbose:
                     score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
                     col_temp = "{}: {}".format(pattern, col_name)
@@ -984,6 +1003,8 @@ class Impyter:
                         col_temp,
                         score_temp,
                         model.__class__.__name__)
+                print X_test[:1]
+                print X_train[:1]
                 to_append = model.predict(X_test)
                 if regressor and auto_scale:
                     to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
