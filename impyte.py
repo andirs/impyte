@@ -20,6 +20,9 @@ from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.base import clone
 
+pd.options.display.max_columns = 500
+pd.options.display.max_rows = 500
+
 
 class NanChecker:
     """
@@ -965,8 +968,15 @@ class Impyter:
                     tmp_accuracy_cutoff = accuracy[0]  # for classification
 
                 # This is where the imputation happens
-                model.fit(X_train, y_train)
-                scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
+                try:
+                    model.fit(X_train, y_train)
+                except ValueError as e:
+                    print "next"
+                try:
+                    scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
+                except ValueError as e:
+                    if "All the n_groups for individual classes are less than" in e:
+                        scores = [0.] * cv
                 if verbose:
                     score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
                     col_temp = "{}: {}".format(pattern, col_name)
@@ -1058,7 +1068,7 @@ class Impyter:
                         # determine scores as 0 for f1 and r2 because there is too few information
                         # to return proper scoring results
                         if "All the n_groups for individual classes are less than" in e:
-                            scores = [0., 0., 0., 0., 0.]
+                            scores = [0.] * cv
 
                     store_models.append(model)
                     store_scores.append(scores)
