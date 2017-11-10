@@ -426,6 +426,8 @@ class Pattern:
         Returns all ids that are complete.
         :return: list - indices of complete cases
         """
+        if not self.complete_idx:
+            self.get_complete_indices()
         return self.complete_idx
 
     def get_column_name(self, patter_no):
@@ -934,8 +936,9 @@ class Impyter:
         # TODO: Error handling: If data has no pattern yet, simply compute it
 
         # Get complete cases
-        complete_cases = self.data[self.data.index.isin(self.pattern_log.get_complete_indices())]
+        # complete_cases = self.data[self.data.index.isin(self.pattern_log.get_complete_indices())]
         complete_idx = self.pattern_log.get_complete_id()
+        complete_cases = self.get_pattern(complete_idx)
 
         # impute single nan patterns
         for pattern in self.pattern_log.get_single_nan_pattern_nos():
@@ -954,8 +957,14 @@ class Impyter:
 
                 # Pre-processing of data
                 if one_hot_encode:
-                    X_train = self.one_hot_encode(X_train)
-                    X_test = self.one_hot_encode(X_test)
+                    test = X_train.append(X_test)
+                    test = self.one_hot_encode(test)
+                    X_train = test[test.index.isin(X_train.index)]
+                    X_test = test[test.index.isin(X_test.index)]
+
+                #print "NEW X: ", test.shape
+                #print "X_train: ", X_train.shape
+                #print "X_test: ", X_test.shape
 
                 y_train = complete_cases[col_name]
 
@@ -1003,8 +1012,7 @@ class Impyter:
                         col_temp,
                         score_temp,
                         model.__class__.__name__)
-                print X_test[:1]
-                print X_train[:1]
+
                 to_append = model.predict(X_test)
                 if regressor and auto_scale:
                     to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
@@ -1057,17 +1065,18 @@ class Impyter:
                             model = self.clf["Classification"]
 
                     X_train = complete_cases.drop(multi_nan_columns, axis=1)
-                    if one_hot_encode:
-                        X_train = self.one_hot_encode(X_train)
-
-                    y_train = complete_cases[col]
                     # retrain model
                     # Get data of pattern for prediction
                     X_test = self.get_pattern(pattern_no).drop(multi_nan_columns, axis=1)
 
-                    # Pre-processing of data
                     if one_hot_encode:
-                        X_test = self.one_hot_encode(X_test)
+                        test = X_train.append(X_test)
+                        test = self.one_hot_encode(test)
+                        X_train = test[test.index.isin(X_train.index)]
+                        X_test = test[test.index.isin(X_test.index)]
+
+                    y_train = complete_cases[col]
+
                     if auto_scale:
                         # Scaling for ml pre-processing X_train
                         X_scaler = StandardScaler()
