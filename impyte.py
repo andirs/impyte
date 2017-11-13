@@ -6,6 +6,7 @@ author: Andreas Rubin-Schwarz
 import math
 import numpy as np
 import pandas as pd
+#import warnings
 from datetime import date
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, \
@@ -20,6 +21,7 @@ from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.base import clone
 
+#warnings.filterwarnings("error")
 
 class NanChecker:
     """
@@ -269,8 +271,6 @@ class Pattern:
         tuple_counter_dict = {}
 
         # Iterate over every row
-        # TODO: Work with apply and row_nan_pattern function
-
         for row_idx, row in data.iterrows():
             tmp_label = []
             for idx, value in enumerate(row):
@@ -890,10 +890,15 @@ class Impyter:
         if not isinstance(data, pd.DataFrame):
             raise ValueError('Input data has wrong format. pd.DataFrame expected.')
 
+        # If data has no pattern yet, simply compute it
+        if not self.pattern_log.pattern_store_temp:
+            print "Computing NaN-patterns first ...\n"
+            self.pattern()
+
         # print accuracy:
         print "{:<30}{:<30}{:<30}".format("Scoring Threshold", "Classification", "Regression")
         print "=" * 90
-        print "{:<30}{:<30}{:<30}".format("", accuracy[0], accuracy[1])
+        print "{:<30}{:<30}{:<30}".format("", str(accuracy[0]), str(accuracy[1]))
         print ""
         print "{:<30}{:<30}{:<30}".format(
                         "Pattern: Label",
@@ -931,17 +936,19 @@ class Impyter:
                 raise ValueError('Classifier unknown')
         result_data = self.data.copy()
 
-        # TODO: Error handling: If data has no pattern yet, simply compute it
-
         # Get complete cases
         # complete_cases = self.data[self.data.index.isin(self.pattern_log.get_complete_indices())]
         complete_idx = self.pattern_log.get_complete_id()
         complete_cases = self.get_pattern(complete_idx)
 
+        # error string
+        error_string = ""
+
         # impute single nan patterns
         for pattern in self.pattern_log.get_single_nan_pattern_nos():
             # Message for verbose output
             verbose_string = ""
+            tmp_error_string = ""
             # filter out complete cases
             if complete_idx != pattern:
                 # regressor flag
@@ -959,10 +966,6 @@ class Impyter:
                     test = self.one_hot_encode(test)
                     X_train = test[test.index.isin(X_train.index)]
                     X_test = test[test.index.isin(X_test.index)]
-
-                #print "NEW X: ", test.shape
-                #print "X_train: ", X_train.shape
-                #print "X_test: ", X_test.shape
 
                 y_train = complete_cases[col_name]
 
@@ -990,14 +993,14 @@ class Impyter:
                     tmp_accuracy_cutoff = accuracy[0]  # for classification
 
                 # This is where the imputation happens
-                try:
-                    model.fit(X_train, y_train)
-                except ValueError as e:
-                    print "next"
+
+                model.fit(X_train, y_train)
+
                 try:
                     scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
-                except ValueError as e:
-                    print e
+                except (ValueError, Warning) as e:
+                    tmp_error_string = "* " + col_name + ": " + str(e)
+                    error_string += tmp_error_string + "\n"
                     scores = [0.] * cv
                     if "All the n_groups for individual classes are less than" in e:
                         print "True"
@@ -1006,6 +1009,9 @@ class Impyter:
                 if verbose:
                     score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
                     col_temp = "{}: {}".format(pattern, col_name)
+                    if tmp_error_string:
+                        col_temp += " (*)"
+
                     verbose_string += "{:<30}{:<30}{:<30} ".format(
                         col_temp,
                         score_temp,
@@ -1047,6 +1053,7 @@ class Impyter:
 
                 multi_nan_columns = self.pattern_log.get_column_name(pattern_no)
                 for col in multi_nan_columns:
+                    tmp_error_string = ""
                     # Message for verbose output
                     verbose_string = ""
                     if col in self.column_to_model:
@@ -1091,10 +1098,13 @@ class Impyter:
                     model.fit(X_train, y_train)
                     try:
                         scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
-                    except ValueError as e:
+                    except (ValueError, Warning) as e:
                         # in case of split error, cross_val_score won't give a proper result
                         # determine scores as 0 for f1 and r2 because there is too few information
                         # to return proper scoring results
+                        tmp_error_string = "* " + col + ": " + str(e)
+                        error_string += tmp_error_string + "\n"
+                        scores = [0.] * cv
                         if "All the n_groups for individual classes are less than" in e:
                             scores = [0.] * cv
 
@@ -1105,6 +1115,8 @@ class Impyter:
                     if verbose:
                         score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
                         col_temp = "{}: {}".format(pattern_no, col)
+                        if tmp_error_string:
+                            col_temp += " (*)"
                         verbose_string += "{:<30}{:<30}{:<30} ".format(
                             col_temp,
                             score_temp,
@@ -1133,6 +1145,11 @@ class Impyter:
                     feature_name=multi_nan_columns,
                     accuracy=store_scores,
                     scoring=store_scoring)
+
+        # print error categories
+        if verbose and error_string:
+            print "\n"
+            print error_string
 
         self.result = result_data
 
