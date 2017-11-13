@@ -153,7 +153,7 @@ class Pattern:
             return int(row.name)
         return -1
 
-    def _compute_pattern(self, data, nan_values="", verbose=False, unique_instances=10):
+    def _compute_pattern(self, data, nan_values="", unique_instances=10):
         """
         Function that checks for missing values and prints out 
         a quick table of a summary of missing values.
@@ -270,7 +270,6 @@ class Pattern:
 
         # Iterate over every row
         # TODO: Work with apply and row_nan_pattern function
-        #data.apply(self.row_nan_pattern)
 
         for row_idx, row in data.iterrows():
             tmp_label = []
@@ -482,6 +481,7 @@ class Pattern:
         Parameters
         ----------
         data: pd.DataFrame
+        unique_instances: int - determines how many unique values are needed to count as continuous variable
         
         Returns
         -------
@@ -866,7 +866,6 @@ class Impyter:
                multi_nans=False,
                one_hot_encode=True,
                auto_scale=True,
-               recursive=False,
                accuracy=[None, None]):
         """
         data: data to be imputed
@@ -884,7 +883,6 @@ class Impyter:
         one_hoe_encode: Boolean - if set to True one-hot-encoding of categorical variables happens
         auto_scale: Boolean - if set to True continuous variables are automatically scaled 
                     and transformed back after imputation.
-        recursive: Boolean - if set to True predicted values are being used to further train and predict multi-nans
         accuracy: list - classification and regression accuracy cut-offs. At this point f1 score and R2.
         """
         if data is None:
@@ -1154,12 +1152,24 @@ class ImpyterModel:
         self.scoring = scoring
 
     def set_model(self, model):
+        """
+        Setter method to update machine learning model.
+        :param model: Machine Learning model
+        """
         self.model = model
 
-    def set_pattern(self, pattern):
-        self.pattern = pattern
+    def set_pattern(self, pattern_no):
+        """
+        Setter method, updating pattern_no
+        :param pattern_no: int  
+        """
+        self.pattern_no = pattern_no
 
     def set_feature_name(self, feature_name):
+        """
+        Setter mtehod, updates feature names
+        :param feature_name: 
+        """
         self.feature_name = feature_name
 
     def set_accuracy(self, accuracy):
