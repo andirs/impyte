@@ -779,7 +779,7 @@ class Impyter:
         except IOError as e:
             print "File not found: {}".format(e)
 
-    def one_hot_encode(self, data):
+    def one_hot_encode(self, data, verbose=False):
         """
         Uses pandas get_dummies method to return a one-hot-encoded
         DataFrame.
@@ -791,6 +791,8 @@ class Impyter:
         for col, col_data in data.iteritems():
             # If data type is categorical, convert to dummy variables
             if col_data.dtype == object:
+                if verbose > 3:
+                    print "Getting dummies for {} (Unique: {})".format(col, len(data[col].unique()))
                 col_data = pd.get_dummies(col_data, prefix=col + "_ohe")
 
             # Collect the revised columns
@@ -962,8 +964,10 @@ class Impyter:
 
                 # Pre-processing of data
                 if one_hot_encode:
+                    if verbose > 3:
+                        print "One-hot encoding for {}...".format(col_name)
                     test = X_train.append(X_test)
-                    test = self.one_hot_encode(test)
+                    test = self.one_hot_encode(test, verbose)
                     X_train = test[test.index.isin(X_train.index)]
                     X_test = test[test.index.isin(X_test.index)]
 
@@ -993,6 +997,8 @@ class Impyter:
                     tmp_accuracy_cutoff = accuracy[0]  # for classification
 
                 # This is where the imputation happens
+                if verbose > 3:
+                    print "Starting imputation {}...".format(col_name)
 
                 model.fit(X_train, y_train)
 
@@ -1076,7 +1082,7 @@ class Impyter:
 
                     if one_hot_encode:
                         test = X_train.append(X_test)
-                        test = self.one_hot_encode(test)
+                        test = self.one_hot_encode(test, verbose)
                         X_train = test[test.index.isin(X_train.index)]
                         X_test = test[test.index.isin(X_test.index)]
 
@@ -1099,14 +1105,17 @@ class Impyter:
                     try:
                         scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
                     except (ValueError, Warning) as e:
+                        # ValueError:
                         # in case of split error, cross_val_score won't give a proper result
                         # determine scores as 0 for f1 and r2 because there is too few information
                         # to return proper scoring results
+                        # Warning:
+                        # All warnings are treated as Errors as well.
+                        # If caught in this step the Error messages are
+                        # collected and the predicted feature is being marked
                         tmp_error_string = "* " + col + ": " + str(e)
                         error_string += tmp_error_string + "\n"
                         scores = [0.] * cv
-                        if "All the n_groups for individual classes are less than" in e:
-                            scores = [0.] * cv
 
                     store_models.append(model)
                     store_scores.append(scores)
