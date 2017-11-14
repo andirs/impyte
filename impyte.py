@@ -6,7 +6,7 @@ author: Andreas Rubin-Schwarz
 import math
 import numpy as np
 import pandas as pd
-#import warnings
+import warnings
 from datetime import date
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, \
@@ -21,7 +21,7 @@ from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.base import clone
 
-#warnings.filterwarnings("error")
+warnings.filterwarnings("error")
 
 class NanChecker:
     """
@@ -860,6 +860,31 @@ class Impyter:
         for estimator in estimator_list:
             _ = self.impute(estimator=estimator)
 
+    @staticmethod
+    def _print_header(threshold):
+        # print threshold:
+        print "{:<30}{:<30}{:<30}".format("Scoring Threshold", "Classification", "Regression")
+        print "=" * 90
+        print "{:<30}{:<30}{:<30}".format("", str(threshold[0]), str(threshold[1]))
+        print ""
+        print "{:<30}{:<30}{:<30}".format(
+            "Pattern: Label",
+            "Score",
+            "Estimator")
+        print "=" * 90
+
+    @staticmethod
+    def _print_results_line(scores, scoring, pattern, col_name, tmp_error_string, model):
+        score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
+        col_temp = "{}: {}".format(pattern, col_name)
+        if tmp_error_string:
+            col_temp += " (*)"
+
+        return "{:<30}{:<30}{:<30} ".format(
+            col_temp,
+            score_temp,
+            model.__class__.__name__)
+
     def impute(self,
                data=None,
                cv=5,
@@ -868,7 +893,7 @@ class Impyter:
                multi_nans=False,
                one_hot_encode=True,
                auto_scale=True,
-               accuracy=[None, None]):
+               threshold=[None, None]):
         """
         data: data to be imputed
         cv: Amount of cross-validation runs.
@@ -885,7 +910,7 @@ class Impyter:
         one_hoe_encode: Boolean - if set to True one-hot-encoding of categorical variables happens
         auto_scale: Boolean - if set to True continuous variables are automatically scaled 
                     and transformed back after imputation.
-        accuracy: list - classification and regression accuracy cut-offs. At this point f1 score and R2.
+        threshold: list - classification and regression threshold cut-offs. At this point f1 score and R2.
         """
         if data is None:
             data = self.data
@@ -897,16 +922,8 @@ class Impyter:
             print "Computing NaN-patterns first ...\n"
             self.pattern()
 
-        # print accuracy:
-        print "{:<30}{:<30}{:<30}".format("Scoring Threshold", "Classification", "Regression")
-        print "=" * 90
-        print "{:<30}{:<30}{:<30}".format("", str(accuracy[0]), str(accuracy[1]))
-        print ""
-        print "{:<30}{:<30}{:<30}".format(
-                        "Pattern: Label",
-                        "Score",
-                        "Estimator")
-        print "=" * 90
+        # print output header
+        self._print_header(threshold)
 
         # Decide which classifier to use and initialize
         if estimator is not None:
@@ -939,7 +956,6 @@ class Impyter:
         result_data = self.data.copy()
 
         # Get complete cases
-        # complete_cases = self.data[self.data.index.isin(self.pattern_log.get_complete_indices())]
         complete_idx = self.pattern_log.get_complete_id()
         complete_cases = self.get_pattern(complete_idx)
 
@@ -948,14 +964,12 @@ class Impyter:
 
         # impute single nan patterns
         for pattern in self.pattern_log.get_single_nan_pattern_nos():
-            # Message for verbose output
             verbose_string = ""
             tmp_error_string = ""
             # filter out complete cases
             if complete_idx != pattern:
                 # regressor flag
                 regressor = False
-
                 col_name = self.pattern_log.get_column_name(pattern)[0]
 
                 # Get data of pattern for prediction
@@ -973,8 +987,8 @@ class Impyter:
 
                 y_train = complete_cases[col_name]
 
+                # Scaling for ml pre-processing X_train
                 if auto_scale:
-                    # Scaling for ml pre-processing X_train
                     X_scaler = StandardScaler()
                     y_scaler = StandardScaler()
                     X_train = X_scaler.fit_transform(X_train)
@@ -987,14 +1001,14 @@ class Impyter:
                     scoring = "r2"
                     if auto_scale:
                         y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1))  # scale continuous
-                        y_train = y_train.ravel() # turn 1d array back into matching format
+                        y_train = y_train.ravel()  # turn 1d array back into matching format
                     model = self.clf["Regression"]
-                    tmp_accuracy_cutoff = accuracy[1]  # for regression
+                    tmp_threshold_cutoff = threshold[1]  # for regression
                 else:
                     # use classifier
                     scoring = "f1_macro"
                     model = self.clf["Classification"]
-                    tmp_accuracy_cutoff = accuracy[0]  # for classification
+                    tmp_threshold_cutoff = threshold[0]  # for classification
 
                 # This is where the imputation happens
                 if verbose > 3:
@@ -1008,20 +1022,11 @@ class Impyter:
                     tmp_error_string = "* " + col_name + ": " + str(e)
                     error_string += tmp_error_string + "\n"
                     scores = [0.] * cv
-                    if "All the n_groups for individual classes are less than" in e:
-                        print "True"
-                        scores = [0.] * cv
 
+                # prepare statement line for verbose printout
                 if verbose:
-                    score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
-                    col_temp = "{}: {}".format(pattern, col_name)
-                    if tmp_error_string:
-                        col_temp += " (*)"
-
-                    verbose_string += "{:<30}{:<30}{:<30} ".format(
-                        col_temp,
-                        score_temp,
-                        model.__class__.__name__)
+                    verbose_string = self._print_results_line(
+                        np.mean(scores), scoring, pattern, col_name, tmp_error_string, model)
 
                 to_append = model.predict(X_test)
                 if regressor and auto_scale:
@@ -1031,10 +1036,10 @@ class Impyter:
                     model=[model],
                     pattern_no=pattern,
                     feature_name=col_name,
-                    accuracy=[scores],
+                    threshold=[scores],
                     scoring=[scoring])
                 indices = self.pattern_log.get_pattern_indices(pattern)
-                if not tmp_accuracy_cutoff or tmp_accuracy_cutoff <= np.mean(scores):
+                if not tmp_threshold_cutoff or tmp_threshold_cutoff <= np.mean(scores):
                     verbose_string += " filled..."
                     for pointer, idx in enumerate(indices):
                         result_data.at[idx, col_name] = to_append[pointer]
@@ -1095,12 +1100,12 @@ class Impyter:
                         X_test = X_scaler.fit_transform(X_test)
 
                     if col in self.pattern_log.get_continuous():
-                        tmp_accuracy_cutoff = accuracy[1]  # get regression accuracy
+                        tmp_threshold_cutoff = threshold[1]  # get regression threshold
                         if auto_scale:
                             y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1))  # scale continuous
                             y_train = y_train.ravel()  # turn 1d array back into matching format
                     else:
-                        tmp_accuracy_cutoff = accuracy[1]  # get classification accuracy
+                        tmp_threshold_cutoff = threshold[1]  # get classification threshold
                     model.fit(X_train, y_train)
                     try:
                         scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
@@ -1122,20 +1127,14 @@ class Impyter:
                     store_scoring.append(scoring)
 
                     if verbose:
-                        score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
-                        col_temp = "{}: {}".format(pattern_no, col)
-                        if tmp_error_string:
-                            col_temp += " (*)"
-                        verbose_string += "{:<30}{:<30}{:<30} ".format(
-                            col_temp,
-                            score_temp,
-                            model.__class__.__name__)
+                        verbose_string = self._print_results_line(
+                            np.mean(scores), scoring, pattern_no, col, tmp_error_string, model)
                     to_append = model.predict(X_test)
                     if col in self.pattern_log.get_continuous() and auto_scale:
                         to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
 
                     indices = self.pattern_log.get_pattern_indices(pattern_no)
-                    if not tmp_accuracy_cutoff or tmp_accuracy_cutoff <= np.mean(scores):
+                    if not tmp_threshold_cutoff or tmp_threshold_cutoff <= np.mean(scores):
                         verbose_string += " filled..."
                         for pointer, idx in enumerate(indices):
                             result_data.at[idx, col] = to_append[pointer]
@@ -1152,7 +1151,7 @@ class Impyter:
                     model=store_models,
                     pattern_no=pattern_no,
                     feature_name=multi_nan_columns,
-                    accuracy=store_scores,
+                    threshold=store_scores,
                     scoring=store_scoring)
 
         # print error categories
@@ -1169,11 +1168,11 @@ class ImpyterModel:
     """
     Stores computed Impyter machine learning models.
     """
-    def __init__(self, estimator_name, model=None, pattern_no=None, feature_name=None, accuracy=None, scoring=None):
+    def __init__(self, estimator_name, model=None, pattern_no=None, feature_name=None, threshold=None, scoring=None):
         self.model = model
         self.pattern_no = pattern_no
         self.feature_name = feature_name
-        self.accuracy = accuracy
+        self.threshold = threshold
         self.estimator_name = estimator_name
         self.scoring = scoring
 
@@ -1198,8 +1197,8 @@ class ImpyterModel:
         """
         self.feature_name = feature_name
 
-    def set_accuracy(self, accuracy):
-        self.accuracy = accuracy
+    def set_threshold(self, threshold):
+        self.threshold = threshold
 
     def get_model(self):
         return self.model
@@ -1210,8 +1209,8 @@ class ImpyterModel:
     def get_feature_name(self):
         return self.feature_name
 
-    def get_accuracy(self):
-        return self.accuracy
+    def get_threshold(self):
+        return self.threshold
 
     def get_scoring(self):
         return self.scoring
