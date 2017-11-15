@@ -23,6 +23,7 @@ from sklearn.base import clone
 
 warnings.filterwarnings("error")
 
+
 class NanChecker:
     """
     Class that checks data set, lists or single
