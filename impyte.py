@@ -391,10 +391,19 @@ class Pattern:
                 tmplabel.append(1)
         return rowidx[0], tmplabel
 
-    def _get_missing_value_percentage(self, data, importance_filter=False):
+    @staticmethod
+    def _get_unique_vals(data):
+        unique_vals = []
+        for col in data.columns:
+            unique_vals.append(len(data[col].unique()))
+
+        return unique_vals
+
+    def get_missing_value_percentage(self, data, importance_filter=False):
         return_table = pd.DataFrame(self.missing_per_column)
         return_table.index = self.column_names
         return_table.columns = ["Missing"]
+        return_table["Unique"] = self._get_unique_vals(data)
         return_table["Complete"] = len(data) - return_table["Missing"]
         return_table["Percentage"] = (return_table["Missing"] / len(data))
         return_table["Percentage"] = pd.Series(
@@ -402,7 +411,7 @@ class Pattern:
         return_table.sort_values("Missing", inplace=True)
         if importance_filter:
             return_table = return_table[return_table["Missing"] > 0]
-        return return_table[["Complete", "Missing", "Percentage"]]
+        return return_table[["Complete", "Missing", "Percentage", "Unique"]]
 
     def _store_tuple(self, tup, row_idx, tmp_col_names):
         if tup in self.result_pattern_temp:
@@ -729,7 +738,7 @@ class Impyter:
         else:
             raise ValueError("Need to impute values first.")
 
-    def get_missing_summary(self, importance_filter=True):
+    def get_summary(self, importance_filter=True):
         """
         Shows simple overview of missing values.
         :param importance_filter: Show only features with at least one missing value.
@@ -737,7 +746,9 @@ class Impyter:
         """
         if not self.pattern_log.pattern_store_temp:
             self.pattern()
-        return self.pattern_log._get_missing_value_percentage(self.data, importance_filter)
+
+        result_table = self.pattern_log.get_missing_value_percentage(self.data, importance_filter)
+        return result_table
 
     def get_model(self, model_no):
         return self.model_log[model_no]
