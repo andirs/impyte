@@ -1052,11 +1052,11 @@ class Impyter:
                     scoring=[scoring])
                 indices = self.pattern_log.get_pattern_indices(pattern)
                 if not tmp_threshold_cutoff or tmp_threshold_cutoff <= np.mean(scores):
-                    verbose_string += " filled..."
+                    verbose_string += " imputed..."
                     for pointer, idx in enumerate(indices):
                         result_data.at[idx, col_name] = to_append[pointer]
                 else:
-                    verbose_string += " dropped..."
+                    verbose_string += " not imputed..."
                 if col_name not in self.column_to_model:
                     self.column_to_model[col_name] = self.model_log[pattern]
                 if verbose:
@@ -1147,11 +1147,11 @@ class Impyter:
 
                     indices = self.pattern_log.get_pattern_indices(pattern_no)
                     if not tmp_threshold_cutoff or tmp_threshold_cutoff <= np.mean(scores):
-                        verbose_string += " filled..."
+                        verbose_string += " imputed..."
                         for pointer, idx in enumerate(indices):
                             result_data.at[idx, col] = to_append[pointer]
                     else:
-                        verbose_string += " dropped..."
+                        verbose_string += " not imputed..."
 
                     store_estimator_names.append(model.__class__.__name__)
 
