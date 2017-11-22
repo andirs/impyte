@@ -14,6 +14,7 @@ One essential problem for any person dealing with data is missing values. There 
 - `sandbox.ipynb` - documentation and examples
 - `testing.ipynb` - additional functionality tests
 - `tools/` - secondary tools for module
+- `requirements.txt` - requirements file, install dependencies with `pip install -r requirements.txt` 
 
 ## Functions
 impyte focuses on two main goals: 
@@ -40,3 +41,6 @@ impyte focuses on two main goals:
 
 ## Limits and Notes
 The current version is a work in progress. First imputation methods are implemented but pre-processing steps need additional documentation. 
+
+## Python 3.6
+There is a Python 3.6 version under development. To use impyte with python3.6 use impyte3.py. All operations work the same as with impyte. Future development might concentrate only on Python3.6>=.
