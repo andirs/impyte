@@ -107,25 +107,22 @@ class Pattern:
     NaN patterns and their indices. 
     """
     def __init__(self):
-        self.nan_checker = NanChecker()
-        self.pattern_store = {}
-        self.pattern_index_store = {}
-        self.discrete_variables = []
-        self.continuous_variables = []
-        self.unique_instances = 10
-        # tryout
-        self.missing_per_column = None
         self.column_names = []
-        self.result_pattern_temp = {}
-        self.tuple_counter_dict_temp = {}
-        self.pattern_index_store_temp = {}
-        self.tuple_counter_temp = 0
-        self.pattern_store_temp = {}
-        self.pattern_col_names = {}
-        self.store_tuple_columns = {}
-        self.easy_access = {}
         self.complete_idx = None
+        self.continuous_variables = []
+        self.discrete_variables = []
+        self.easy_access = {}
+        self.missing_per_column = None
+        self.nan_checker = NanChecker()
+        self.pattern_col_names = {}
+        self.pattern_index_store = {}
+        self.pattern_store = {}
+        self.store_tuple_columns = {}
+        self.result_pattern = {}
+        self.tuple_counter = 0
+        self.tuple_counter_dict = {}
         self.tuple_dict = {}
+        self.unique_instances = 10
 
     def __str__(self):
         """
@@ -187,16 +184,16 @@ class Pattern:
         self.column_names = data.columns
         self.missing_per_column = [0] * len(self.column_names)
 
-        # Iteration via apply - stores results in self.result_pattern_temp
+        # Iteration via apply - stores results in self.result_pattern
         data.apply(self.row_nan_pattern, axis=1)
 
         # Beautification of result
-        result_pattern = pd.DataFrame.from_dict(self.result_pattern_temp, orient='index')
+        result_pattern = pd.DataFrame.from_dict(self.result_pattern, orient='index')
         final_result = []
         index_list = []
         for tuple_val in result_pattern.index:
             # Get index label from tuple_counter_dict
-            index_list.append(self.tuple_counter_dict_temp[tuple_val])
+            index_list.append(self.tuple_counter_dict[tuple_val])
             # Store pattern as list per column
             final_result.append(list(tuple_val))
         final_result = pd.DataFrame(final_result)
@@ -204,7 +201,7 @@ class Pattern:
         final_result["Count"] = result_pattern.values
         final_result.index = index_list
         final_result.sort_values("Count", ascending=False, inplace=True)
-        old_indices = self.pattern_index_store_temp
+        old_indices = self.pattern_index_store
         new_indices = {}
         new_tuple_dict = {}
         # Rearrange values for better ordering (from 0 to n)
@@ -214,136 +211,16 @@ class Pattern:
             new_tuple_dict[new] = tuple_list[new]
 
         self.tuple_dict = new_tuple_dict
-        self.pattern_index_store_temp = new_indices
+        self.pattern_index_store = new_indices
         final_result.reset_index(inplace=True, drop=True)
 
         # Store result in object
-        self.pattern_store_temp["result"] = final_result
+        self.pattern_store["result"] = final_result
 
         return_dict = {"table": final_result,
-                       "indices": self.pattern_index_store_temp}
+                       "indices": self.pattern_index_store}
 
         variable_store = self._get_discrete_and_continuous(data, unique_instances)
-        self.discrete_variables, self.continuous_variables = variable_store['discrete'], variable_store['continuous']
-
-        return return_dict
-
-    def _compute_pattern_old(self, data, nan_values="", verbose=False):
-        """
-        Function that checks for missing values and prints out 
-        a quick table of a summary of missing values.
-        Includes pattern overview and counts of missing values by column  
-
-        Parameters
-        ----------
-        data: pandas DataFrame
-
-        Returns
-        -------
-        return_dict: dict with keys 'table' and 'indices'
-                    'table': pandas DataFrame with pattern overview
-                    'indices': dict with indices list
-        """
-        data_cols = data.columns
-
-        # Stores the NaN pattern
-        result_pattern = {}
-
-        # Stores the count of NaN values per column
-        result_columns = {}
-
-        # Initialize storage for col
-        for column in data_cols:
-            result_columns[column] = 0
-
-        # NaN Values
-        nan_vals = [""]
-
-        # Add additional custom NaN Values
-        # Check first if entry is list, otherwise turn into list
-        if not isinstance(nan_values, list):
-            nan_values = [nan_values]
-        # Iterate over nan_values parameter and add to list of nan-values
-        for nv in nan_values:
-            nan_vals.append(nv)
-
-        pattern_index_store = {}
-        tuple_counter = 0
-        tuple_counter_dict = {}
-
-        # Iterate over every row
-        for row_idx, row in data.iterrows():
-            tmp_label = []
-            for idx, value in enumerate(row):
-                # For each value, check if NaN
-                if self.nan_checker.is_nan(value):
-                    # Add true-indicator to label
-                    tmp_label.append('NaN')
-                    # Count appearance for column
-                    result_columns[data_cols[idx]] += 1
-                else:
-                    # Add false-indicator to label
-                    tmp_label.append(1)
-            # Check if tuple already exists, if so: increase count for label
-            if tuple(tmp_label) in result_pattern:
-                result_pattern[tuple(tmp_label)] += 1
-                # Get corresponding label number from dict
-                tuple_label = tuple_counter_dict[tuple(tmp_label)]
-                pattern_index_store[tuple_label].append(row_idx)
-            # else: tuple hasn't been seen yet
-            else:
-                result_pattern[tuple(tmp_label)] = 1
-                tuple_counter_dict[tuple(tmp_label)] = tuple_counter
-                # Add first row id to pattern_index_store
-                pattern_index_store[tuple_counter] = [row_idx]
-                tuple_counter += 1
-
-        # Transform dict into DataFrame
-        result_pattern = pd.DataFrame.from_dict(result_pattern, orient='index')
-        final_result = []
-        index_list = []
-        for tuple_val in result_pattern.index:
-            # Get index label from tuple_counter_dict
-            index_list.append(tuple_counter_dict[tuple_val])
-            # Store pattern as list per column
-            final_result.append(list(tuple_val))
-        final_result = pd.DataFrame(final_result)
-        final_result.columns = data_cols
-        final_result["Count"] = result_pattern.values
-        final_result.index = index_list
-        final_result.sort_values("Count", ascending=False, inplace=True)
-
-        old_index = index_list
-
-        final_result.reset_index(drop=True, inplace=True)
-        new_index = range(len(final_result))
-
-        print old_index
-        print new_index
-
-        new_pattern_index_store = {}
-        # Transform pattern index store
-        for old, new in zip(old_index, new_index):
-            new_pattern_index_store[new] = pattern_index_store[old]
-        # print pattern_index_store.keys()
-
-        if verbose:
-            print final_result
-            print "\n"
-            print "Column \t\t NaN Count"
-            print "-" * 30
-            for col in data_cols:
-                print "{}: \t {}".format(col, result_columns[col])
-
-        # Store in object
-        self.pattern_store["result"] = final_result
-        self.pattern_store["columns"] = result_columns
-        self.pattern_index_store = new_pattern_index_store
-
-        return_dict = {"table": final_result,
-                       "indices": new_pattern_index_store}
-
-        variable_store = self._get_discrete_and_continuous(data)
         self.discrete_variables, self.continuous_variables = variable_store['discrete'], variable_store['continuous']
 
         return return_dict
@@ -414,21 +291,21 @@ class Pattern:
         return return_table[["Complete", "Missing", "Percentage", "Unique"]]
 
     def _store_tuple(self, tup, row_idx, tmp_col_names):
-        if tup in self.result_pattern_temp:
-            self.result_pattern_temp[tup] += 1
+        if tup in self.result_pattern:
+            self.result_pattern[tup] += 1
             # Get corresponding label number from dict
-            tuple_label = self.tuple_counter_dict_temp[tup]
-            self.pattern_index_store_temp[tuple_label].append(row_idx)
+            tuple_label = self.tuple_counter_dict[tup]
+            self.pattern_index_store[tuple_label].append(row_idx)
         # else: tuple hasn't been seen yet
         else:
             # Enter only if variable exists
             if tmp_col_names:
                 self.easy_access[tup] = tmp_col_names
-            self.result_pattern_temp[tup] = 1
-            self.tuple_counter_dict_temp[tup] = self.tuple_counter_temp
+            self.result_pattern[tup] = 1
+            self.tuple_counter_dict[tup] = self.tuple_counter
             # Add first row id to pattern_index_store
-            self.pattern_index_store_temp[self.tuple_counter_temp] = [row_idx]
-            self.tuple_counter_temp += 1
+            self.pattern_index_store[self.tuple_counter] = [row_idx]
+            self.tuple_counter += 1
 
     def get_complete_id(self):
         """
@@ -498,8 +375,8 @@ class Pattern:
         pd.DataFrame with NaN-pattern overview
         """
         # If pattern is already computed, return stored result
-        if self.pattern_store_temp:
-            return self.pattern_store_temp["result"]
+        if self.pattern_store:
+            return self.pattern_store["result"]
         # compute new pattern analysis
         elif not data.empty:
             return self._compute_pattern(data, unique_instances)['table']
@@ -541,12 +418,12 @@ class Pattern:
         -------
         self.data: data points that have a certain pattern
         """
-        if not self.pattern_index_store_temp:
+        if not self.pattern_index_store:
             raise ValueError("Pattern needs to be computed first.")
-        if pattern_no not in self.pattern_index_store_temp:
+        if pattern_no not in self.pattern_index_store:
             raise ValueError("Pattern index not in store.")
 
-        return self.pattern_index_store_temp[pattern_no]
+        return self.pattern_index_store[pattern_no]
 
     def remove_pattern(self, pattern_no):
         """ Removes a certain pattern. Deletes dictionary entry in the pattern index store
@@ -565,11 +442,11 @@ class Pattern:
             for pointer in range(len(self.column_names)):
                 if self.column_names[pointer] == col:
                     # decrease missing values by count of pattern values
-                    pattern_table = self.pattern_store_temp["result"]
+                    pattern_table = self.pattern_store["result"]
                     decrease_value = pattern_table[pattern_table.index == pattern_no]["Count"]
                     self.missing_per_column[pointer] -= int(decrease_value)
-        del(self.pattern_index_store_temp[pattern_no])
-        self.pattern_store_temp["result"].drop(pattern_no, axis=0, inplace=True)
+        del(self.pattern_index_store[pattern_no])
+        self.pattern_store["result"].drop(pattern_no, axis=0, inplace=True)
 
     def row_nan_pattern(self, row):
         """
@@ -744,7 +621,7 @@ class Impyter:
         :param importance_filter: Show only features with at least one missing value.
         :return: pd.DataFrame
         """
-        if not self.pattern_log.pattern_store_temp:
+        if not self.pattern_log.pattern_store:
             self.pattern()
 
         result_table = self.pattern_log.get_missing_value_percentage(self.data, importance_filter)
@@ -930,7 +807,7 @@ class Impyter:
             raise ValueError('Input data has wrong format. pd.DataFrame expected.')
 
         # If data has no pattern yet, simply compute it
-        if not self.pattern_log.pattern_store_temp:
+        if not self.pattern_log.pattern_store:
             print "Computing NaN-patterns first ...\n"
             self.pattern()
 
