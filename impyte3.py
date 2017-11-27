@@ -21,7 +21,7 @@ from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.base import clone
 
-warnings.filterwarnings("error")
+#warnings.filterwarnings("error")
 
 
 class NanChecker:
@@ -169,6 +169,11 @@ class Pattern:
                     'table': pandas DataFrame with pattern overview
                     'indices': dict with indices list
         """
+        if not isinstance(data, pd.DataFrame):
+            raise ValueError("Input has to be DataFrame")
+        if data.empty:
+            raise ValueError("DataFrame can't be empty")
+
         # NaN Values
         nan_vals = [""]
 
@@ -555,6 +560,26 @@ class Impyter:
                 return pd.DataFrame()
         return data
 
+    def drop_imputation(self, threshold, verbose=True):
+        models = dict(self.model_log)
+        for pattern_no in models:
+            model = self.get_model(pattern_no)
+            for idx in range(len(model.get_model())):
+                if 'r2' in model.get_scoring()[idx]:
+                    cur_threshold = threshold[1]
+                else:
+                    cur_threshold = threshold[0]
+                # average score in case it's a multi-nan pattern
+                avg_score = np.mean(model.get_score()[idx])
+                if avg_score < cur_threshold:
+                    if verbose:
+                        print("Dropping pattern {} ({} < {} {})".format(
+                            pattern_no, avg_score, cur_threshold, model.get_scoring()[0]))
+
+                    del (self.model_log[pattern_no])
+                    self.drop_pattern(pattern_no)
+                    break  # because only one value is enough to discard pattern
+
     def load_data(self, data):
         """
         Function to load data into Impyter class.
@@ -763,11 +788,11 @@ class Impyter:
         print("=" * 90)
 
     @staticmethod
-    def _print_results_line(scores, scoring, pattern, col_name, tmp_error_string, model):
+    def _print_results_line(scores, scoring, pattern, col_name, tmp_error_string, model, error_count):
         score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
         col_temp = "{}: {}".format(pattern, col_name)
         if tmp_error_string:
-            col_temp += " (*)"
+            col_temp += " (* {})".format(error_count)
 
         return "{:<30}{:<30}{:<30} ".format(
             col_temp,
@@ -805,6 +830,12 @@ class Impyter:
             data = self.data
         if not isinstance(data, pd.DataFrame):
             raise ValueError('Input data has wrong format. pd.DataFrame expected.')
+        # TODO: Decide if below 50 points a warning should be raised
+
+        if not data.empty and len(data) < 50:
+            with warnings.catch_warnings():
+                warnings.simplefilter('always')
+                warnings.warn("There might be too few data points for imputation. (Threshold >= 50)\n", UserWarning)
 
         # If data has no pattern yet, simply compute it
         if not self.pattern_log.pattern_store:
@@ -850,6 +881,7 @@ class Impyter:
 
         # error string
         error_string = ""
+        error_count = 0
 
         # impute single nan patterns
         for pattern in self.pattern_log.get_single_nan_pattern_nos():
@@ -903,19 +935,21 @@ class Impyter:
                 if verbose > 3:
                     print("Starting imputation {}...".format(col_name))
 
-                model.fit(X_train, y_train)
-
-                try:
-                    scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
-                except (ValueError, Warning) as e:
-                    tmp_error_string = "* " + col_name + ": " + str(e)
-                    error_string += tmp_error_string + "\n"
-                    scores = [0.] * cv
+                with warnings.catch_warnings():
+                    warnings.simplefilter('error')
+                    model.fit(X_train, y_train)
+                    try:
+                        scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
+                    except (ValueError, Warning) as e:
+                        error_count += 1
+                        tmp_error_string = "* (" + str(error_count) + ") " + col_name + ": " + str(e)
+                        error_string += tmp_error_string + "\n"
+                        scores = [0.] * cv
 
                 # prepare statement line for verbose printout
                 if verbose:
                     verbose_string = self._print_results_line(
-                        np.mean(scores), scoring, pattern, col_name, tmp_error_string, model)
+                        np.mean(scores), scoring, pattern, col_name, tmp_error_string, model, error_count)
 
                 to_append = model.predict(X_test)
                 if regressor and auto_scale:
@@ -925,7 +959,7 @@ class Impyter:
                     model=[model],
                     pattern_no=pattern,
                     feature_name=col_name,
-                    threshold=[scores],
+                    scores=[scores],
                     scoring=[scoring])
                 indices = self.pattern_log.get_pattern_indices(pattern)
                 if not tmp_threshold_cutoff or tmp_threshold_cutoff <= np.mean(scores):
@@ -995,21 +1029,25 @@ class Impyter:
                             y_train = y_train.ravel()  # turn 1d array back into matching format
                     else:
                         tmp_threshold_cutoff = threshold[1]  # get classification threshold
-                    model.fit(X_train, y_train)
-                    try:
-                        scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
-                    except (ValueError, Warning) as e:
-                        # ValueError:
-                        # in case of split error, cross_val_score won't give a proper result
-                        # determine scores as 0 for f1 and r2 because there is too few information
-                        # to return proper scoring results
-                        # Warning:
-                        # All warnings are treated as Errors as well.
-                        # If caught in this step the Error messages are
-                        # collected and the predicted feature is being marked
-                        tmp_error_string = "* " + col + ": " + str(e)
-                        error_string += tmp_error_string + "\n"
-                        scores = [0.] * cv
+
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('error')
+                        model.fit(X_train, y_train)
+                        try:
+                            scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
+                        except (ValueError, Warning) as e:
+                            # ValueError:
+                            # in case of split error, cross_val_score won't give a proper result
+                            # determine scores as 0 for f1 and r2 because there is too few information
+                            # to return proper scoring results
+                            # Warning:
+                            # All warnings are treated as Errors as well.
+                            # If caught in this step the Error messages are
+                            # collected and the predicted feature is being marked
+                            error_count += 1
+                            tmp_error_string = "* (" + str(error_count) + ") " + col + ": " + str(e)
+                            error_string += tmp_error_string + "\n"
+                            scores = [0.] * cv
 
                     store_models.append(model)
                     store_scores.append(scores)
@@ -1017,7 +1055,7 @@ class Impyter:
 
                     if verbose:
                         verbose_string = self._print_results_line(
-                            np.mean(scores), scoring, pattern_no, col, tmp_error_string, model)
+                            np.mean(scores), scoring, pattern_no, col, tmp_error_string, model, error_count)
                     to_append = model.predict(X_test)
                     if col in self.pattern_log.get_continuous() and auto_scale:
                         to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
@@ -1040,7 +1078,7 @@ class Impyter:
                     model=store_models,
                     pattern_no=pattern_no,
                     feature_name=multi_nan_columns,
-                    threshold=store_scores,
+                    scores=store_scores,
                     scoring=store_scoring)
 
         # print error categories
@@ -1057,11 +1095,11 @@ class ImpyterModel:
     """
     Stores computed Impyter machine learning models.
     """
-    def __init__(self, estimator_name, model=None, pattern_no=None, feature_name=None, threshold=None, scoring=None):
+    def __init__(self, estimator_name, model=None, pattern_no=None, feature_name=None, scores=None, scoring=None):
         self.model = model
         self.pattern_no = pattern_no
         self.feature_name = feature_name
-        self.threshold = threshold
+        self.scores = scores
         self.estimator_name = estimator_name
         self.scoring = scoring
 
@@ -1086,8 +1124,8 @@ class ImpyterModel:
         """
         self.feature_name = feature_name
 
-    def set_threshold(self, threshold):
-        self.threshold = threshold
+    def set_scores(self, scores):
+        self.scores = scores
 
     def get_model(self):
         return self.model
@@ -1098,8 +1136,14 @@ class ImpyterModel:
     def get_feature_name(self):
         return self.feature_name
 
-    def get_threshold(self):
-        return self.threshold
+    def get_score(self):
+        ret_list = []
+        for score_list in self.scores:
+            ret_list.append(np.mean(score_list))
+        return ret_list
+
+    def get_scores(self):
+        return self.scores
 
     def get_scoring(self):
         return self.scoring
