@@ -349,20 +349,14 @@ class Pattern:
         Returns copy of continuous variable names. 
         :return: list
         """
-        if self.continuous_variables:
-            return list(self.continuous_variables)
-        else:
-            raise ValueError("Variables aren't analzed yet.")
+        return list(self.continuous_variables)
 
     def get_discrete(self):
         """
         Returns copy of discrete variable names. 
         :return: list
         """
-        if self.discrete_variables:
-            return list(self.discrete_variables)
-        else:
-            raise ValueError("Variables aren't analzed yet.")
+        return list(self.discrete_variables)
 
     def get_pattern(self, data=None, unique_instances=10):
         """
@@ -514,12 +508,11 @@ class Impyter:
 
     def __init__(self, data=None):
         self.data = None  # stores original data
+        self.result = None  # stores result data set - in beginning a copy of data
         self.load_data(data)  # loads or initializes data set
         self.clf = {}  # stores classifier - deprecated
         self.pattern_log = Pattern()  # stores Pattern() object for data set
         self.model_log = {}  # stores all models once impute has been run
-        self.result = None  # stores result data set
-        self.column_to_model = {}  # stores information on which column can be predicted through what model
         self.error_string = ""
 
     def __str__(self):
@@ -594,7 +587,7 @@ class Impyter:
             data = self._data_check(data)
 
         self.data = data.copy()
-
+        self.result = self.data.copy()
         self.pattern_log = Pattern()
 
     def pattern(self):
@@ -655,33 +648,17 @@ class Impyter:
     def get_model(self, model_no):
         return self.model_log[model_no]
 
-    def get_complete_old(self):
-        """
-        Old but easy to read method to get complete indices. 
-        """
-        return self.data.dropna().index
-
     def drop_pattern(self, pattern_no, inplace=False):
         temp_patterns = self.pattern_log.get_pattern_indices(pattern_no)
 
         if inplace:
             # Drop self.data with overwrite function
-            self.data = self.data[~self.data.index.isin(temp_patterns)]
+            self.result = self.result[~self.result.index.isin(temp_patterns)]
             # Delete indices in pattern_log
             self.pattern_log.remove_pattern(pattern_no)
-            return self.data
+            return self.result
 
         return self.data[~self.data.index.isin(temp_patterns)].copy()
-
-    def print_pattern(self, data=None):
-        """
-        Counts individual NaN patterns and returns them in a dictionary.
-        :return: dict
-        """
-        if data is None:
-            data = self.data
-
-        return self.pattern_log.print_pattern(data)
 
     def load_model(self, model):
         """
@@ -883,8 +860,6 @@ class Impyter:
                 result_data.at[idx, col_name] = to_append[pointer]
         else:
             verbose_string += " not imputed..."
-        if col_name not in self.column_to_model:
-            self.column_to_model[col_name] = self.model_log[pattern]
         if verbose:
             print(verbose_string)
 
@@ -916,11 +891,11 @@ class Impyter:
         threshold: list - classification and regression threshold cut-offs. At this point f1 score and R2.
         """
         if data is None:
-            data = self.data
+            data = self.result
         if not isinstance(data, pd.DataFrame):
             raise ValueError('Input data has wrong format. pd.DataFrame expected.')
-        # TODO: Decide if below 50 points a warning should be raised
 
+        # show warning if less than 50 data points available
         if not data.empty and len(data) < 50:
             with warnings.catch_warnings():
                 warnings.simplefilter('always')
@@ -965,7 +940,7 @@ class Impyter:
                 self.clf["Classification"] = SVC()
             else:
                 raise ValueError('Classifier unknown')
-        result_data = self.data.copy()
+        result_data = self.result
 
         # Get complete cases
         complete_idx = self.pattern_log.get_complete_id()
@@ -996,7 +971,6 @@ class Impyter:
             print("Multi nans")
             print("=" * 90)
             for pattern_no in multi_nan_patterns:
-                verbose_string = ""
                 tmp_error_string = ""
 
                 multi_nan_columns = self.pattern_log.get_column_name(pattern_no)
@@ -1015,7 +989,6 @@ class Impyter:
             print(self.error_string)
 
         self.result = result_data
-
         return result_data
 
 
