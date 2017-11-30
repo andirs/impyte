@@ -798,16 +798,12 @@ class Impyter:
             score_temp,
             model.__class__.__name__)
 
-    def _impute(self, pattern, col_name, complete_cases, one_hot_encode,
+    def _impute(self, pattern, col_name, X_train, X_test, y_train, one_hot_encode,
                 auto_scale, threshold, error_string, error_count,
                 result_data, cv, verbose_string, tmp_error_string, verbose):
         # regressor flag
         regressor = False
-
-
-        # Get data of pattern for prediction
-        X_train = complete_cases.drop(col_name, axis=1)
-        X_test = self.get_pattern(pattern).drop(col_name, axis=1)
+        store_models, store_scores, store_scoring, store_estimator_names = [], [], [], []
 
         # Pre-processing of data
         if one_hot_encode:
@@ -818,8 +814,6 @@ class Impyter:
             X_train = test[test.index.isin(X_train.index)]
             X_test = test[test.index.isin(X_test.index)]
 
-        y_train = complete_cases[col_name]
-
         # Scaling for ml pre-processing X_train
         if auto_scale:
             X_scaler = StandardScaler()
@@ -828,21 +822,20 @@ class Impyter:
             X_test = X_scaler.fit_transform(X_test)
 
         # Select appropriate estimator
-        for col in col_name:
-            if col in self.pattern_log.get_continuous():
-                regressor = True
-                # use regressor
-                scoring = "r2"
-                if auto_scale:
-                    y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1))  # scale continuous
-                    y_train = y_train.ravel()  # turn 1d array back into matching format
-                model = self.clf["Regression"]
-                tmp_threshold_cutoff = threshold[1]  # for regression
-            else:
-                # use classifier
-                scoring = "f1_macro"
-                model = self.clf["Classification"]
-                tmp_threshold_cutoff = threshold[0]  # for classification
+        if col_name in self.pattern_log.get_continuous():
+            regressor = True
+            # use regressor
+            scoring = "r2"
+            if auto_scale:
+                y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1))  # scale continuous
+                y_train = y_train.ravel()  # turn 1d array back into matching format
+            model = self.clf["Regression"]
+            tmp_threshold_cutoff = threshold[1]  # for regression
+        else:
+            # use classifier
+            scoring = "f1_macro"
+            model = self.clf["Classification"]
+            tmp_threshold_cutoff = threshold[0]  # for classification
 
         # This is where the imputation happens
         if verbose > 3:
@@ -859,6 +852,10 @@ class Impyter:
                 error_string += tmp_error_string + "\n"
                 scores = [0.] * cv
 
+        store_models.append(model)
+        store_scores.append(scores)
+        store_scoring.append(scoring)
+
         # prepare statement line for verbose printout
         if verbose:
             verbose_string = self._print_results_line(
@@ -867,13 +864,16 @@ class Impyter:
         to_append = model.predict(X_test)
         if regressor and auto_scale:
             to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
+
+        store_models.append(model.__class__.__name__)
+
         self.model_log[pattern] = ImpyterModel(
-            estimator_name=model.__class__.__name__,
-            model=[model],
+            estimator_name=store_models,
+            model=store_models,
             pattern_no=pattern,
             feature_name=col_name,
-            scores=[scores],
-            scoring=[scoring])
+            scores=store_scores,
+            scoring=store_scoring)
         indices = self.pattern_log.get_pattern_indices(pattern)
         if not tmp_threshold_cutoff or tmp_threshold_cutoff <= np.mean(scores):
             verbose_string += " imputed..."
@@ -979,8 +979,12 @@ class Impyter:
 
                 if pattern not in self.model_log:
                     col_name = self.pattern_log.get_column_name(pattern)[0]
+                    # Get data of pattern for prediction
+                    X_train = complete_cases.drop(col_name, axis=1)
+                    X_test = self.get_pattern(pattern).drop(col_name, axis=1)
+                    y_train = complete_cases[col_name]
                     self._impute(
-                        pattern, col_name, complete_cases, one_hot_encode,
+                        pattern, col_name, X_train, X_test, y_train, one_hot_encode,
                         auto_scale, threshold, error_string, error_count,
                         result_data, cv, verbose_string, tmp_error_string, verbose)
 
@@ -994,279 +998,17 @@ class Impyter:
             for pattern_no in multi_nan_patterns:
                 verbose_string = ""
                 tmp_error_string = ""
-                store_models = []
-                store_scores = []
-                store_scoring = []
-                store_estimator_names = []
 
                 multi_nan_columns = self.pattern_log.get_column_name(pattern_no)
-                for col in multi_nan_columns:
+                for col_name in multi_nan_columns:
+                    # Get data of pattern for prediction
+                    X_train = complete_cases.drop(multi_nan_columns, axis=1)
+                    X_test = self.get_pattern(pattern_no).drop(multi_nan_columns, axis=1)
+                    y_train = complete_cases[col_name]
                     self._impute(
-                        pattern_no, col, complete_cases, one_hot_encode,
+                        pattern_no, col_name, X_train, X_test, y_train, one_hot_encode,
                         auto_scale, threshold, error_string, error_count,
                         result_data, cv, verbose_string, tmp_error_string, verbose)
-
-        # print error categories
-        if verbose and error_string:
-            print("\n")
-            print(error_string)
-
-        self.result = result_data
-
-        return result_data
-
-    def new_impute(self,
-               data=None,
-               cv=5,
-               verbose=True,
-               estimator='rf',
-               multi_nans=False,
-               threshold=[None, None],
-               recompute=False):
-        """
-        data: data to be imputed
-        cv: Amount of cross-validation runs.
-        verbose: Boolean value, whether prediction results should be printed out.
-        estimator:  'rf: Random Forest', 
-                    'svm: Support Vector Machine', 
-                    'sgd: Stochastic Gradient Descent'
-                    'knn: KNearest Neighbor'
-                    'bayes: (Naive) Bayes',
-                    'dt: Decision Tree',
-                    'gb: Gradient Boosting',
-                    'mlp: Multi-layer Perceptron (neural network)'
-        multi_nans: Boolean indicator if data points with multiple NaN values should be imputed as well
-        one_hoe_encode: Boolean - if set to True one-hot-encoding of categorical variables happens
-        auto_scale: Boolean - if set to True continuous variables are automatically scaled 
-                    and transformed back after imputation.
-        threshold: list - classification and regression threshold cut-offs. At this point f1 score and R2.
-        """
-        if data is None:
-            data = self.data
-        if not isinstance(data, pd.DataFrame):
-            raise ValueError('Input data has wrong format. pd.DataFrame expected.')
-        # TODO: Decide if below 50 points a warning should be raised
-
-        if not data.empty and len(data) < 50:
-            with warnings.catch_warnings():
-                warnings.simplefilter('always')
-                warnings.warn("There might be too few data points for imputation. (Threshold >= 50)\n", UserWarning)
-
-        # If data has no pattern yet, simply compute it
-        if not self.pattern_log.pattern_store:
-            print("Computing NaN-patterns first ...\n")
-            self.pattern()
-
-        # print output header
-        self._print_header(threshold)
-
-        # Decide which classifier to use and initialize
-        if estimator is not None:
-            if estimator == 'rf':
-                self.clf["Regression"] = RandomForestRegressor()
-                self.clf["Classification"] = RandomForestClassifier()
-            elif estimator == 'bayes':
-                self.clf["Regression"] = BayesianRidge()
-                self.clf["Classification"] = GaussianNB()
-            elif estimator == 'dt':
-                self.clf["Regression"] = DecisionTreeRegressor()
-                self.clf["Classification"] = DecisionTreeClassifier()
-            elif estimator == 'gb':
-                self.clf["Regression"] = GradientBoostingRegressor()
-                self.clf["Classification"] = GradientBoostingClassifier()
-            elif estimator == 'knn':
-                self.clf["Regression"] = KNeighborsRegressor()
-                self.clf["Classification"] = KNeighborsClassifier()
-            elif estimator == 'mlp':
-                self.clf["Regression"] = MLPRegressor()
-                self.clf["Classification"] = MLPClassifier()
-            elif estimator == 'sgd':
-                self.clf["Regression"] = SGDRegressor()
-                self.clf["Classification"] = SGDClassifier()
-            elif estimator == 'svm':
-                self.clf["Regression"] = SVR()
-                self.clf["Classification"] = SVC()
-            else:
-                raise ValueError('Classifier unknown')
-        result_data = self.data.copy()
-
-        # Get complete cases
-        complete_idx = self.pattern_log.get_complete_id()
-        complete_cases = self.get_pattern(complete_idx)
-
-        # error string
-        error_string = ""
-        error_count = 0
-
-        # impute single nan patterns
-        for pattern in self.pattern_log.get_single_nan_pattern_nos():
-            verbose_string = ""
-            tmp_error_string = ""
-            # filter out complete cases
-            if complete_idx != pattern:
-                # regressor flag
-                regressor = False
-
-                col_name = self.pattern_log.get_column_name(pattern)[0]
-
-                # Get data of pattern for prediction
-                X_train = complete_cases.drop(col_name, axis=1)
-                X_test = self.get_pattern(pattern).drop(col_name, axis=1)
-
-                # check if there is already an existing model
-                if pattern in self.model_log and not recompute:
-                    # load model and predict
-                    print("ALREADY IMPUTED LOADING MODEL")
-
-                    return False
-                elif pattern not in self.model_log or recompute:
-                    print("IMPUTING NOW")
-                # create model and predict
-                y_train = complete_cases[col_name]
-
-                # Select appropriate estimator
-                if col_name in self.pattern_log.get_continuous():
-                    regressor = True
-                    # use regressor
-                    scoring = "r2"
-                    model = self.clf["Regression"]
-                    tmp_threshold_cutoff = threshold[1]  # for regression
-                else:
-                    # use classifier
-                    scoring = "f1_macro"
-                    model = self.clf["Classification"]
-                    tmp_threshold_cutoff = threshold[0]  # for classification
-
-                # This is where the imputation happens
-                if verbose > 3:
-                    print("Starting imputation {}...".format(col_name))
-
-                with warnings.catch_warnings():
-                    warnings.simplefilter('error')
-                    model.fit(X_train, y_train)
-                    try:
-                        scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
-                    except (ValueError, Warning) as e:
-                        error_count += 1
-                        tmp_error_string = "* (" + str(error_count) + ") " + col_name + ": " + str(e)
-                        error_string += tmp_error_string + "\n"
-                        scores = [0.] * cv
-
-                # prepare statement line for verbose printout
-                if verbose:
-                    verbose_string = self._print_results_line(
-                        np.mean(scores), scoring, pattern, col_name, tmp_error_string, model, error_count)
-
-                to_append = model.predict(X_test)
-                self.model_log[pattern] = ImpyterModel(
-                    estimator_name=model.__class__.__name__,
-                    model=[model],
-                    pattern_no=pattern,
-                    feature_name=col_name,
-                    scores=[scores],
-                    scoring=[scoring])
-                indices = self.pattern_log.get_pattern_indices(pattern)
-                if not tmp_threshold_cutoff or tmp_threshold_cutoff <= np.mean(scores):
-                    verbose_string += " imputed..."
-                    for pointer, idx in enumerate(indices):
-                        result_data.at[idx, col_name] = to_append[pointer]
-                else:
-                    verbose_string += " not imputed..."
-                if col_name not in self.column_to_model:
-                    self.column_to_model[col_name] = self.model_log[pattern]
-                if verbose:
-                    print(verbose_string)
-
-        # Multi-Nan
-        multi_nan_patterns = self.pattern_log.get_multi_nan_pattern_nos()
-        if multi_nans and not multi_nan_patterns.empty:
-            print("")
-            print("Multi nans")
-            print("=" * 90)
-            for pattern_no in multi_nan_patterns:
-                store_models = []
-                store_scores = []
-                store_scoring = []
-                store_estimator_names = []
-
-                multi_nan_columns = self.pattern_log.get_column_name(pattern_no)
-                for col in multi_nan_columns:
-                    tmp_error_string = ""
-                    # Message for verbose output
-                    verbose_string = ""
-                    if col in self.column_to_model:
-                        model = clone(self.column_to_model[col].get_model()[0])  # get model
-                    else:
-                        # Select appropriate estimator
-                        if col in self.pattern_log.get_continuous():
-                            # use regressor
-                            scoring = "r2"
-                            model = self.clf["Regression"]
-                        else:
-                            # use classifier
-                            scoring = "f1_macro"
-                            model = self.clf["Classification"]
-
-                    X_train = complete_cases.drop(multi_nan_columns, axis=1)
-                    # retrain model
-                    # Get data of pattern for prediction
-                    X_test = self.get_pattern(pattern_no).drop(multi_nan_columns, axis=1)
-
-                    y_train = complete_cases[col]
-
-                    if col in self.pattern_log.get_continuous():
-                        tmp_threshold_cutoff = threshold[1]  # get regression threshold
-                    else:
-                        tmp_threshold_cutoff = threshold[1]  # get classification threshold
-
-                    with warnings.catch_warnings():
-                        warnings.simplefilter('error')
-                        model.fit(X_train, y_train)
-                        try:
-                            scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
-                        except (ValueError, Warning) as e:
-                            # ValueError:
-                            # in case of split error, cross_val_score won't give a proper result
-                            # determine scores as 0 for f1 and r2 because there is too few information
-                            # to return proper scoring results
-                            # Warning:
-                            # All warnings are treated as Errors as well.
-                            # If caught in this step the Error messages are
-                            # collected and the predicted feature is being marked
-                            error_count += 1
-                            tmp_error_string = "* (" + str(error_count) + ") " + col + ": " + str(e)
-                            error_string += tmp_error_string + "\n"
-                            scores = [0.] * cv
-
-                    store_models.append(model)
-                    store_scores.append(scores)
-                    store_scoring.append(scoring)
-
-                    if verbose:
-                        verbose_string = self._print_results_line(
-                            np.mean(scores), scoring, pattern_no, col, tmp_error_string, model, error_count)
-                    to_append = model.predict(X_test)
-
-                    indices = self.pattern_log.get_pattern_indices(pattern_no)
-                    if not tmp_threshold_cutoff or tmp_threshold_cutoff <= np.mean(scores):
-                        verbose_string += " imputed..."
-                        for pointer, idx in enumerate(indices):
-                            result_data.at[idx, col] = to_append[pointer]
-                    else:
-                        verbose_string += " not imputed..."
-
-                    store_estimator_names.append(model.__class__.__name__)
-
-                    if verbose:
-                        print(verbose_string)
-
-                self.model_log[pattern_no] = ImpyterModel(
-                    estimator_name=store_estimator_names,
-                    model=store_models,
-                    pattern_no=pattern_no,
-                    feature_name=multi_nan_columns,
-                    scores=store_scores,
-                    scoring=store_scoring)
 
         # print error categories
         if verbose and error_string:
