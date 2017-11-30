@@ -217,6 +217,7 @@ class Pattern:
             new_tuple_dict[new] = tuple_list[new]
 
         self.tuple_dict = new_tuple_dict
+        self.tuple_counter_dict = {v: k for k, v in new_tuple_dict.items()}
         self.pattern_index_store = new_indices
         final_result.reset_index(inplace=True, drop=True)
 
@@ -666,22 +667,28 @@ class Impyter:
 
         return self.data[~self.data.index.isin(temp_patterns)].copy()
 
-    def map_model_to_pattern(mdl):
+    def map_model_to_pattern(self, mdl):
         pred_variables = mdl.get_predictor_variables()
-        feature = mdl.get_feature_name()
+        dependent_variables = mdl.get_feature_name()
         pattern_no = None
 
         def compare_features(list1, list2):
             return Counter(list1) == Counter(list2)
 
         for i in self.pattern_log.store_tuple_columns:
-            if compare_features(feature, self.pattern_log.store_tuple_columns[i]):
+            if compare_features(dependent_variables, self.pattern_log.store_tuple_columns[i]):
                 pattern_no = self.pattern_log.tuple_counter_dict[i]
                 break
         if pattern_no and compare_features(pred_variables, self.pattern_predictor_dict[pattern_no]):
             return pattern_no
         else:
             return None
+
+    def load_model_only(self, model):
+        try:
+            return joblib.load(model)
+        except IOError as e:
+            print(e)
 
     def load_model(self, pattern_no, model):
         """
@@ -769,7 +776,7 @@ class Impyter:
             name_str = "pattern_{}_".format(pattern_no)
         if name is None:
             name = name_str + str(date.today()) + "-impyte-mdl.pkl"
-            print(name)
+            print("Saved model under {}".format(name))
         joblib.dump(model, name)
 
     def ensemble(self, estimator_list=["rf", "dt"]):
