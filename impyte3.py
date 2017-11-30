@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import warnings
 
+from collections import Counter
 from datetime import date
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, \
@@ -21,6 +22,7 @@ from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.base import clone
+
 
 
 class NanChecker:
@@ -514,6 +516,7 @@ class Impyter:
         self.pattern_log = Pattern()  # stores Pattern() object for data set
         self.model_log = {}  # stores all models once impute has been run
         self.error_string = ""
+        self.pattern_predictor_dict = {}
 
     def __str__(self):
         """
@@ -645,8 +648,11 @@ class Impyter:
         result_table = self.pattern_log.get_missing_value_percentage(self.data, importance_filter)
         return result_table
 
-    def get_model(self, model_no):
-        return self.model_log[model_no]
+    def get_model(self, pattern_no):
+        if pattern_no in self.model_log:
+            return self.model_log[pattern_no]
+        else:
+            raise ValueError("There is no model for pattern {}".format(pattern_no))
 
     def drop_pattern(self, pattern_no, inplace=False):
         temp_patterns = self.pattern_log.get_pattern_indices(pattern_no)
@@ -660,13 +666,37 @@ class Impyter:
 
         return self.data[~self.data.index.isin(temp_patterns)].copy()
 
-    def load_model(self, model):
+    def map_model_to_pattern(mdl):
+        pred_variables = mdl.get_predictor_variables()
+        feature = mdl.get_feature_name()
+        pattern_no = None
+
+        def compare_features(list1, list2):
+            return Counter(list1) == Counter(list2)
+
+        for i in self.pattern_log.store_tuple_columns:
+            if compare_features(feature, self.pattern_log.store_tuple_columns[i]):
+                pattern_no = self.pattern_log.tuple_counter_dict[i]
+                break
+        if pattern_no and compare_features(pred_variables, self.pattern_predictor_dict[pattern_no]):
+            return pattern_no
+        else:
+            return None
+
+    def load_model(self, pattern_no, model):
         """
         Load a stored machine learning model to perform value imputation.
         :param model: pickle object or filename of model. 
         """
         try:
-            self.model_log = joblib.load(model)
+            mdl = joblib.load(model)
+            mdl_pattern_no = self.map_model_to_pattern(mdl)
+            if pattern_no and mdl_pattern_no:
+                self.model_log[self.map_model_to_pattern(mdl)] = mdl
+            elif pattern_no and not mdl_pattern_no:
+                raise ValueError("Model and pattern seem to be inconsistent")
+            else:
+                self.model_log = joblib.load(model)
         except IOError as e:
             print("File not found: {}".format(e))
 
@@ -726,15 +756,21 @@ class Impyter:
         data = pd.concat([data, return_table], axis=1)
         return data
 
-    def save_model(self, name=None):
+    def save_model(self, pattern_no=None, name=None):
         """
         Save a learned machine learning model to disk.
         :param name: Name of file.  
         """
+        name_str = ""
+        if pattern_no is None:
+            model = self.model_log
+        else:
+            model = self.get_model(pattern_no)
+            name_str = "pattern_{}_".format(pattern_no)
         if name is None:
-            name = str(date.today()) + "-impyte-mdl.pkl"
+            name = name_str + str(date.today()) + "-impyte-mdl.pkl"
             print(name)
-        joblib.dump(self.model_log, name)
+        joblib.dump(model, name)
 
     def ensemble(self, estimator_list=["rf", "dt"]):
         """
@@ -782,8 +818,17 @@ class Impyter:
         # regressor flag
         tmp_error_string = ""
         regressor = False
-        store_models, store_scores, store_scoring, store_estimator_names = [], [], [], []
+        if pattern in self.model_log:
+            store_models = self.get_model(pattern).get_model()
+            store_scores = self.get_model(pattern).get_scores()
+            store_scoring = self.get_model(pattern).get_scoring()
+            store_estimator_names = self.get_model(pattern).get_estimator_name()
+            feature_names = self.get_model(pattern).get_feature_name()
+        else:
+            store_models, store_scores, store_scoring, store_estimator_names = [], [], [], []
+            feature_names = []
         predictor_variables = X_train.columns
+        self.pattern_predictor_dict[pattern] = predictor_variables
 
         # Pre-processing of data
         if one_hot_encode:
@@ -835,6 +880,7 @@ class Impyter:
         store_models.append(model)
         store_scores.append(scores)
         store_scoring.append(scoring)
+        feature_names.append(col_name)
 
         # prepare statement line for verbose printout
         if verbose:
@@ -845,13 +891,13 @@ class Impyter:
         if regressor and auto_scale:
             to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
 
-        store_models.append(model.__class__.__name__)
+        store_estimator_names.append(model.__class__.__name__)
 
         self.model_log[pattern] = ImpyterModel(
-            estimator_name=store_models,
+            estimator_name=store_estimator_names,
             model=store_models,
             pattern_no=pattern,
-            feature_name=col_name,
+            feature_name=feature_names,
             scores=store_scores,
             scoring=store_scoring,
             predictor_variables=predictor_variables)
