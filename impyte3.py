@@ -520,6 +520,7 @@ class Impyter:
         self.model_log = {}  # stores all models once impute has been run
         self.result = None  # stores result data set
         self.column_to_model = {}  # stores information on which column can be predicted through what model
+        self.error_string = ""
 
     def __str__(self):
         """
@@ -575,9 +576,9 @@ class Impyter:
                         print("Dropping pattern {} ({} < {} {})".format(
                             pattern_no, avg_score, cur_threshold, model.get_scoring()[0]))
 
+                    self.drop_pattern(pattern_no, inplace=True)
                     del (self.model_log[pattern_no])
-                    self.drop_pattern(pattern_no)
-                    break  # because only one value is enough to discard pattern
+                    break  # only one value below threshold is enough to discard pattern
 
     def load_data(self, data):
         """
@@ -799,9 +800,10 @@ class Impyter:
             model.__class__.__name__)
 
     def _impute(self, pattern, col_name, X_train, X_test, y_train, one_hot_encode,
-                auto_scale, threshold, error_string, error_count,
-                result_data, cv, verbose_string, tmp_error_string, verbose):
+                auto_scale, threshold, result_data, cv, verbose_string, verbose):
+        global error_count
         # regressor flag
+        tmp_error_string = ""
         regressor = False
         store_models, store_scores, store_scoring, store_estimator_names = [], [], [], []
 
@@ -849,7 +851,7 @@ class Impyter:
             except (ValueError, Warning) as e:
                 error_count += 1
                 tmp_error_string = "* (" + str(error_count) + ") " + col_name + ": " + str(e)
-                error_string += tmp_error_string + "\n"
+                self.error_string += tmp_error_string + "\n"
                 scores = [0.] * cv
 
         store_models.append(model)
@@ -929,6 +931,9 @@ class Impyter:
             print("Computing NaN-patterns first ...\n")
             self.pattern()
 
+        # reset error string
+        self.error_string = ""
+
         # print output header
         self._print_header(threshold)
 
@@ -967,27 +972,22 @@ class Impyter:
         complete_cases = self.get_pattern(complete_idx)
 
         # error string
-        error_string = ""
+        global error_count
         error_count = 0
 
         # impute single nan patterns
         for pattern in self.pattern_log.get_single_nan_pattern_nos():
-            verbose_string = ""
             tmp_error_string = ""
             # filter out complete cases
             if complete_idx != pattern:
-
-                if pattern not in self.model_log:
-                    col_name = self.pattern_log.get_column_name(pattern)[0]
-                    # Get data of pattern for prediction
-                    X_train = complete_cases.drop(col_name, axis=1)
-                    X_test = self.get_pattern(pattern).drop(col_name, axis=1)
-                    y_train = complete_cases[col_name]
-                    self._impute(
-                        pattern, col_name, X_train, X_test, y_train, one_hot_encode,
-                        auto_scale, threshold, error_string, error_count,
-                        result_data, cv, verbose_string, tmp_error_string, verbose)
-
+                col_name = self.pattern_log.get_column_name(pattern)[0]
+                # Get data of pattern for prediction
+                X_train = complete_cases.drop(col_name, axis=1)
+                X_test = self.get_pattern(pattern).drop(col_name, axis=1)
+                y_train = complete_cases[col_name]
+                self._impute(
+                    pattern, col_name, X_train, X_test, y_train, one_hot_encode,
+                    auto_scale, threshold, result_data, cv, tmp_error_string, verbose)
 
         # Multi-Nan
         multi_nan_patterns = self.pattern_log.get_multi_nan_pattern_nos()
@@ -1007,13 +1007,12 @@ class Impyter:
                     y_train = complete_cases[col_name]
                     self._impute(
                         pattern_no, col_name, X_train, X_test, y_train, one_hot_encode,
-                        auto_scale, threshold, error_string, error_count,
-                        result_data, cv, verbose_string, tmp_error_string, verbose)
+                        auto_scale, threshold, result_data, cv, tmp_error_string, verbose)
 
         # print error categories
-        if verbose and error_string:
+        if verbose and self.error_string:
             print("\n")
-            print(error_string)
+            print(self.error_string)
 
         self.result = result_data
 
