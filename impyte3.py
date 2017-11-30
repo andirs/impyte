@@ -783,6 +783,7 @@ class Impyter:
         tmp_error_string = ""
         regressor = False
         store_models, store_scores, store_scoring, store_estimator_names = [], [], [], []
+        predictor_variables = X_train.columns
 
         # Pre-processing of data
         if one_hot_encode:
@@ -852,7 +853,8 @@ class Impyter:
             pattern_no=pattern,
             feature_name=col_name,
             scores=store_scores,
-            scoring=store_scoring)
+            scoring=store_scoring,
+            predictor_variables=predictor_variables)
         indices = self.pattern_log.get_pattern_indices(pattern)
         if not tmp_threshold_cutoff or tmp_threshold_cutoff <= np.mean(scores):
             verbose_string += " imputed..."
@@ -996,13 +998,20 @@ class ImpyterModel:
     """
     Stores computed Impyter machine learning models.
     """
-    def __init__(self, estimator_name, model=None, pattern_no=None, feature_name=None, scores=None, scoring=None):
+    def __init__(self, estimator_name,
+                 model=None,
+                 pattern_no=None,
+                 feature_name=None,
+                 scores=None,
+                 scoring=None,
+                 predictor_variables=None):
         self.model = model
         self.pattern_no = pattern_no
         self.feature_name = feature_name
         self.scores = scores
         self.estimator_name = estimator_name
         self.scoring = scoring
+        self.predictor_variables = predictor_variables
 
     def set_model(self, model):
         """
@@ -1020,13 +1029,20 @@ class ImpyterModel:
 
     def set_feature_name(self, feature_name):
         """
-        Setter mtehod, updates feature names
+        Setter method, updates feature names
         :param feature_name: 
         """
         self.feature_name = feature_name
 
     def set_scores(self, scores):
         self.scores = scores
+
+    def set_predictor_variables(self, predictor_variables):
+        """
+        Setter method, updates predictor names
+        :param predictor_names: 
+        """
+        self.predictor_variables = predictor_variables
 
     def get_model(self):
         return self.model
@@ -1036,6 +1052,9 @@ class ImpyterModel:
 
     def get_feature_name(self):
         return self.feature_name
+
+    def get_predictor_variables(self):
+        return self.predictor_variables
 
     def get_score(self):
         ret_list = []
