@@ -6,6 +6,7 @@ author: Andreas Rubin-Schwarz
 import math
 import numpy as np
 import pandas as pd
+import time
 import warnings
 
 from collections import Counter
@@ -126,6 +127,8 @@ class Pattern:
         self.tuple_counter_dict = {}
         self.tuple_dict = {}
         self.unique_instances = 10
+        self.pattern_predictor_dict = {}
+        self.pattern_dependent_dict = {}
 
     def __str__(self):
         """
@@ -149,25 +152,27 @@ class Pattern:
         tuple with pattern indicator
         """
         tmp_label = []
-        tmp_nan_col_idc = []
-        tmp_counter = 0
+        tmp_dependent_variable = []
+        tmp_independent_variable = []
         tmp_col_lists = []
         for idx, value in enumerate(row):
+            col_name = self.column_names[idx]
             # For each value, check if NaN
             if self.nan_checker.is_nan(value):
                 self.missing_per_column[idx] += 1
                 # Add NaN-indicator to label
                 tmp_label.append('NaN')
                 # Store column indicators
-                tmp_nan_col_idc.append(tmp_counter)
-                tmp_col_lists.append(self.column_names[tmp_counter])
+                tmp_dependent_variable.append(idx)
+                tmp_col_lists.append(col_name)
             else:
                 # Add complete-indicator to label
+                tmp_independent_variable.append(col_name)
                 tmp_label.append(1)
-            tmp_counter += 1
         try:
-            self.store_tuple_columns[tuple(tmp_label)] = tmp_nan_col_idc
-            self._store_tuple(tuple(tmp_label), row.name, tmp_col_lists)
+            self.store_tuple_columns[tuple(tmp_label)] = tmp_dependent_variable
+            self._store_tuple(
+                tuple(tmp_label), row.name, tmp_col_lists, tmp_dependent_variable, tmp_independent_variable)
         # in case of list
         except AttributeError:
             return tuple(tmp_label)
@@ -306,7 +311,7 @@ class Pattern:
 
         return unique_vals
 
-    def _store_tuple(self, tup, row_idx, tmp_col_names):
+    def _store_tuple(self, tup, row_idx, tmp_col_names, dependent_variables, independent_variables):
         if tup in self.result_pattern:
             self.result_pattern[tup] += 1
             # Get corresponding label number from dict
@@ -322,6 +327,9 @@ class Pattern:
             # Add first row id to pattern_index_store
             self.pattern_index_store[self.tuple_counter] = [row_idx]
             self.tuple_counter += 1
+            # store dependent and independent variables
+            self.pattern_predictor_dict[tup] = independent_variables
+            self.pattern_dependent_dict[tup] = dependent_variables
 
     def get_complete_id(self):
         """
@@ -510,6 +518,7 @@ class Impyter:
         self.model_log = {}  # stores all models once impute has been run
         self.error_string = ""
         self.pattern_predictor_dict = {}
+        self.pattern_dependent_variable_dict = {}
 
     def __str__(self):
         """
@@ -519,299 +528,7 @@ class Impyter:
         if self.data is not None:
             return str(self.data)
 
-    @staticmethod
-    def _set_display_options(length, cols=True):
-        if cols:
-            pd.set_option("display.max_columns", length)
-        else:
-            pd.set_option("display.max_rows", length)
-
-    @staticmethod
-    def _get_display_options(cols=True):
-        if cols:
-            return pd.get_option("display.max_columns")
-        else:
-            return pd.get_option("display.max_rows")
-
-    @staticmethod
-    def _data_check(data):
-        """
-        Checks if data is pandas DataFrame. Otherwise the data will be transformed.
-        """
-        # perform instance check on data if available in constructor
-        if not isinstance(data, pd.DataFrame):
-            # if data is not a DataFrame, try turning it into one
-            try:
-                return_data = pd.DataFrame(data)
-                return return_data
-            except ValueError as e:
-                print("Value Error: {}".format(e))
-                return pd.DataFrame()
-        return data
-
-    def drop_imputation(self, threshold, verbose=True):
-        models = dict(self.model_log)
-        for pattern_no in models:
-            model = self.get_model(pattern_no)
-            for idx in range(len(model.get_model())):
-                if 'r2' in model.get_scoring()[idx]:
-                    cur_threshold = threshold[1]
-                else:
-                    cur_threshold = threshold[0]
-                # average score in case it's a multi-nan pattern
-                avg_score = np.mean(model.get_score()[idx])
-                if avg_score < cur_threshold:
-                    if verbose:
-                        print("Dropping pattern {} ({} < {} {})".format(
-                            pattern_no, avg_score, cur_threshold, model.get_scoring()[0]))
-
-                    self.drop_pattern(pattern_no, inplace=True)
-                    del (self.model_log[pattern_no])
-                    break  # only one value below threshold is enough to discard pattern
-
-    def load_data(self, data):
-        """
-        Function to load data into Impyter class.
-        to reload and erase not needed information.
-        
-        :param data: preferably pandas DataFrame 
-        """
-        # check if data is set in constructor otherwise load empty set.
-        if data is None:
-            data = pd.DataFrame()
-        else:
-            data = self._data_check(data)
-
-        self.data = data.copy()
-        self.result = self.data.copy()
-        self.pattern_log = Pattern()
-
-    def pattern(self):
-        """
-        Returns missing value patterns of data set.
-        """
-        if self.data.empty:
-            raise ValueError("Error: Load data first.")
-        else:
-            return_table = self.pattern_log.get_pattern(self.data)
-            if len(return_table.columns) > Impyter._get_display_options():
-                Impyter._set_display_options(len(return_table.columns))
-            if len(return_table) > Impyter._get_display_options(False):  # check if too many rows to display
-                Impyter._set_display_options(len(return_table), False)
-        return return_table
-
-    def get_pattern_column_name(self, pattern_no):
-        tmp = self.pattern()
-        return tmp[tmp.index == pattern_no]
-
-    def get_pattern(self, pattern_no):
-        """
-        Returns data points for a specific pattern_no for further
-        investigation.
-
-        Parameters
-        ----------
-        pattern_no: index int value that indicates pattern
-
-        Returns
-        -------
-        self.data: data points that have a certain pattern
-        """
-        return self.data[self.data.index.isin(
-            self.pattern_log.get_pattern_indices(pattern_no))]
-
-    def get_data(self):
-        return self.data
-
-    def get_result(self):
-        if self.result is not None:
-            return self.result.copy()
-        else:
-            raise ValueError("Need to impute values first.")
-
-    def get_summary(self, importance_filter=True):
-        """
-        Shows simple overview of missing values.
-        :param importance_filter: Show only features with at least one missing value.
-        :return: pd.DataFrame
-        """
-        if not self.pattern_log.pattern_store:
-            self.pattern()
-
-        result_table = self.pattern_log.get_missing_value_percentage(self.data, importance_filter)
-        return result_table
-
-    def get_model(self, pattern_no):
-        if pattern_no in self.model_log:
-            return self.model_log[pattern_no]
-        else:
-            raise ValueError("There is no model for pattern {}".format(pattern_no))
-
-    def drop_pattern(self, pattern_no, inplace=False):
-        temp_patterns = self.pattern_log.get_pattern_indices(pattern_no)
-
-        if inplace:
-            # Drop self.data with overwrite function
-            self.result = self.result[~self.result.index.isin(temp_patterns)]
-            # Delete indices in pattern_log
-            self.pattern_log.remove_pattern(pattern_no)
-            return self.result
-
-        return self.data[~self.data.index.isin(temp_patterns)].copy()
-
-    def map_model_to_pattern(self, mdl):
-        pred_variables = mdl.get_predictor_variables()
-        dependent_variables = mdl.get_feature_name()
-        pattern_no = None
-
-        def compare_features(list1, list2):
-            return Counter(list1) == Counter(list2)
-
-        for i in self.pattern_log.store_tuple_columns:
-            if compare_features(dependent_variables, self.pattern_log.store_tuple_columns[i]):
-                pattern_no = self.pattern_log.tuple_counter_dict[i]
-                break
-        if pattern_no and compare_features(pred_variables, self.pattern_predictor_dict[pattern_no]):
-            return pattern_no
-        else:
-            return None
-
-    def load_model_only(self, model):
-        try:
-            return joblib.load(model)
-        except IOError as e:
-            print(e)
-
-    def load_model(self, pattern_no, model):
-        """
-        Load a stored machine learning model to perform value imputation.
-        :param model: pickle object or filename of model. 
-        """
-        try:
-            mdl = joblib.load(model)
-            mdl_pattern_no = self.map_model_to_pattern(mdl)
-            if pattern_no and mdl_pattern_no:
-                self.model_log[self.map_model_to_pattern(mdl)] = mdl
-            elif pattern_no and not mdl_pattern_no:
-                raise ValueError("Model and pattern seem to be inconsistent")
-            else:
-                self.model_log = joblib.load(model)
-        except IOError as e:
-            print("File not found: {}".format(e))
-
-    def one_hot_encode(self, data, verbose=False):
-        """
-        Uses pandas get_dummies method to return a one-hot-encoded
-        DataFrame.
-        :param data: 
-        :return: pd.DataFrame - with one-hot-encoded categorical values
-        """
-        return_table = pd.DataFrame(index=data.index)
-
-        for col, col_data in data.iteritems():
-            # If data type is categorical, convert to dummy variables
-            if col_data.dtype == object:
-                if verbose > 3:
-                    print("Getting dummies for {} (Unique: {})".format(col, len(data[col].unique())))
-                col_data = pd.get_dummies(col_data, prefix=col + "_ohe")
-
-            # Collect the revised columns
-            return_table = return_table.join(col_data)
-        return return_table
-
-    def one_hot_decode(self, data):
-        """
-        Decodes one-hot-encoded features into single column again.
-        Generally speaking, this function inverses the one-hot-encode function. 
-        :return: pd.DataFrame - data set with collapsed information.
-        """
-        all_columns = data.columns
-        ohe_selector = []
-        for col in all_columns:
-            if '_ohe_' in col:
-                ohe_selector.append(col)
-        encoded_data = data[ohe_selector].copy()
-
-        ohe_columns = ohe_selector
-        unique_cols = []
-        ohe_column_transform_val = []
-        for col in ohe_columns:
-            if '_ohe_' in col:
-                column_split = col.split('_ohe_')
-                if column_split[0] not in unique_cols:
-                    unique_cols.append(column_split[0])
-                ohe_column_transform_val.append(column_split[1])
-
-        list_of_lists = []
-        for idx, row in encoded_data.iterrows():
-            tmp_list = []
-            for value in range(len(row)):
-                if row[value] == 1:
-                    tmp_list.append(ohe_column_transform_val[value])
-            list_of_lists.append(tmp_list)
-        return_table = pd.DataFrame(list_of_lists)
-        return_table.columns = unique_cols
-        data.drop(ohe_selector, inplace=True, axis=1)
-        data = pd.concat([data, return_table], axis=1)
-        return data
-
-    def save_model(self, pattern_no=None, name=None):
-        """
-        Save a learned machine learning model to disk.
-        :param name: Name of file.  
-        """
-        name_str = ""
-        if pattern_no is None:
-            model = self.model_log
-        else:
-            model = self.get_model(pattern_no)
-            name_str = "pattern_{}_".format(pattern_no)
-        if name is None:
-            name = name_str + str(date.today()) + "-impyte-mdl.pkl"
-            print("Saved model under {}".format(name))
-        joblib.dump(model, name)
-
-    def ensemble(self, estimator_list=["rf", "dt"]):
-        """
-        Exhaustive search for best estimator to predict a certain feature. 
-        Work in progress and beta method. Needs further work on summaries and plotting.
-        :return: 
-        """
-
-        imp = Impyter()
-        imp.load_data(self.data.copy())
-        # ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
-        if not estimator_list:
-            estimator_list = ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
-        for estimator in estimator_list:
-            _ = self.impute(estimator=estimator)
-
-    @staticmethod
-    def _print_header(threshold):
-        # print threshold:
-        print("{:<30}{:<30}{:<30}".format("Scoring Threshold", "Classification", "Regression"))
-        print("=" * 90)
-        print("{:<30}{:<30}{:<30}".format("", str(threshold[0]), str(threshold[1])))
-        print("")
-        print("{:<30}{:<30}{:<30}".format(
-            "Pattern: Label",
-            "Score",
-            "Estimator"))
-        print("=" * 90)
-
-    @staticmethod
-    def _print_results_line(scores, scoring, pattern, col_name, tmp_error_string, model, error_count):
-        score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
-        col_temp = "{}: {}".format(pattern, col_name)
-        if tmp_error_string:
-            col_temp += " (* {})".format(error_count)
-
-        return "{:<30}{:<30}{:<30} ".format(
-            col_temp,
-            score_temp,
-            model.__class__.__name__)
-
-    def _impute(self, pattern, col_name, X_train, X_test, y_train, one_hot_encode,
+    def __impute(self, pattern, col_name, X_train, X_test, y_train, one_hot_encode,
                 auto_scale, threshold, result_data, cv, verbose_string, verbose):
         global error_count
         # regressor flag
@@ -883,7 +600,7 @@ class Impyter:
 
         # prepare statement line for verbose printout
         if verbose:
-            verbose_string = self._print_results_line(
+            verbose_string = self.__print_results_line(
                 np.mean(scores), scoring, pattern, col_name, tmp_error_string, model, error_count)
 
         to_append = model.predict(X_test)
@@ -909,6 +626,323 @@ class Impyter:
             verbose_string += " not imputed..."
         if verbose:
             print(verbose_string)
+
+    @staticmethod
+    def __print_header(threshold):
+        # print threshold:
+        print("{:<30}{:<30}{:<30}".format("Scoring Threshold", "Classification", "Regression"))
+        print("=" * 90)
+        print("{:<30}{:<30}{:<30}".format("", str(threshold[0]), str(threshold[1])))
+        print("")
+        print("{:<30}{:<30}{:<30}".format(
+            "Pattern: Label",
+            "Score",
+            "Estimator"))
+        print("=" * 90)
+
+    @staticmethod
+    def __print_results_line(scores, scoring, pattern, col_name, tmp_error_string, model, error_count):
+        score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
+        col_temp = "{}: {}".format(pattern, col_name)
+        if tmp_error_string:
+            col_temp += " (* {})".format(error_count)
+
+        return "{:<30}{:<30}{:<30} ".format(
+            col_temp,
+            score_temp,
+            model.__class__.__name__)
+
+    @staticmethod
+    def _data_check(data):
+        """
+        Checks if data is pandas DataFrame. Otherwise the data will be transformed.
+        """
+        # perform instance check on data if available in constructor
+        if not isinstance(data, pd.DataFrame):
+            # if data is not a DataFrame, try turning it into one
+            try:
+                return_data = pd.DataFrame(data)
+                return return_data
+            except ValueError as e:
+                print("Value Error: {}".format(e))
+                return pd.DataFrame()
+        return data
+
+    @staticmethod
+    def _get_display_options(cols=True):
+        if cols:
+            return pd.get_option("display.max_columns")
+        else:
+            return pd.get_option("display.max_rows")
+
+    @staticmethod
+    def _set_display_options(length, cols=True):
+        if cols:
+            pd.set_option("display.max_columns", length)
+        else:
+            pd.set_option("display.max_rows", length)
+
+    def drop_imputation(self, threshold, verbose=True):
+        models = dict(self.model_log)
+        for pattern_no in models:
+            model = self.get_model(pattern_no)
+            for idx in range(len(model.get_model())):
+                if 'r2' in model.get_scoring()[idx]:
+                    cur_threshold = threshold[1]
+                else:
+                    cur_threshold = threshold[0]
+                # average score in case it's a multi-nan pattern
+                avg_score = np.mean(model.get_score()[idx])
+                if avg_score < cur_threshold:
+                    if verbose:
+                        print("Dropping pattern {} ({} < {} {})".format(
+                            pattern_no, avg_score, cur_threshold, model.get_scoring()[0]))
+
+                    self.drop_pattern(pattern_no, inplace=True)
+                    del (self.model_log[pattern_no])
+                    break  # only one value below threshold is enough to discard pattern
+
+    def drop_pattern(self, pattern_no, inplace=False):
+        temp_patterns = self.pattern_log.get_pattern_indices(pattern_no)
+
+        if inplace:
+            # Drop self.data with overwrite function
+            self.result = self.result[~self.result.index.isin(temp_patterns)]
+            # Delete indices in pattern_log
+            self.pattern_log.remove_pattern(pattern_no)
+            return self.result
+
+        return self.data[~self.data.index.isin(temp_patterns)].copy()
+
+    def ensemble(self, estimator_list=["rf", "dt"]):
+        """
+        Exhaustive search for best estimator to predict a certain feature. 
+        Work in progress and beta method. Needs further work on summaries and plotting.
+        :return: 
+        """
+
+        imp = Impyter()
+        imp.load_data(self.data.copy())
+        # ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
+        if not estimator_list:
+            estimator_list = ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
+        for estimator in estimator_list:
+            _ = self.impute(estimator=estimator)
+
+    def get_pattern(self, pattern_no):
+        """
+        Returns data points for a specific pattern_no for further
+        investigation.
+
+        Parameters
+        ----------
+        pattern_no: index int value that indicates pattern
+
+        Returns
+        -------
+        self.data: data points that have a certain pattern
+        """
+        return self.data[self.data.index.isin(
+            self.pattern_log.get_pattern_indices(pattern_no))]
+
+    def get_data(self):
+        return self.data
+
+    def get_result(self):
+        if self.result is not None:
+            return self.result.copy()
+        else:
+            raise ValueError("Need to impute values first.")
+
+    def get_summary(self, importance_filter=True):
+        """
+        Shows simple overview of missing values.
+        :param importance_filter: Show only features with at least one missing value.
+        :return: pd.DataFrame
+        """
+        if not self.pattern_log.pattern_store:
+            self.pattern()
+
+        result_table = self.pattern_log.get_missing_value_percentage(self.data, importance_filter)
+        return result_table
+
+    def get_model(self, pattern_no):
+        if pattern_no in self.model_log:
+            return self.model_log[pattern_no]
+        else:
+            raise ValueError("There is no model for pattern {}".format(pattern_no))
+
+    def load_data(self, data):
+        """
+        Function to load data into Impyter class.
+        to reload and erase not needed information.
+
+        :param data: preferably pandas DataFrame 
+        """
+        # check if data is set in constructor otherwise load empty set.
+        if data is None:
+            data = pd.DataFrame()
+        else:
+            data = self._data_check(data)
+
+        self.data = data.copy()
+        self.result = self.data.copy()
+        self.pattern_log = Pattern()
+
+    def load_only(self, model):
+        """
+        Load a stored machine learning model to perform value imputation.
+        :param model: pickle object or filename of model. 
+        """
+        try:
+            mdl = joblib.load(model)
+            return mdl
+        except IOError as e:
+            print("File not found: {}".format(e))
+
+    def load_model(self, model):
+        """
+        Load a stored machine learning model to perform value imputation.
+        :param model: pickle object or filename of model. 
+        """
+        # if data has no pattern yet, compute it
+        if not self.pattern_log.pattern_store:
+            print("Computing NaN-patterns first ...\n")
+            self.pattern()
+        
+        try:
+            mdl = joblib.load(model)
+            if isinstance(mdl, dict):
+                print("Found {} models...".format(len(mdl)))
+                for m in mdl:
+                    temp_mdl = mdl[m]
+                    mdl_pattern_no = self.map_model_to_pattern(temp_mdl)
+                    if mdl_pattern_no:
+                        print("Added model for pattern {}".format(mdl_pattern_no))
+                        self.model_log[mdl_pattern_no] = temp_mdl
+                    else:
+                        print("No matching pattern found for {}".format(temp_mdl))
+            elif isinstance(mdl, ImpyterModel):
+                mdl_pattern_no = self.map_model_to_pattern(mdl)
+                if mdl_pattern_no:
+                    self.model_log[mdl_pattern_no] = mdl
+                    print("Added model for pattern {}".format(mdl_pattern_no))
+                else:
+                    print("No matching pattern found for {}".format(mdl))
+            else:
+                raise ValueError(
+                    "Wrong format. Model log must be pickle file and contain dict i.e. {1 : ImpyteModel, ...}")
+        except IOError as e:
+            print("File not found: {}".format(e))
+
+    def compare_features(self, list1, list2):
+        return Counter(list1) == Counter(list2)
+
+    def map_model_to_pattern(self, mdl):
+        pred_variables = mdl.get_predictor_variables()
+        dependent_variables = mdl.get_feature_name()
+        pattern_no = None
+        pattern_string = ""
+
+        for tmp_pattern_string in self.pattern_log.pattern_dependent_dict.keys():
+            if self.compare_features(
+                    dependent_variables,
+                    self.pattern_log.pattern_dependent_dict[tmp_pattern_string]):
+                pattern_no = self.pattern_log.tuple_counter_dict[tmp_pattern_string]
+                pattern_string = tmp_pattern_string
+                break
+        if pattern_no and self.compare_features(
+                pred_variables,
+                self.pattern_log.pattern_predictor_dict[pattern_string]):
+            return pattern_no
+        else:
+            return None
+
+    def one_hot_encode(self, data, verbose=False):
+        """
+        Uses pandas get_dummies method to return a one-hot-encoded
+        DataFrame.
+        :param data: 
+        :return: pd.DataFrame - with one-hot-encoded categorical values
+        """
+        return_table = pd.DataFrame(index=data.index)
+
+        for col, col_data in data.iteritems():
+            # If data type is categorical, convert to dummy variables
+            if col_data.dtype == object:
+                if verbose > 3:
+                    print("Getting dummies for {} (Unique: {})".format(col, len(data[col].unique())))
+                col_data = pd.get_dummies(col_data, prefix=col + "_ohe")
+
+            # Collect the revised columns
+            return_table = return_table.join(col_data)
+        return return_table
+
+    def one_hot_decode(self, data):
+        """
+        Decodes one-hot-encoded features into single column again.
+        Generally speaking, this function inverses the one-hot-encode function. 
+        :return: pd.DataFrame - data set with collapsed information.
+        """
+        all_columns = data.columns
+        ohe_selector = []
+        for col in all_columns:
+            if '_ohe_' in col:
+                ohe_selector.append(col)
+        encoded_data = data[ohe_selector].copy()
+
+        ohe_columns = ohe_selector
+        unique_cols = []
+        ohe_column_transform_val = []
+        for col in ohe_columns:
+            if '_ohe_' in col:
+                column_split = col.split('_ohe_')
+                if column_split[0] not in unique_cols:
+                    unique_cols.append(column_split[0])
+                ohe_column_transform_val.append(column_split[1])
+
+        list_of_lists = []
+        for idx, row in encoded_data.iterrows():
+            tmp_list = []
+            for value in range(len(row)):
+                if row[value] == 1:
+                    tmp_list.append(ohe_column_transform_val[value])
+            list_of_lists.append(tmp_list)
+        return_table = pd.DataFrame(list_of_lists)
+        return_table.columns = unique_cols
+        data.drop(ohe_selector, inplace=True, axis=1)
+        data = pd.concat([data, return_table], axis=1)
+        return data
+
+    def pattern(self):
+        """
+        Returns missing value patterns of data set.
+        """
+        if self.data.empty:
+            raise ValueError("Error: Load data first.")
+        else:
+            return_table = self.pattern_log.get_pattern(self.data)
+            if len(return_table.columns) > Impyter._get_display_options():
+                Impyter._set_display_options(len(return_table.columns))
+            if len(return_table) > Impyter._get_display_options(False):  # check if too many rows to display
+                Impyter._set_display_options(len(return_table), False)
+        return return_table
+
+    def save_model(self, pattern_no=None, name=None):
+        """
+        Save a learned machine learning model to disk.
+        :param name: Name of file.  
+        """
+        name_str = ""
+        if pattern_no is None:
+            model = self.model_log
+        else:
+            model = self.get_model(pattern_no)
+            name_str = "_pattern_{}".format(pattern_no)
+        if name is None:
+            name = "{}{}{}{}{}".format(str(date.today()), name_str, "_impyte_mdl_", int(time.time()), ".pkl")
+            print("Saved model under {}".format(name))
+        joblib.dump(model, name)
 
     def impute(self,
                data=None,
@@ -957,7 +991,7 @@ class Impyter:
         self.error_string = ""
 
         # print output header
-        self._print_header(threshold)
+        self.__print_header(threshold)
 
         # Decide which classifier to use and initialize
         if estimator is not None:
@@ -1007,7 +1041,8 @@ class Impyter:
                 X_train = complete_cases.drop(col_name, axis=1)
                 X_test = self.get_pattern(pattern).drop(col_name, axis=1)
                 y_train = complete_cases[col_name]
-                self._impute(
+                self.pattern_dependent_variable_dict[pattern] = [col_name]
+                self.__impute(
                     pattern, col_name, X_train, X_test, y_train, one_hot_encode,
                     auto_scale, threshold, result_data, cv, tmp_error_string, verbose)
 
@@ -1021,12 +1056,13 @@ class Impyter:
                 tmp_error_string = ""
 
                 multi_nan_columns = self.pattern_log.get_column_name(pattern_no)
+                self.pattern_dependent_variable_dict[pattern_no] = multi_nan_columns
                 for col_name in multi_nan_columns:
                     # Get data of pattern for prediction
                     X_train = complete_cases.drop(multi_nan_columns, axis=1)
                     X_test = self.get_pattern(pattern_no).drop(multi_nan_columns, axis=1)
                     y_train = complete_cases[col_name]
-                    self._impute(
+                    self.__impute(
                         pattern_no, col_name, X_train, X_test, y_train, one_hot_encode,
                         auto_scale, threshold, result_data, cv, tmp_error_string, verbose)
 
