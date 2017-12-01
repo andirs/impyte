@@ -135,6 +135,43 @@ class Pattern:
         if self.pattern_store:
             return str(self.pattern_store["result"])
 
+    def __row_nan_pattern(self, row):
+        """
+        Function to evaluate row on its NaN value patterns.
+        Works with is_nan function to determine whether a value is empty or not.
+
+        Parameters
+        ----------
+        row: any row of a data set
+
+        Returns
+        -------
+        tuple with pattern indicator
+        """
+        tmp_label = []
+        tmp_nan_col_idc = []
+        tmp_counter = 0
+        tmp_col_lists = []
+        for idx, value in enumerate(row):
+            # For each value, check if NaN
+            if self.nan_checker.is_nan(value):
+                self.missing_per_column[idx] += 1
+                # Add NaN-indicator to label
+                tmp_label.append('NaN')
+                # Store column indicators
+                tmp_nan_col_idc.append(tmp_counter)
+                tmp_col_lists.append(self.column_names[tmp_counter])
+            else:
+                # Add complete-indicator to label
+                tmp_label.append(1)
+            tmp_counter += 1
+        try:
+            self.store_tuple_columns[tuple(tmp_label)] = tmp_nan_col_idc
+            self._store_tuple(tuple(tmp_label), row.name, tmp_col_lists)
+        # in case of list
+        except AttributeError:
+            return tuple(tmp_label)
+
     def _check_complete_row(self, row):
         """
         Determines whether a row consists out of only 1s.
@@ -193,7 +230,8 @@ class Pattern:
         self.missing_per_column = [0] * len(self.column_names)
 
         # Iteration via apply - stores results in self.result_pattern
-        data.apply(self.row_nan_pattern, axis=1)
+        self.result_pattern = {}
+        data.apply(self.__row_nan_pattern, axis=1)
 
         # Beautification of result
         result_pattern = pd.DataFrame.from_dict(self.result_pattern, orient='index')
@@ -268,20 +306,6 @@ class Pattern:
 
         return unique_vals
 
-    def get_missing_value_percentage(self, data, importance_filter=False):
-        return_table = pd.DataFrame(self.missing_per_column)
-        return_table.index = self.column_names
-        return_table.columns = ["Missing"]
-        return_table["Unique"] = self._get_unique_vals(data)
-        return_table["Complete"] = len(data) - return_table["Missing"]
-        return_table["Percentage"] = (return_table["Missing"] / len(data))
-        return_table["Percentage"] = pd.Series(
-            ["{0:.2f} %".format(val * 100) for val in return_table["Percentage"]], index=return_table.index)
-        return_table.sort_values("Missing", inplace=True)
-        if importance_filter:
-            return_table = return_table[return_table["Missing"] > 0]
-        return return_table[["Complete", "Missing", "Percentage", "Unique"]]
-
     def _store_tuple(self, tup, row_idx, tmp_col_names):
         if tup in self.result_pattern:
             self.result_pattern[tup] += 1
@@ -349,7 +373,21 @@ class Pattern:
         """
         return list(self.discrete_variables)
 
-    def get_pattern(self, data=None, unique_instances=10):
+    def get_missing_value_percentage(self, data, importance_filter=False):
+        return_table = pd.DataFrame(self.missing_per_column)
+        return_table.index = self.column_names
+        return_table.columns = ["Missing"]
+        return_table["Unique"] = self._get_unique_vals(data)
+        return_table["Complete"] = len(data) - return_table["Missing"]
+        return_table["Percentage"] = (return_table["Missing"] / len(data))
+        return_table["Percentage"] = pd.Series(
+            ["{0:.2f} %".format(val * 100) for val in return_table["Percentage"]], index=return_table.index)
+        return_table.sort_values("Missing", inplace=True)
+        if importance_filter:
+            return_table = return_table[return_table["Missing"] > 0]
+        return return_table[["Complete", "Missing", "Percentage", "Unique"]]
+
+    def get_pattern(self, data=None, unique_instances=10, recompute=False):
         """
         Returns NaN-patterns based on primary computation or
         initiates new computation of NaN-patterns.
@@ -358,30 +396,31 @@ class Pattern:
         ----------
         data: pd.DataFrame
         unique_instances: int - determines how many unique values are needed to count as continuous variable
+        recompute: Boolean - if set True, stored results are being disregarded
         
         Returns
         -------
         pd.DataFrame with NaN-pattern overview
         """
         # If pattern is already computed, return stored result
-        if self.pattern_store:
+        if self.pattern_store and not recompute:
             return self.pattern_store["result"]
         # compute new pattern analysis
-        elif not data.empty:
+        if not data.empty:
             return self._compute_pattern(data, unique_instances)['table']
         else:
             raise ValueError("No pattern stored and missing data to compute pattern.")
 
     def get_single_nan_pattern_nos(self):
         """
-        Returns all pattern indices of single nans
+        Returns all pattern numbers of single nans
         :return: 
         """
         return self.get_multi_nan_pattern_nos(multi=False)
 
     def get_multi_nan_pattern_nos(self, multi=True):
         """
-        Returns all pattern indices of multi-nans or single-nans
+        Returns all pattern numbers of multi-nans or single-nans
         :return: 
         """
         # TODO: More beautiful way of refactoring with get_single_nan_pattern_nos
@@ -426,54 +465,19 @@ class Pattern:
         -------
         None
         """
-        for col in self.get_column_name(pattern_no):
-            # search for index of column in missing summary list
-            for pointer in range(len(self.column_names)):
-                if self.column_names[pointer] == col:
-                    # decrease missing values by count of pattern values
-                    pattern_table = self.pattern_store["result"]
-                    decrease_value = pattern_table[pattern_table.index == pattern_no]["Count"]
-                    self.missing_per_column[pointer] -= int(decrease_value)
-        del(self.pattern_index_store[pattern_no])
-        self.pattern_store["result"].drop(pattern_no, axis=0, inplace=True)
-
-    def row_nan_pattern(self, row):
-        """
-        Function to evaluate row on its NaN value patterns.
-        Works with is_nan function to determine whether a value is empty or not.
-
-        Parameters
-        ----------
-        row: any row of a data set
-
-        Returns
-        -------
-        tuple with pattern indicator
-        """
-        tmp_label = []
-        tmp_nan_col_idc = []
-        tmp_counter = 0
-        tmp_col_lists = []
-        for idx, value in enumerate(row):
-            # For each value, check if NaN
-            if self.nan_checker.is_nan(value):
-                self.missing_per_column[idx] += 1
-                # Add NaN-indicator to label
-                tmp_label.append('NaN')
-                # Store column indicators
-                tmp_nan_col_idc.append(tmp_counter)
-                tmp_col_lists.append(self.column_names[tmp_counter])
-            else:
-                # Add complete-indicator to label
-                tmp_label.append(1)
-            tmp_counter += 1
-        try:
-            self.store_tuple_columns[tuple(tmp_label)] = tmp_nan_col_idc
-            self._store_tuple(tuple(tmp_label), row.name, tmp_col_lists)
-        # in case of list
-        except AttributeError:
-            return tuple(tmp_label)
-
+        if pattern_no in self.tuple_dict.keys():
+            for col in self.get_column_name(pattern_no):
+                # search for index of column in missing summary list
+                for pointer in range(len(self.column_names)):
+                    if self.column_names[pointer] == col:
+                        # decrease missing values by count of pattern values
+                        pattern_table = self.pattern_store["result"]
+                        decrease_value = pattern_table[pattern_table.index == pattern_no]["Count"]
+                        self.missing_per_column[pointer] -= int(decrease_value)
+            del(self.pattern_index_store[pattern_no])
+            self.pattern_store["result"].drop(pattern_no, axis=0, inplace=True)
+        else:
+            raise ValueError("Pattern not found")
 
 class Impyter:
     """
