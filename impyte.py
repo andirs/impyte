@@ -534,15 +534,17 @@ class Impyter:
         # regressor flag
         tmp_error_string = ""
         regressor = False
-        if pattern in self.model_log:
+        """
+        if pattern in self.model_log and pattern in self.pattern_log.get_multi_nan_pattern_nos():
             store_models = self.get_model(pattern).get_model()
             store_scores = self.get_model(pattern).get_scores()
             store_scoring = self.get_model(pattern).get_scoring()
             store_estimator_names = self.get_model(pattern).get_estimator_name()
             feature_names = self.get_model(pattern).get_feature_name()
         else:
-            store_models, store_scores, store_scoring, store_estimator_names = [], [], [], []
-            feature_names = []
+        """
+        store_models, store_scores, store_scoring, store_estimator_names = [], [], [], []
+        feature_names = []
         predictor_variables = X_train.columns
         self.pattern_predictor_dict[pattern] = predictor_variables
 
@@ -609,14 +611,6 @@ class Impyter:
 
         store_estimator_names.append(model.__class__.__name__)
 
-        self.model_log[pattern] = ImpyterModel(
-            estimator_name=store_estimator_names,
-            model=store_models,
-            pattern_no=pattern,
-            feature_name=feature_names,
-            scores=store_scores,
-            scoring=store_scoring,
-            predictor_variables=predictor_variables)
         indices = self.pattern_log.get_pattern_indices(pattern)
         if not tmp_threshold_cutoff or tmp_threshold_cutoff <= np.mean(scores):
             verbose_string += " imputed..."
@@ -626,6 +620,13 @@ class Impyter:
             verbose_string += " not imputed..."
         if verbose:
             print(verbose_string)
+
+        return {"store_estimator_names": store_estimator_names,
+                "store_models": store_models,
+                "feature_names": feature_names,
+                "store_scores": store_scores,
+                "store_scoring": store_scoring,
+                "predictor_variables": predictor_variables}
 
     @staticmethod
     def __print_header(threshold):
@@ -682,25 +683,31 @@ class Impyter:
         else:
             pd.set_option("display.max_rows", length)
 
+    def __drop_imputation(self, model, pattern_no, threshold, verbose):
+        if 'r2' in model.get_scoring():
+            cur_threshold = threshold[1]
+        else:
+            cur_threshold = threshold[0]
+        avg_score = np.mean(model.get_score())
+        if avg_score < cur_threshold:
+            if verbose:
+                print("Dropping pattern {} ({} < {} {})".format(
+                    pattern_no, avg_score, cur_threshold, model.get_scoring()[0]))
+
+            self.drop_pattern(pattern_no, inplace=True)
+            del (self.model_log[pattern_no])
+            return True
+
     def drop_imputation(self, threshold, verbose=True):
         models = dict(self.model_log)
         for pattern_no in models:
             model = self.get_model(pattern_no)
-            for idx in range(len(model.get_model())):
-                if 'r2' in model.get_scoring()[idx]:
-                    cur_threshold = threshold[1]
-                else:
-                    cur_threshold = threshold[0]
-                # average score in case it's a multi-nan pattern
-                avg_score = np.mean(model.get_score()[idx])
-                if avg_score < cur_threshold:
-                    if verbose:
-                        print("Dropping pattern {} ({} < {} {})".format(
-                            pattern_no, avg_score, cur_threshold, model.get_scoring()[0]))
-
-                    self.drop_pattern(pattern_no, inplace=True)
-                    del (self.model_log[pattern_no])
-                    break  # only one value below threshold is enough to discard pattern
+            if isinstance(model, ImpyterModel):
+                self.__drop_imputation(model, pattern_no, threshold, verbose)
+            if isinstance(model, ImpyterMultiModel):
+                for model in model.get_model():
+                    if self.__drop_imputation(model, pattern_no, threshold, verbose):
+                        break  # only one score needs to be below threshold in order to break
 
     def drop_pattern(self, pattern_no, inplace=False):
         temp_patterns = self.pattern_log.get_pattern_indices(pattern_no)
@@ -809,19 +816,27 @@ class Impyter:
         if not self.pattern_log.pattern_store:
             print("Computing NaN-patterns first ...\n")
             self.pattern()
-        
+
         try:
             mdl = joblib.load(model)
             if isinstance(mdl, dict):
                 print("Found {} models...".format(len(mdl)))
                 for m in mdl:
                     temp_mdl = mdl[m]
-                    mdl_pattern_no = self.map_model_to_pattern(temp_mdl)
-                    if mdl_pattern_no:
-                        print("Added model for pattern {}".format(mdl_pattern_no))
-                        self.model_log[mdl_pattern_no] = temp_mdl
-                    else:
-                        print("No matching pattern found for {}".format(temp_mdl))
+                    if isinstance(temp_mdl, ImpyterModel):
+                        # analyze predictors and dependent variables of model
+                        mdl_pattern_no = self.map_model_to_pattern(temp_mdl)
+                        if mdl_pattern_no:
+                            print("Added model for pattern {}".format(mdl_pattern_no))
+                            self.model_log[mdl_pattern_no] = temp_mdl
+                        else:
+                            print("No matching pattern found for {}".format(temp_mdl))
+                    elif isinstance(temp_mdl, ImpyterMultiModel):
+                        # analyze predictors and dependent variables of multimodel
+                        mdl_pattern_no = self.map_multimodel_to_pattern(temp_mdl)
+                        if mdl_pattern_no:
+                            self.model_log[mdl_pattern_no] = temp_mdl
+                            print("Added model for pattern {}".format(mdl_pattern_no))
             elif isinstance(mdl, ImpyterModel):
                 mdl_pattern_no = self.map_model_to_pattern(mdl)
                 if mdl_pattern_no:
@@ -836,7 +851,10 @@ class Impyter:
             print("File not found: {}".format(e))
 
     def compare_features(self, list1, list2):
-        return Counter(list1) == Counter(list2)
+        try:
+            return Counter(list1) == Counter(list2)
+        except TypeError as e:
+            return list1 == list2
 
     def map_model_to_pattern(self, mdl):
         pred_variables = mdl.get_predictor_variables()
@@ -855,6 +873,28 @@ class Impyter:
                 pred_variables,
                 self.pattern_log.pattern_predictor_dict[pattern_string]):
             return pattern_no
+        else:
+            return None
+
+    def map_multimodel_to_pattern(self, mmdl):
+        dep_indep_store = mmdl.get_dependend_and_independent_variables()
+        # dependent items
+        dep_pattern_no = None
+        for item in self.pattern_log.pattern_dependent_dict:
+            if self.compare_features(
+                    self.pattern_log.pattern_dependent_dict[item],
+                    dep_indep_store["dependent_variables"]):
+                dep_pattern_no = self.pattern_log.tuple_counter_dict[item]
+                break
+        # independent items
+        indep_pattern_no = None
+        for item in self.pattern_log.pattern_predictor_dict:
+            if self.compare_features(
+                    self.pattern_log.pattern_predictor_dict[item],
+                    dep_indep_store["independent_variables"]):
+                indep_pattern_no = self.pattern_log.tuple_counter_dict[item]
+        if dep_pattern_no and indep_pattern_no and dep_pattern_no == indep_pattern_no:
+            return dep_pattern_no
         else:
             return None
 
@@ -1031,9 +1071,10 @@ class Impyter:
         global error_count
         error_count = 0
 
-        # impute single nan patterns
+        # impute single-nan patterns
         for pattern in self.pattern_log.get_single_nan_pattern_nos():
             tmp_error_string = ""
+            pattern_string = self.pattern_log.tuple_dict[pattern]
             # filter out complete cases
             if complete_idx != pattern:
                 col_name = self.pattern_log.get_column_name(pattern)[0]
@@ -1042,19 +1083,33 @@ class Impyter:
                 X_test = self.get_pattern(pattern).drop(col_name, axis=1)
                 y_train = complete_cases[col_name]
                 self.pattern_dependent_variable_dict[pattern] = [col_name]
-                self.__impute(
+                tmp_results = self.__impute(
                     pattern, col_name, X_train, X_test, y_train, one_hot_encode,
                     auto_scale, threshold, result_data, cv, tmp_error_string, verbose)
+                # get return values and store in model log
+                self.model_log[pattern] = ImpyterModel(
+                    estimator_name=tmp_results["store_estimator_names"],
+                    model=tmp_results["store_models"],
+                    pattern_no=pattern,
+                    feature_name=tmp_results["feature_names"],
+                    scores=tmp_results["store_scores"],
+                    scoring=tmp_results["store_scoring"],
+                    predictor_variables=tmp_results["predictor_variables"],
+                    pattern_string=pattern_string)
 
-        # Multi-Nan
+        # impute multi-nan patterns
         multi_nan_patterns = self.pattern_log.get_multi_nan_pattern_nos()
         if multi_nans and not multi_nan_patterns.empty:
             print("")
             print("Multi nans")
             print("=" * 90)
             for pattern_no in multi_nan_patterns:
+                pattern_string = self.pattern_log.tuple_dict[pattern_no]
+                multi_model = ImpyterMultiModel(pattern_string)
                 tmp_error_string = ""
-
+                store_models, store_scores, \
+                    store_scoring, store_estimator_names,\
+                    feature_names = [], [], [], [], []
                 multi_nan_columns = self.pattern_log.get_column_name(pattern_no)
                 self.pattern_dependent_variable_dict[pattern_no] = multi_nan_columns
                 for col_name in multi_nan_columns:
@@ -1062,9 +1117,26 @@ class Impyter:
                     X_train = complete_cases.drop(multi_nan_columns, axis=1)
                     X_test = self.get_pattern(pattern_no).drop(multi_nan_columns, axis=1)
                     y_train = complete_cases[col_name]
-                    self.__impute(
+                    tmp_results = self.__impute(
                         pattern_no, col_name, X_train, X_test, y_train, one_hot_encode,
                         auto_scale, threshold, result_data, cv, tmp_error_string, verbose)
+                    store_estimator_names = tmp_results["store_estimator_names"]
+                    store_models = tmp_results["store_models"]
+                    store_scores = tmp_results["store_scores"]
+                    store_scoring = tmp_results["store_scoring"]
+                    feature_names = tmp_results["feature_names"]
+                    # get return values and store in model log
+                    tmp_model = ImpyterModel(
+                        estimator_name=store_estimator_names,
+                        model=store_models,
+                        pattern_no=pattern_no,
+                        feature_name=feature_names,
+                        scores=store_scores,
+                        scoring=store_scoring,
+                        predictor_variables=tmp_results["predictor_variables"],
+                        pattern_string=pattern_string)
+                    multi_model.append(tmp_model)
+                self.model_log[pattern_no] = multi_model
 
         # print error categories
         if verbose and self.error_string:
@@ -1085,7 +1157,8 @@ class ImpyterModel:
                  feature_name=None,
                  scores=None,
                  scoring=None,
-                 predictor_variables=None):
+                 predictor_variables=None,
+                 pattern_string=None):
         self.model = model
         self.pattern_no = pattern_no
         self.feature_name = feature_name
@@ -1093,6 +1166,7 @@ class ImpyterModel:
         self.estimator_name = estimator_name
         self.scoring = scoring
         self.predictor_variables = predictor_variables
+        self.pattern_string = pattern_string
 
     def set_model(self, model):
         """
@@ -1151,3 +1225,51 @@ class ImpyterModel:
 
     def get_estimator_name(self):
         return self.estimator_name
+
+
+class ImpyterMultiModel():
+    """
+    Stores multi-nan-models
+    """
+    def __init__(self, pattern_string):
+        self.model_list = []
+        self.count = 0
+        self.pattern_string = pattern_string
+
+    def append(self, model):
+        if not isinstance(model, ImpyterModel):
+            raise ValueError("Only objects of type ImpyterModel allowed")
+        self.count += 1
+        self.model_list.append(model)
+
+    @staticmethod
+    def combine_in_list(input_list, *args):
+        return input_list.extend(args)
+
+    @staticmethod
+    def check_and_append(input_list, storage_list):
+        if isinstance(input_list, list):
+            for item in input_list:
+                if item not in storage_list:
+                    storage_list.append(item)
+        else:
+            if input_list not in storage_list:
+                storage_list.append(input_list)
+
+        return storage_list
+
+    def get_dependend_and_independent_variables(self):
+        dependent_variables = []
+        independent_variables = []
+        for mdl in self.model_list:
+            tmp_feature_name = mdl.get_feature_name()
+            tmp_predictor_name = mdl.get_predictor_variables()
+            dependent_variables = ImpyterMultiModel.check_and_append(
+                tmp_feature_name, dependent_variables)
+            independent_variables = ImpyterMultiModel.check_and_append(
+                tmp_predictor_name, independent_variables)
+        return {"independent_variables": independent_variables,
+                "dependent_variables": dependent_variables}
+
+    def get_model(self):
+        return self.model_list
