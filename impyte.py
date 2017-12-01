@@ -24,6 +24,7 @@ from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.base import clone
 
 
+# TODO: Use __future__ bindings to include Python 2 and Python 3 users
 
 class NanChecker:
     """
