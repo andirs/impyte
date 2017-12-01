@@ -25,6 +25,7 @@ from sklearn.base import clone
 
 
 # TODO: Use __future__ bindings to include Python 2 and Python 3 users
+# http://python-future.org/compatible_idioms.html
 
 class NanChecker:
     """
@@ -260,23 +261,6 @@ class Pattern:
                 'continuous': continuous_selector}
 
     @staticmethod
-    def _get_index_and_pattern(row):
-        tmplabel = []
-        rowidx = row.index
-        for cell_idx, cell_value in enumerate(row):
-            print(cell_idx, cell_value)
-            # For each value, check if NaN
-            if NanChecker.is_nan(cell_value):
-                # Add true-indicator to label
-                tmplabel.append('NaN')
-                # Count appearance for column (not needed right now)
-                # result_columns[data_cols[cell_idx]] += 1
-            else:
-                # Add false-indicator to label
-                tmplabel.append(1)
-        return rowidx[0], tmplabel
-
-    @staticmethod
     def _get_unique_vals(data):
         unique_vals = []
         for col in data.columns:
@@ -317,8 +301,8 @@ class Pattern:
 
     def get_complete_id(self):
         """
-        Returns all ids that are complete.
-        :return: list - indices of complete cases
+        Returns pattern number of complete data points.
+        :return: int - pattern number
         """
         if not self.complete_idx:
             self.get_complete_indices()
@@ -330,7 +314,10 @@ class Pattern:
         :param patter_no: int - index of pattern
         :return: list
         """
-        return self.easy_access[self.tuple_dict[patter_no]]
+        if self.tuple_dict[patter_no] in self.easy_access:
+            return self.easy_access[self.tuple_dict[patter_no]]
+        else:
+            raise ValueError("Pattern {} is not a valid option".format(patter_no))
 
     def get_complete_indices(self):
         """
