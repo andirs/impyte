@@ -516,6 +516,7 @@ class Impyter:
         self.clf = {}  # stores classifier - deprecated
         self.pattern_log = Pattern()  # stores Pattern() object for data set
         self.model_log = {}  # stores all models once impute has been run
+        self.imputation_log = {} # stores imputation log
         self.error_string = ""
         self.pattern_predictor_dict = {}
         self.pattern_dependent_variable_dict = {}
@@ -527,6 +528,19 @@ class Impyter:
         """
         if self.data is not None:
             return str(self.data)
+
+    def __drop_imputation(self, model, pattern_no, threshold, drop_pattern, verbose):
+        cur_threshold = threshold[model.get_scoring()[0]]
+        avg_score = np.mean(model.get_score())
+        if avg_score < cur_threshold:
+            if verbose:
+                print("Dropping pattern {} ({} < {} {})".format(
+                    pattern_no, avg_score, cur_threshold, model.get_scoring()[0]))
+
+            if drop_pattern:
+                self.drop_pattern(pattern_no, inplace=True)
+            del (self.model_log[pattern_no])
+            return True
 
     def __impute_train(self, pattern, col_name, X_train, y_train, pred_vars,
                 auto_scale, y_scaler, threshold, result_data, cv, verbose_string, verbose):
@@ -608,6 +622,24 @@ class Impyter:
         if verbose:
             return return_verbose_string
 
+    def __preprocess_data(self, X_train, X_test, col_name, verbose, one_hot_encode, auto_scale):
+        X_scaler, y_scaler = None, None
+        # Pre-processing of data
+        if one_hot_encode:
+            if verbose > 3:
+                print("One-hot encoding for {}...".format(col_name))
+            test = X_train.append(X_test)
+            test = self.one_hot_encode(test, verbose)
+            X_train = test[test.index.isin(X_train.index)]
+            X_test = test[test.index.isin(X_test.index)]
+
+        # Scaling for ml pre-processing X_train
+        if auto_scale:
+            X_scaler = StandardScaler()
+            y_scaler = StandardScaler()
+            X_train = X_scaler.fit_transform(X_train)
+
+        return X_train, X_test, X_scaler, y_scaler
 
     @staticmethod
     def __print_header(threshold):
@@ -633,6 +665,17 @@ class Impyter:
             col_temp,
             score_temp,
             model.__class__.__name__)
+
+    def __reset(self, data):
+        """
+        Resets internal data when new data set is being loaded.
+        :param data: pd.DataFrame
+        """
+        self.data = data.copy()
+        self.model_log = {}
+        self.result = self.data.copy()
+        self.pattern_log = Pattern()
+
 
     @staticmethod
     def _data_check(data):
@@ -663,19 +706,6 @@ class Impyter:
             pd.set_option("display.max_columns", length)
         else:
             pd.set_option("display.max_rows", length)
-
-    def __drop_imputation(self, model, pattern_no, threshold, drop_pattern, verbose):
-        cur_threshold = threshold[model.get_scoring()[0]]
-        avg_score = np.mean(model.get_score())
-        if avg_score < cur_threshold:
-            if verbose:
-                print("Dropping pattern {} ({} < {} {})".format(
-                    pattern_no, avg_score, cur_threshold, model.get_scoring()[0]))
-
-            if drop_pattern:
-                self.drop_pattern(pattern_no, inplace=True)
-            del (self.model_log[pattern_no])
-            return True
 
     def drop_imputation(self, threshold, verbose=True, drop_pattern=False):
         models = dict(self.model_log)
@@ -713,7 +743,7 @@ class Impyter:
         if not estimator_list:
             estimator_list = ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
         for estimator in estimator_list:
-            _ = self.impute(estimator=estimator)
+            _ = self.impute(estimator=estimator, recompute=True)
 
     def get_pattern(self, pattern_no):
         """
@@ -771,9 +801,8 @@ class Impyter:
         else:
             data = self._data_check(data)
 
-        self.data = data.copy()
-        self.result = self.data.copy()
-        self.pattern_log = Pattern()
+        # perform data and imputation reset when new data set is being loaded
+        self.__reset(data)
 
     def load_only(self, model):
         """
@@ -829,7 +858,8 @@ class Impyter:
         except IOError as e:
             print("File not found: {}".format(e))
 
-    def compare_features(self, list1, list2):
+    @staticmethod
+    def compare_features(list1, list2):
         try:
             return Counter(list1) == Counter(list2)
         except TypeError as e:
@@ -842,18 +872,13 @@ class Impyter:
         pattern_string = ""
 
         for tmp_pattern_string in self.pattern_log.pattern_dependent_dict.keys():
-            #print("Pattern String:", tmp_pattern_string)
-            #print("Preds:", pred_variables)
-            #print("Deps:", dependent_variables)
-            #print("Stored Deps:", self.pattern_log.pattern_dependent_dict[tmp_pattern_string])
-            #print("Stored Preds:", self.pattern_log.pattern_predictor_dict[tmp_pattern_string])
-            if self.compare_features(
+            if Impyter.compare_features(
                     dependent_variables,
                     self.pattern_log.pattern_dependent_dict[tmp_pattern_string]):
                 pattern_no = self.pattern_log.tuple_counter_dict[tmp_pattern_string]
                 pattern_string = tmp_pattern_string
                 break
-        if pattern_no and self.compare_features(
+        if pattern_no and Impyter.compare_features(
                 pred_variables,
                 self.pattern_log.pattern_predictor_dict[pattern_string]):
             return pattern_no
@@ -865,7 +890,7 @@ class Impyter:
         # dependent items
         dep_pattern_no = None
         for item in self.pattern_log.pattern_dependent_dict:
-            if self.compare_features(
+            if Impyter.compare_features(
                     self.pattern_log.pattern_dependent_dict[item],
                     dep_indep_store["dependent_variables"]):
                 dep_pattern_no = self.pattern_log.tuple_counter_dict[item]
@@ -873,7 +898,7 @@ class Impyter:
         # independent items
         indep_pattern_no = None
         for item in self.pattern_log.pattern_predictor_dict:
-            if self.compare_features(
+            if Impyter.compare_features(
                     self.pattern_log.pattern_predictor_dict[item],
                     dep_indep_store["independent_variables"]):
                 indep_pattern_no = self.pattern_log.tuple_counter_dict[item]
@@ -967,25 +992,6 @@ class Impyter:
             name = "{}{}{}{}{}".format(str(date.today()), name_str, "_impyte_mdl_", int(time.time()), ".pkl")
             print("Saved model under {}".format(name))
         joblib.dump(model, name)
-
-    def __preprocess_data(self, X_train, X_test, col_name, verbose, one_hot_encode, auto_scale):
-        X_scaler, y_scaler = None, None
-        # Pre-processing of data
-        if one_hot_encode:
-            if verbose > 3:
-                print("One-hot encoding for {}...".format(col_name))
-            test = X_train.append(X_test)
-            test = self.one_hot_encode(test, verbose)
-            X_train = test[test.index.isin(X_train.index)]
-            X_test = test[test.index.isin(X_test.index)]
-
-        # Scaling for ml pre-processing X_train
-        if auto_scale:
-            X_scaler = StandardScaler()
-            y_scaler = StandardScaler()
-            X_train = X_scaler.fit_transform(X_train)
-
-        return X_train, X_test, X_scaler, y_scaler
 
     def impute(self,
                data=None,
