@@ -163,7 +163,7 @@ class Pattern:
                 # Add NaN-indicator to label
                 tmp_label.append('NaN')
                 # Store column indicators
-                tmp_dependent_variable.append(idx)
+                tmp_dependent_variable.append(col_name)
                 tmp_col_lists.append(col_name)
             else:
                 # Add complete-indicator to label
@@ -568,8 +568,6 @@ class Impyter:
                 self.error_string += tmp_error_string + "\n"
                 scores = [0.] * cv
 
-        #if col_name == 'number_project':
-        #print(len(model.feature_importances_))
         store_models.append(model)
         store_scores.append(scores)
         store_scoring.append(scoring)
@@ -581,9 +579,6 @@ class Impyter:
             verbose_string = self.__print_results_line(
                 np.mean(scores), scoring, pattern, col_name, tmp_error_string, model, error_count)
 
-        #self.__impute_predict(model, pattern, col_name, X_test, regressor, y_scaler, tmp_threshold_cutoff,
-        #                      scores, auto_scale, result_data, verbose_string, verbose)
-
         return {"store_estimator_names": store_estimator_names,
                 "store_models": store_models,
                 "feature_names": feature_names,
@@ -594,9 +589,10 @@ class Impyter:
                 "verbose_string": verbose_string}
 
     def __impute_predict(self, model, pattern, col_name, X_test, scores,
-                         auto_scale, result_data, threshold, verbose_string, verbose):
+                         auto_scale, result_data, threshold, verbose):
         # prediction takes place here
         to_append = model.get_model()[0].predict(X_test)
+        return_verbose_string = ""
 
         if model.get_scoring()[0] == 'r2' and auto_scale:
             y_scaler = model.get_y_scaler()
@@ -604,13 +600,13 @@ class Impyter:
 
         indices = self.pattern_log.get_pattern_indices(pattern)
         if not threshold or threshold <= np.mean(scores):
-            verbose_string += " imputed..."
+            return_verbose_string += " imputed..."
             for pointer, idx in enumerate(indices):
                 result_data.at[idx, col_name] = to_append[pointer]
         else:
-            verbose_string += " not imputed..."
+            return_verbose_string += " not imputed..."
         if verbose:
-            print(verbose_string)
+            return return_verbose_string
 
 
     @staticmethod
@@ -668,7 +664,7 @@ class Impyter:
         else:
             pd.set_option("display.max_rows", length)
 
-    def __drop_imputation(self, model, pattern_no, threshold, verbose):
+    def __drop_imputation(self, model, pattern_no, threshold, drop_pattern, verbose):
         cur_threshold = threshold[model.get_scoring()[0]]
         avg_score = np.mean(model.get_score())
         if avg_score < cur_threshold:
@@ -676,19 +672,20 @@ class Impyter:
                 print("Dropping pattern {} ({} < {} {})".format(
                     pattern_no, avg_score, cur_threshold, model.get_scoring()[0]))
 
-            self.drop_pattern(pattern_no, inplace=True)
+            if drop_pattern:
+                self.drop_pattern(pattern_no, inplace=True)
             del (self.model_log[pattern_no])
             return True
 
-    def drop_imputation(self, threshold, verbose=True):
+    def drop_imputation(self, threshold, verbose=True, drop_pattern=False):
         models = dict(self.model_log)
         for pattern_no in models:
             model = self.get_model(pattern_no)
             if isinstance(model, ImpyterModel):
-                self.__drop_imputation(model, pattern_no, threshold, verbose)
+                self.__drop_imputation(model, pattern_no, threshold, drop_pattern, verbose)
             if isinstance(model, ImpyterMultiModel):
                 for model in model.get_model():
-                    if self.__drop_imputation(model, pattern_no, threshold, verbose):
+                    if self.__drop_imputation(model, pattern_no, threshold, drop_pattern, verbose):
                         break  # only one score needs to be below threshold in order to break
 
     def drop_pattern(self, pattern_no, inplace=False):
@@ -845,6 +842,11 @@ class Impyter:
         pattern_string = ""
 
         for tmp_pattern_string in self.pattern_log.pattern_dependent_dict.keys():
+            #print("Pattern String:", tmp_pattern_string)
+            #print("Preds:", pred_variables)
+            #print("Deps:", dependent_variables)
+            #print("Stored Deps:", self.pattern_log.pattern_dependent_dict[tmp_pattern_string])
+            #print("Stored Preds:", self.pattern_log.pattern_predictor_dict[tmp_pattern_string])
             if self.compare_features(
                     dependent_variables,
                     self.pattern_log.pattern_dependent_dict[tmp_pattern_string]):
@@ -1079,7 +1081,6 @@ class Impyter:
             pattern_string = self.pattern_log.tuple_dict[pattern]
             # filter out complete cases
             if complete_idx != pattern:
-                y_scaler = None
                 col_name = self.pattern_log.get_column_name(pattern)[0]
                 X_train = complete_cases.drop(col_name, axis=1)
                 y_train = complete_cases[col_name]
@@ -1117,21 +1118,22 @@ class Impyter:
 
                     cur_threshold = threshold[tmp_results["store_scoring"][0]]
 
-                    self.__impute_predict(model, pattern, col_name, X_test, scores,
-                                          auto_scale, result_data, cur_threshold,
-                                          verbose_string, verbose)
+                    verbose_string += self.__impute_predict(model, pattern, col_name, X_test, scores,
+                                          auto_scale, result_data, cur_threshold, verbose)
+                    if verbose:
+                        print(verbose_string)
                 else:
                     # predict with existing models
                     model = self.model_log[pattern]
                     scores = model.get_scores()
                     cur_threshold = threshold[model.get_scoring()[0]]
-                    verbose_string = ""
-                    self.__impute_predict(model, pattern, col_name, X_test, scores,
-                                          auto_scale, result_data, cur_threshold,
-                                          verbose_string, verbose)
-                    print(self.__print_results_line(
+                    verbose_string = self.__print_results_line(
                         model.get_scores()[0], model.get_scoring()[0], pattern, model.get_feature_name()[0],
-                        "", model.get_model()[0], 0))
+                        "", model.get_model()[0], 0)
+                    verbose_string += self.__impute_predict(model, pattern, col_name, X_test, scores,
+                                          auto_scale, result_data, cur_threshold, verbose)
+                    if verbose:
+                        print(verbose_string)
 
 
         # impute multi-nan patterns
@@ -1144,36 +1146,61 @@ class Impyter:
                 pattern_string = self.pattern_log.tuple_dict[pattern_no]
                 multi_model = ImpyterMultiModel(pattern_string)
                 tmp_error_string = ""
-                store_models, store_scores, \
-                    store_scoring, store_estimator_names,\
-                    feature_names = [], [], [], [], []
                 multi_nan_columns = self.pattern_log.get_column_name(pattern_no)
                 self.pattern_dependent_variable_dict[pattern_no] = multi_nan_columns
                 for col_name in multi_nan_columns:
+
                     # Get data of pattern for prediction
                     X_train = complete_cases.drop(multi_nan_columns, axis=1)
-                    X_test = self.get_pattern(pattern_no).drop(multi_nan_columns, axis=1)
                     y_train = complete_cases[col_name]
-                    tmp_results = self.__impute_train(
-                        pattern_no, col_name, X_train, X_test, y_train, one_hot_encode,
-                        auto_scale, threshold, result_data, cv, tmp_error_string, verbose)
-                    store_estimator_names = tmp_results["store_estimator_names"]
-                    store_models = tmp_results["store_models"]
-                    store_scores = tmp_results["store_scores"]
-                    store_scoring = tmp_results["store_scoring"]
-                    feature_names = tmp_results["feature_names"]
-                    # get return values and store in model log
-                    tmp_model = ImpyterModel(
-                        estimator_name=store_estimator_names,
-                        model=store_models,
-                        pattern_no=pattern_no,
-                        feature_name=feature_names,
-                        scores=store_scores,
-                        scoring=store_scoring,
-                        predictor_variables=tmp_results["predictor_variables"],
-                        pattern_string=pattern_string,
-                        y_scaler=tmp_results["y_scaler"])
-                    multi_model.append(tmp_model)
+                    # Get data of pattern for prediction
+                    X_test = self.get_pattern(pattern_no).drop(multi_nan_columns, axis=1)
+                    pred_vars = X_train.columns
+
+                    # preprocessing
+                    X_train, X_test, X_scaler, y_scaler = self.__preprocess_data(
+                        X_train, X_test, col_name, verbose, one_hot_encode, auto_scale)
+
+                    if pattern_no not in self.model_log or recompute:  # train and predict
+                        tmp_results = self.__impute_train(
+                            pattern_no, col_name, X_train, y_train, pred_vars, auto_scale,
+                            y_scaler, threshold, result_data, cv, tmp_error_string, verbose)
+                        store_estimator_names = tmp_results["store_estimator_names"]
+                        store_models = tmp_results["store_models"]
+                        scores = tmp_results["store_scores"]
+                        store_scoring = tmp_results["store_scoring"]
+                        feature_names = tmp_results["feature_names"]
+                        # get return values and store in model log
+                        tmp_model = ImpyterModel(
+                            estimator_name=store_estimator_names,
+                            model=store_models,
+                            pattern_no=pattern_no,
+                            feature_name=feature_names,
+                            scores=scores,
+                            scoring=store_scoring,
+                            predictor_variables=tmp_results["predictor_variables"],
+                            pattern_string=pattern_string,
+                            y_scaler=tmp_results["y_scaler"])
+                        multi_model.append(tmp_model)
+                        cur_threshold = threshold[tmp_results["store_scoring"][0]]
+                        verbose_string = tmp_results["verbose_string"]
+
+                        verbose_string += self.__impute_predict(tmp_model, pattern_no, col_name, X_test, scores,
+                                              auto_scale, result_data, cur_threshold, verbose)
+                    else:
+                        # predict with existing models
+                        multi_model = self.model_log[pattern_no]
+                        for model in multi_model.model_list:
+                            if col_name in model.get_feature_name():
+                                scores = model.get_scores()
+                                cur_threshold = threshold[model.get_scoring()[0]]
+                                verbose_string = self.__print_results_line(
+                                    model.get_scores()[0], model.get_scoring()[0],
+                                    pattern_no, model.get_feature_name()[0], "", model.get_model()[0], 0)
+                                verbose_string += self.__impute_predict(model, pattern_no, col_name, X_test, scores,
+                                                      auto_scale, result_data, cur_threshold, verbose)
+                    if verbose:
+                        print(verbose_string)
                 self.model_log[pattern_no] = multi_model
 
         # print error categories
@@ -1296,8 +1323,9 @@ class ImpyterMultiModel():
                 if item not in storage_list:
                     storage_list.append(item)
         else:
-            if input_list not in storage_list:
-                storage_list.append(input_list)
+            for element in input_list:
+                if element not in storage_list:
+                    storage_list.append(element)
 
         return storage_list
 
