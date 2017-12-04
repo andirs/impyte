@@ -37,7 +37,7 @@ impyte focuses on two main goals:
     imp.impyte(estimator='rf', multi_nans=True)
     
     # use f1 and r2 thresholds
-    imp.impyte(estimator='rf', threshold=[.7, .7])  # f1, r2
+    imp.impyte(estimator='rf', threshold={"r2": .7, "f1_macro": .7})
 
 ## Limits and Notes
 The current version is a work in progress. First imputation methods are implemented but pre-processing steps need additional documentation. 

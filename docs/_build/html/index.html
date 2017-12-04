@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Impyte documentation &mdash; impyte 0.0.1 documentation</title>
+  <title>Welcome to impyter &mdash; impyte 0.0.1 documentation</title>
   
 
   
@@ -32,8 +32,7 @@
   
 
   
-    <link rel="top" title="impyte 0.0.1 documentation" href="#"/>
-        <link rel="next" title="Installation" href="installation.html"/> 
+    <link rel="top" title="impyte 0.0.1 documentation" href="#"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -86,13 +85,18 @@
               
             
             
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Welcome to impyter</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
 </ul>
-
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</div>
             
           
         </div>
@@ -135,7 +139,7 @@
     
       <li><a href="#">Docs</a> &raquo;</li>
         
-      <li>Impyte documentation</li>
+      <li>Welcome to impyter</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -154,32 +158,45 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="impyte-documentation">
-<h1>Impyte documentation<a class="headerlink" href="#impyte-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Here is some intro text</p>
+  <div class="section" id="welcome-to-impyter">
+<h1>Welcome to impyter<a class="headerlink" href="#welcome-to-impyter" title="Permalink to this headline">¶</a></h1>
+<p>Impyter is a Python module to impute missing values by prediction using machine learning algorithms.</p>
 </div>
-<div class="section" id="header-number-two">
-<h1>Header Number Two<a class="headerlink" href="#header-number-two" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="contents">
+<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>One essential problem for any person dealing with data is missing values.
+There are several possibilities to deal with missing information, ranging
+from dropping data points to estimating the value based on other values
+in that column (i.e. average or median values).
+A more recent method involves machine-learning algorithms.
+This module offers a lightweight Python solution to calculate missing
+information based on the underlying relationship between data points.</p>
 <p>This is some additional cool text.:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">print</span> <span class="s1">&#39;Hello world&#39;</span>
 <span class="o">&gt;&gt;</span> <span class="n">Hello</span> <span class="n">world</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="contents">
-<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="license.html#contact">Contact</a></li>
-</ul>
-</li>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>Since this module is still in beta, you can install the latest version through its <a class="reference external" href="https://github.com/andirs/impyter">github</a> repository via pip.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">git</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">andirs</span><span class="o">/</span><span class="n">impyter</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>The requirements are listed in <code class="docutils literal"><span class="pre">requirements.txt</span></code> and will usually be installed when
+proceeding through pip. When installing manual,
+please make sure following modules are already installed:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://www.python.org/">Python 3.6</a></li>
+<li><a class="reference external" href="https://scikit-learn.org/">sklearn 0.19</a></li>
+<li><a class="reference external" href="http://pandas.pydata.org/">pandas 0.21</a></li>
 </ul>
 </div>
 </div>
@@ -199,13 +216,6 @@
            </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-    </div>
   
 
   <hr/>
