@@ -94,6 +94,7 @@
 <li><a class="reference internal" href="#requirements">Requirements</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#api-reference">API Reference</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 </div>
@@ -199,6 +200,552 @@ please make sure following modules are already installed:</p>
 <li><a class="reference external" href="http://pandas.pydata.org/">pandas 0.21</a></li>
 </ul>
 </div>
+</div>
+<div class="section" id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<p><code class="xref py py-mod docutils literal"></code> Module</p>
+<span class="target" id="module-impyte"></span><p>Module to impute missing values using machine learning algorithms.
+author: Andreas Rubin-Schwarz</p>
+<dl class="class">
+<dt id="impyte.Impyter">
+<em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">Impyter</code><span class="sig-paren">(</span><em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Example usage:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">impyte</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;missing_values.csv&quot;</span><span class="p">)</span>
+<span class="n">imp</span> <span class="o">=</span> <span class="n">impyte</span><span class="o">.</span><span class="n">Impyter</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+<span class="c1"># show nan-patterns of data in one data frame</span>
+<span class="n">imp</span><span class="o">.</span><span class="n">pattern</span><span class="p">()</span> <span class="c1"># shows nan-patterns</span>
+
+<span class="c1"># imputation of all single-nans using random forest</span>
+<span class="n">imp</span><span class="o">.</span><span class="n">impute</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="s1">&#39;rf&#39;</span><span class="p">)</span>
+
+<span class="c1"># imputation of all nan-patterns</span>
+<span class="n">imp</span><span class="o">.</span><span class="n">impute</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="s1">&#39;rf&#39;</span><span class="p">,</span> <span class="n">multi_nans</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># use f1 and r2 thresholds</span>
+<span class="n">imp</span><span class="o">.</span><span class="n">impute</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="s1">&#39;rf&#39;</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;r2&quot;</span><span class="p">:</span> <span class="o">.</span><span class="mi">7</span><span class="p">,</span> <span class="s2">&quot;f1_macro&quot;</span><span class="p">:</span> <span class="o">.</span><span class="mi">7</span><span class="p">})</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> (<em>pd.DataFrame, optional</em>) &#8211; Data on which to perform imputation.</p>
+<p>The data can also be a list of lists but will be converted
+into a pandas DataFrame once loaded. If none, data can be loaded
+at a later point through <a class="reference internal" href="#impyte.Impyter.load_data" title="impyte.Impyter.load_data"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.load_data</span></code></a>.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<em>pd.DataFrame</em>) &#8211; The original data, loaded by user through instantiation or <a class="reference internal" href="#impyte.Impyter.load_data" title="impyte.Impyter.load_data"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.load_data</span></code></a> method.</li>
+<li><strong>result</strong> (<em>pd.DataFrame</em>) &#8211; Copy of original data on which imputation is being performed.</li>
+<li><strong>clf</strong> (<em>dict</em>) &#8211; Holds estimator for given imputation. <cite>(Deprecated)</cite></li>
+<li><strong>self.pattern_log</strong> (<em>Pattern object</em>) &#8211; An instantiated <a class="reference internal" href="#impyte.Pattern" title="impyte.Pattern"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Pattern</span></code></a> object, that holds information about the NaN-pattern.</li>
+<li><strong>self.model_log</strong> (<em>dict</em>) &#8211; Python dictionary, storing all models once <a class="reference internal" href="#impyte.Impyter.impute" title="impyte.Impyter.impute"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.impute</span></code></a> has been run</li>
+<li><strong>self.error_string</strong> (<em>str</em>) &#8211; String representation of error messages that occured during the imputation process.</li>
+<li><strong>self.pattern_predictor_dict</strong> (<em>dict</em>) &#8211; Python dictionary storing a pattern string and its connected list of predictors.</li>
+<li><strong>self.pattern_dependent_variable_dict</strong> (<em>dict</em>) &#8211; Python dictionary storing a pattern string and its connected list of dependent variables.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="impyte.Impyter.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="impyte.Impyter.compare_features">
+<em class="property">static </em><code class="descname">compare_features</code><span class="sig-paren">(</span><em>list1</em>, <em>list2</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.compare_features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.drop_imputation">
+<code class="descname">drop_imputation</code><span class="sig-paren">(</span><em>threshold</em>, <em>verbose=True</em>, <em>drop_pattern=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.drop_imputation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.drop_pattern">
+<code class="descname">drop_pattern</code><span class="sig-paren">(</span><em>pattern_no</em>, <em>inplace=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.drop_pattern" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.get_data">
+<code class="descname">get_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.get_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.get_model">
+<code class="descname">get_model</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.get_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.get_pattern">
+<code class="descname">get_pattern</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.get_pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns data points for a specific pattern_no for further
+investigation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_no</strong> (<em>index int value that indicates pattern</em>)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>self.data</strong></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">data points that have a certain pattern</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.get_result">
+<code class="descname">get_result</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.get_result" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.get_summary">
+<code class="descname">get_summary</code><span class="sig-paren">(</span><em>importance_filter=True</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.get_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows simple overview of missing values.
+:param importance_filter: Show only features with at least one missing value.
+:return: pd.DataFrame</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.impute">
+<code class="descname">impute</code><span class="sig-paren">(</span><em>data=None</em>, <em>cv=5</em>, <em>verbose=True</em>, <em>estimator='rf'</em>, <em>multi_nans=False</em>, <em>one_hot_encode=True</em>, <em>auto_scale=True</em>, <em>threshold={'f1_macro': None</em>, <em>'r2': None}</em>, <em>recompute=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.impute" title="Permalink to this definition">¶</a></dt>
+<dd><p>data: data to be imputed
+cv: Amount of cross-validation runs.
+verbose: Boolean value, whether prediction results should be printed out.
+estimator:  &#8216;rf: Random Forest&#8217;,</p>
+<blockquote>
+<div>&#8216;svm: Support Vector Machine&#8217;,
+&#8216;sgd: Stochastic Gradient Descent&#8217;
+&#8216;knn: KNearest Neighbor&#8217;
+&#8216;bayes: (Naive) Bayes&#8217;,
+&#8216;dt: Decision Tree&#8217;,
+&#8216;gb: Gradient Boosting&#8217;,
+&#8216;mlp: Multi-layer Perceptron (neural network)&#8217;</div></blockquote>
+<p>multi_nans: Boolean indicator if data points with multiple NaN values should be imputed as well
+one_hoe_encode: Boolean - if set to True one-hot-encoding of categorical variables happens
+auto_scale: Boolean - if set to True continuous variables are automatically scaled</p>
+<blockquote>
+<div>and transformed back after imputation.</div></blockquote>
+<p>threshold: list - classification and regression threshold cut-offs. At this point f1 score and R2.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.load_data">
+<code class="descname">load_data</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to load data into Impyter class.
+to reload and erase not needed information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> &#8211; preferably pandas DataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.load_model">
+<code class="descname">load_model</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.load_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a stored machine learning model to perform value imputation.
+:param model: pickle object or filename of model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.load_only">
+<code class="descname">load_only</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.load_only" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a stored machine learning model to perform value imputation.
+:param model: pickle object or filename of model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.map_model_to_pattern">
+<code class="descname">map_model_to_pattern</code><span class="sig-paren">(</span><em>mdl</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.map_model_to_pattern" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.map_multimodel_to_pattern">
+<code class="descname">map_multimodel_to_pattern</code><span class="sig-paren">(</span><em>mmdl</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.map_multimodel_to_pattern" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.one_hot_decode">
+<code class="descname">one_hot_decode</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.one_hot_decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decodes one-hot-encoded features into single column again.
+Generally speaking, this function inverses the one-hot-encode function.
+:return: pd.DataFrame - data set with collapsed information.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.one_hot_encode">
+<code class="descname">one_hot_encode</code><span class="sig-paren">(</span><em>data</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.one_hot_encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses pandas get_dummies method to return a one-hot-encoded
+DataFrame.
+:param data:
+:return: pd.DataFrame - with one-hot-encoded categorical values</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.pattern">
+<code class="descname">pattern</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns missing value patterns of data set.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Impyter.save_model">
+<code class="descname">save_model</code><span class="sig-paren">(</span><em>pattern_no=None</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.save_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a learned machine learning model to disk.
+:param name: Name of file.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="impyte.ImpyterModel">
+<em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">ImpyterModel</code><span class="sig-paren">(</span><em>estimator_name</em>, <em>model=None</em>, <em>pattern_no=None</em>, <em>feature_name=None</em>, <em>scores=None</em>, <em>scoring=None</em>, <em>predictor_variables=None</em>, <em>pattern_string=None</em>, <em>y_scaler=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores computed Impyter machine learning models.</p>
+<dl class="method">
+<dt id="impyte.ImpyterModel.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>estimator_name</em>, <em>model=None</em>, <em>pattern_no=None</em>, <em>feature_name=None</em>, <em>scores=None</em>, <em>scoring=None</em>, <em>predictor_variables=None</em>, <em>pattern_string=None</em>, <em>y_scaler=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.get_estimator_name">
+<code class="descname">get_estimator_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_estimator_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.get_feature_name">
+<code class="descname">get_feature_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_feature_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.get_model">
+<code class="descname">get_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.get_pattern_no">
+<code class="descname">get_pattern_no</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_pattern_no" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.get_predictor_variables">
+<code class="descname">get_predictor_variables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_predictor_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.get_score">
+<code class="descname">get_score</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_score" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.get_scores">
+<code class="descname">get_scores</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_scores" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.get_scoring">
+<code class="descname">get_scoring</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_scoring" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.get_y_scaler">
+<code class="descname">get_y_scaler</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_y_scaler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.set_feature_name">
+<code class="descname">set_feature_name</code><span class="sig-paren">(</span><em>feature_name</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.set_feature_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setter method, updates feature names
+:param feature_name:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.set_model">
+<code class="descname">set_model</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.set_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setter method to update machine learning model.
+:param model: Machine Learning model</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.set_pattern">
+<code class="descname">set_pattern</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.set_pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setter method, updating pattern_no
+:param pattern_no: int</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.set_predictor_variables">
+<code class="descname">set_predictor_variables</code><span class="sig-paren">(</span><em>predictor_variables</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.set_predictor_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setter method, updates predictor names
+:param predictor_names:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterModel.set_scores">
+<code class="descname">set_scores</code><span class="sig-paren">(</span><em>scores</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.set_scores" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="impyte.ImpyterMultiModel">
+<em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">ImpyterMultiModel</code><span class="sig-paren">(</span><em>pattern_string</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores multi-nan-models</p>
+<dl class="method">
+<dt id="impyte.ImpyterMultiModel.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>pattern_string</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterMultiModel.append">
+<code class="descname">append</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.append" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="impyte.ImpyterMultiModel.check_and_append">
+<em class="property">static </em><code class="descname">check_and_append</code><span class="sig-paren">(</span><em>input_list</em>, <em>storage_list</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.check_and_append" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="impyte.ImpyterMultiModel.combine_in_list">
+<em class="property">static </em><code class="descname">combine_in_list</code><span class="sig-paren">(</span><em>input_list</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.combine_in_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterMultiModel.get_dependend_and_independent_variables">
+<code class="descname">get_dependend_and_independent_variables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.get_dependend_and_independent_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.ImpyterMultiModel.get_model">
+<code class="descname">get_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.get_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="impyte.NanChecker">
+<em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">NanChecker</code><a class="headerlink" href="#impyte.NanChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class that checks data set, lists or single
+values for NaN occurrence.</p>
+<p class="rubric">Examples</p>
+<p>Testing list for NaN values</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nan_array</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Test&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;42&quot;</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nan_checker</span> <span class="o">=</span> <span class="n">impyte</span><span class="o">.</span><span class="n">NanChecker</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">nan_checker</span><span class="o">.</span><span class="n">is_nan</span><span class="p">(</span><span class="n">nan_array</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>[False, True, True, False, [True, False]]</p>
+<dl class="staticmethod">
+<dt id="impyte.NanChecker.is_nan">
+<em class="property">static </em><code class="descname">is_nan</code><span class="sig-paren">(</span><em>data</em>, <em>nan_vals=None</em>, <em>recursive=True</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.NanChecker.is_nan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detect missing values (NaN in numeric arrays, empty strings in string arrays).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>ndarray</em>)</li>
+<li><strong>nan_vals</strong> (<em>array of values that count as NaN values - if empty, &#8220;&#8221; and None are being used</em>)</li>
+<li><strong>recursive</strong> (<em>handle lists in recursive manner</em>)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> &#8211; Array or bool indicating whether an object is null or if an array is
+given which of the element is null.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array-like of bool or bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="impyte.Pattern">
+<em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">Pattern</code><a class="headerlink" href="#impyte.Pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class that calculates, stores and visualizes NaN patterns and their indices.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>self.column_names</strong> (<em>list</em>) &#8211; Python list storing names of all columns that are in data set.</li>
+<li><strong>self.complete_idx</strong> (<em>int</em>) &#8211; Integer containing pattern number with only complete cases</li>
+<li><strong>self.continuous_variables</strong> (<em>list</em>) &#8211; Python list containing column names of all continuous variables.
+(i.e. columns that contain values in a range from 0.0 to 1.0)</li>
+<li><strong>self.discrete_variables</strong> (<em>list</em>) &#8211; Python list containing column names of all discrete variables.
+(i.e. columns that contain values such as &#8220;red&#8221;, &#8220;blue&#8221;, &#8220;green&#8221;)</li>
+<li><strong>self.easy_access</strong> (<em>dict</em>) &#8211; </li>
+<li><strong>self.missing_per_column</strong> (<em>None</em>) &#8211; </li>
+<li><strong>self.nan_checker</strong> (<a class="reference internal" href="#impyte.NanChecker" title="impyte.NanChecker"><em>NanChecker()</em></a>) &#8211; </li>
+<li><strong>self.pattern_col_names</strong> (<em>dict</em>) &#8211; </li>
+<li><strong>self.pattern_index_store</strong> (<em>dict</em>) &#8211; </li>
+<li><strong>self.pattern_store</strong> (<em>dict</em>) &#8211; </li>
+<li><strong>self.store_tuple_columns</strong> (<em>dict</em>) &#8211; </li>
+<li><strong>self.result_pattern</strong> (<em>dict</em>) &#8211; </li>
+<li><strong>self.tuple_counter</strong> (<em>int</em>) &#8211; (the default is 0)</li>
+<li><strong>self.tuple_counter_dict</strong> (<em>dict</em>) &#8211; </li>
+<li><strong>self.tuple_dict</strong> (<em>dict</em>) &#8211; </li>
+<li><strong>self.unique_instances</strong> (<em>int</em>) &#8211; (the default is 10, which implies that columns with over 10 unique
+values are being labeled as continuous variables if containing
+numbers).</li>
+<li><strong>self.pattern_predictor_dict</strong> (<em>dict</em>) &#8211; </li>
+<li><strong>self.pattern_dependent_dict</strong> (<em>dict</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="impyte.Pattern.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.Pattern.get_column_name">
+<code class="descname">get_column_name</code><span class="sig-paren">(</span><em>patter_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_column_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the column name(s) of a certain NaN-pattern.
+:param patter_no: int - index of pattern
+:return: list</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Pattern.get_complete_id">
+<code class="descname">get_complete_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_complete_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns pattern number of complete data points.
+:return: int - pattern number</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Pattern.get_complete_indices">
+<code class="descname">get_complete_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_complete_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to determine complete cases based on results table.
+Leverages pre-computed information and is quicker than dropna method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>array</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">indices list of complete cases</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Pattern.get_continuous">
+<code class="descname">get_continuous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_continuous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns copy of continuous variable names.
+:return: list</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Pattern.get_discrete">
+<code class="descname">get_discrete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_discrete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns copy of discrete variable names.
+:return: list</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Pattern.get_missing_value_percentage">
+<code class="descname">get_missing_value_percentage</code><span class="sig-paren">(</span><em>data</em>, <em>importance_filter=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_missing_value_percentage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="impyte.Pattern.get_multi_nan_pattern_nos">
+<code class="descname">get_multi_nan_pattern_nos</code><span class="sig-paren">(</span><em>multi=True</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_multi_nan_pattern_nos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all pattern numbers of multi-nans or single-nans
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Pattern.get_pattern">
+<code class="descname">get_pattern</code><span class="sig-paren">(</span><em>data=None</em>, <em>unique_instances=10</em>, <em>recompute=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns NaN-patterns based on primary computation or
+initiates new computation of NaN-patterns.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>pd.DataFrame</em>)</li>
+<li><strong>unique_instances</strong> (<em>int - determines how many unique values are needed to count as continuous variable</em>)</li>
+<li><strong>recompute</strong> (<em>Boolean - if set True, stored results are being disregarded</em>)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame with NaN-pattern overview</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Pattern.get_pattern_indices">
+<code class="descname">get_pattern_indices</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_pattern_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns data points for a specific pattern_no for further
+investigation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_no</strong> (<em>index int value that indicates pattern</em>)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>self.data</strong></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">data points that have a certain pattern</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Pattern.get_single_nan_pattern_nos">
+<code class="descname">get_single_nan_pattern_nos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_single_nan_pattern_nos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all pattern numbers of single nans
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="impyte.Pattern.remove_pattern">
+<code class="descname">remove_pattern</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.remove_pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a certain pattern. Deletes dictionary entry in the pattern index store
+as well as drops the entry in the results table.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_no</strong> (<em>index int value that indicates pattern</em>)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>

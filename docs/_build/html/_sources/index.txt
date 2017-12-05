@@ -48,6 +48,15 @@ please make sure following modules are already installed:
 .. _sklearn 0.19: https://scikit-learn.org/
 .. _pandas 0.21: http://pandas.pydata.org/
 
+API Reference
+=============
+:mod:`.` Module
+
+.. automodule:: impyte
+    :members:
+    :undoc-members:
+    :special-members: __init__
+    :show-inheritance:
 
 
 Indices and tables

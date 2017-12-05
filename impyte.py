@@ -107,8 +107,43 @@ class NanChecker:
 
 class Pattern:
     """
-    Class that calculates, stores and visualizes 
-    NaN patterns and their indices. 
+        Class that calculates, stores and visualizes NaN patterns and their indices.
+
+        Attributes
+        ----------
+        self.column_names : list
+            Python list storing names of all columns that are in data set.
+            
+        self.complete_idx : int
+            Integer containing pattern number with only complete cases
+        
+        self.continuous_variables : list
+            Python list containing column names of all continuous variables. 
+            (i.e. columns that contain values in a range from 0.0 to 1.0)
+        
+        self.discrete_variables : list
+            Python list containing column names of all discrete variables.
+            (i.e. columns that contain values such as "red", "blue", "green") 
+            
+        self.easy_access : dict
+        
+        self.missing_per_column : None
+        self.nan_checker : NanChecker()
+        self.pattern_col_names : dict
+        self.pattern_index_store : dict
+        self.pattern_store : dict
+        self.store_tuple_columns : dict
+        self.result_pattern : dict
+        self.tuple_counter : int
+            (the default is 0)
+        self.tuple_counter_dict : dict
+        self.tuple_dict : dict
+        self.unique_instances : int
+            (the default is 10, which implies that columns with over 10 unique 
+            values are being labeled as continuous variables if containing
+            numbers).
+        self.pattern_predictor_dict : dict
+        self.pattern_dependent_dict : dict    
     """
     def __init__(self):
         self.column_names = []
@@ -489,37 +524,71 @@ class Pattern:
 
 class Impyter:
     """
-    Value imputation class.
-    
-    Parameters
-    ----------
-    data = pandas DataFrame
-    
-    Examples
-    ----------
-    Importing DataFrame from numpy ndarray:
-    
-    >>> imputer = Impyter(np.random.randint(low=0, high=10, size=(4,4)))
-    >>> imputer
-       0  1  2  3
-    0  1  5  1  1
-    1  1  9  9  4
-    2  5  7  2  1
-    3  9  7  5  3
-    
-    """
+        Example usage::
+        
+            import impyte
+            
+            df = pd.read_csv("missing_values.csv")
+            imp = impyte.Impyter(df)
+            
+            # show nan-patterns of data in one data frame
+            imp.pattern() # shows nan-patterns
+            
+            # imputation of all single-nans using random forest
+            imp.impute(estimator='rf')
+            
+            # imputation of all nan-patterns
+            imp.impute(estimator='rf', multi_nans=True)
+            
+            # use f1 and r2 thresholds
+            imp.impute(estimator='rf', threshold={"r2": .7, "f1_macro": .7})
 
+        Parameters
+        ----------
+        data : pd.DataFrame, optional
+            Data on which to perform imputation. 
+            
+            The data can also be a list of lists but will be converted 
+            into a pandas DataFrame once loaded. If none, data can be loaded
+            at a later point through :mod:`impyte.Impyter.load_data`.
+            
+        Attributes
+        ----------
+        data : pd.DataFrame
+            The original data, loaded by user through instantiation or :mod:`impyte.Impyter.load_data` method.
+        
+        result : pd.DataFrame
+            Copy of original data on which imputation is being performed.
+             
+        clf : dict
+            Holds estimator for given imputation. `(Deprecated)`
+            
+        self.pattern_log : Pattern object 
+            An instantiated :mod:`impyte.Pattern` object, that holds information about the NaN-pattern.
+        
+        self.model_log : dict  
+            Python dictionary, storing all models once :mod:`impyte.Impyter.impute` has been run
+        
+        self.error_string : str
+            String representation of error messages that occured during the imputation process.
+            
+        self.pattern_predictor_dict : dict
+            Python dictionary storing a pattern string and its connected list of predictors.
+        
+        self.pattern_dependent_variable_dict : dict
+            Python dictionary storing a pattern string and its connected list of dependent variables.     
+    """
     def __init__(self, data=None):
         self.data = None  # stores original data
         self.result = None  # stores result data set - in beginning a copy of data
-        self.load_data(data)  # loads or initializes data set
         self.clf = {}  # stores classifier - deprecated
         self.pattern_log = Pattern()  # stores Pattern() object for data set
         self.model_log = {}  # stores all models once impute has been run
-        self.imputation_log = {} # stores imputation log
         self.error_string = ""
         self.pattern_predictor_dict = {}
         self.pattern_dependent_variable_dict = {}
+
+        self.load_data(data)  # load or initializes data set
 
     def __str__(self):
         """
@@ -541,6 +610,21 @@ class Impyter:
                 self.drop_pattern(pattern_no, inplace=True)
             del (self.model_log[pattern_no])
             return True
+
+    def __ensemble(self, estimator_list=["rf", "dt"]):
+        """
+        Exhaustive search for best estimator to predict a certain feature. 
+        Work in progress and beta method. Needs further work on summaries and plotting.
+        :return: 
+        """
+
+        imp = Impyter()
+        imp.load_data(self.data.copy())
+        # ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
+        if not estimator_list:
+            estimator_list = ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
+        for estimator in estimator_list:
+            _ = self.impute(estimator=estimator, recompute=True)
 
     def __impute_train(self, pattern, col_name, X_train, y_train, pred_vars,
                 auto_scale, y_scaler, threshold, result_data, cv, verbose_string, verbose):
@@ -729,21 +813,6 @@ class Impyter:
             return self.result
 
         return self.data[~self.data.index.isin(temp_patterns)].copy()
-
-    def ensemble(self, estimator_list=["rf", "dt"]):
-        """
-        Exhaustive search for best estimator to predict a certain feature. 
-        Work in progress and beta method. Needs further work on summaries and plotting.
-        :return: 
-        """
-
-        imp = Impyter()
-        imp.load_data(self.data.copy())
-        # ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
-        if not estimator_list:
-            estimator_list = ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
-        for estimator in estimator_list:
-            _ = self.impute(estimator=estimator, recompute=True)
 
     def get_pattern(self, pattern_no):
         """

@@ -31,13 +31,13 @@ impyte focuses on two main goals:
     imp.pattern() # shows nan-patterns
 
     # imputation of all single-nans using random forest
-    imp.impyte(estimator='rf')
+    imp.impute(estimator='rf')
 
     # imputation of all nan-patterns
-    imp.impyte(estimator='rf', multi_nans=True)
+    imp.impute(estimator='rf', multi_nans=True)
     
     # use f1 and r2 thresholds
-    imp.impyte(estimator='rf', threshold={"r2": .7, "f1_macro": .7})
+    imp.impute(estimator='rf', threshold={"r2": .7, "f1_macro": .7})
 
 ## Limits and Notes
 The current version is a work in progress. First imputation methods are implemented but pre-processing steps need additional documentation. 
