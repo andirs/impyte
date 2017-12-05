@@ -3,6 +3,11 @@ Module to impute missing values using machine learning algorithms.
 author: Andreas Rubin-Schwarz
 """
 
+# Documentation:
+# https://goldilocks.readthedocs.io/en/latest/source/goldilocks.html#module-goldilocks.cmd
+# https://samnicholls.net/2016/06/15/how-to-sphinx-readthedocs/
+# https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+
 import math
 import numpy as np
 import pandas as pd
@@ -126,6 +131,7 @@ class Pattern:
             (i.e. columns that contain values such as "red", "blue", "green") 
             
         self.easy_access : dict
+            Python dictionary 
         
         self.missing_per_column : None
         self.nan_checker : NanChecker()
@@ -703,6 +709,10 @@ class Impyter:
                 result_data.at[idx, col_name] = to_append[pointer]
         else:
             return_verbose_string += " not imputed..."
+
+        # update result data
+        self.result = result_data
+
         if verbose:
             return return_verbose_string
 
@@ -814,7 +824,7 @@ class Impyter:
 
         return self.data[~self.data.index.isin(temp_patterns)].copy()
 
-    def get_pattern(self, pattern_no):
+    def get_pattern(self, pattern_no, result=False):
         """
         Returns data points for a specific pattern_no for further
         investigation.
@@ -827,6 +837,9 @@ class Impyter:
         -------
         self.data: data points that have a certain pattern
         """
+        if result:
+            return self.result[self.result.index.isin(
+                self.pattern_log.get_pattern_indices(pattern_no))]
         return self.data[self.data.index.isin(
             self.pattern_log.get_pattern_indices(pattern_no))]
 
@@ -1140,7 +1153,8 @@ class Impyter:
                 self.clf["Classification"] = SVC()
             else:
                 raise ValueError('Classifier unknown')
-        result_data = self.result
+
+        result_data = self.data.copy()
 
         # Get complete cases
         complete_idx = self.pattern_log.get_complete_id()
