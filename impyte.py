@@ -42,13 +42,13 @@ class NanChecker:
     
     Examples
     ----------
-    Testing list for NaN values
+    Testing list for NaN values: ::
     
-    >>> nan_array = ["Test", None, '', 23, [None, "42"]]
-    >>> nan_checker = impyte.NanChecker()
-    >>> print nan_checker.is_nan(nan_array)
-    
-    [False, True, True, False, [True, False]]
+        nan_array = ["Test", None, '', 23, [None, "42"]]
+        nan_checker = impyte.NanChecker()
+        print(nan_checker.is_nan(nan_array))
+        >>> [False, True, True, False, [True, False]]
+        
     """
     @staticmethod
     def is_nan(data,
@@ -59,13 +59,18 @@ class NanChecker:
 
         Parameters
         ----------
-        data : ndarray
-        nan_vals : array of values that count as NaN values - if empty, "" and None are being used
-        recursive : handle lists in recursive manner
+        data : {numpy.ndarray|str|list|int|float}
+            Data to be investigated for NaN values.
+
+        nan_vals : list
+            Array of values that count as NaN values - if empty, "" and None are being used
+
+        recursive : boolean
+            Flag that determines whether the lists should be handled in recursive manner
 
         Returns
         -------
-        result : array-like of bool or bool
+        result : Boolean
             Array or bool indicating whether an object is null or if an array is
             given which of the element is null.
         """
@@ -132,28 +137,116 @@ class Pattern:
             Python list containing column names of all discrete variables.
             (i.e. columns that contain values such as "red", "blue", "green") 
             
-        self.easy_access : dict
-            Python dictionary 
+        self.easy_access : dict{tuple, list}
+            Python dictionary holding NaN-pattern strings and mapping them 
+            to a list of the names of columns that contain NaN values 
+            in the given NaN-pattern.
+            
+            As an example: ::
+                
+                {
+                    ('NaN', 1):     ['left_socks'],
+                    (1, 'NaN'):     ['right_socks'],
+                    ('NaN', 'NaN'): ['left_socks', 'right_socks']
+                }
         
-        self.missing_per_column : None
-        self.nan_checker : NanChecker()
-        self.pattern_col_names : dict
-        self.pattern_index_store : dict
-        self.pattern_store : dict
-        self.store_tuple_columns : dict
-        self.result_pattern : dict
+        self.missing_per_column : list
+            Python list used to store summarization results, to make the use 
+            of :mod:`impyte.Pattern.get_missing_value_percentage` 
+            more efficient (the default is None)
+        
+        self.nan_checker : NanChecker object
+            An instantiated :mod:`impyte.NanChecker` object, that can be used 
+            to analyze values and rows regarding their NaN values.
+            
+        self.pattern_index_store : dict{int, list}
+            Python dictionary holding a list of indices for every pattern number. 
+            This dictionary is being used to look up the corresponding 
+            data points in a pandas DataFrame.
+            
+            As an example: ::
+            
+                {
+                    0: [0, 1, 2, 3, 4],    # pattern_number: indices
+                    1: [5, 6, 7, 8, 9]
+                }
+            
+            This pattern log consists out of 2 patterns (0 and 1) 
+            each pointing to 5 indices. 
+            
+        self.pattern_store : dict{str, pd.DataFrame}
+            Python dictionary storing the pattern table. The table 
+            (in pd.DataFrame form) can be accessed by ``self.pattern_store['result']``.
+            
+            A potential result table could look like this, where ``NaN`` 
+            indicates the column contains missing values in this pattern. 
+            The ``Count`` column shows how many observations of this NaN-pattern 
+            are in the data set.
+            
+                =======      ==========   ===========  =====
+                Pattern      left_socks   right_socks  Count
+                =======      ==========   ===========  =====
+                0            1            1            15
+                1            NaN          1            6
+                2            1            NaN          6
+                3            NaN          NaN          4
+                =======      ==========   ===========  =====
+                
+            Let's hope these left and right socks are of the same color at least...
+        
+        self.result_pattern : dict{tuple, int}
+            Python dictionary version of pattern counts. Makes computation 
+            and alterations easier.
+        
         self.tuple_counter : int
-            (the default is 0)
+            Value storing the amount of different patterns after performing 
+            pattern analysis. (the default is 0)
+        
         self.tuple_counter_dict : dict
-        self.tuple_dict : dict
+            Python dictionary mapping pattern strings to pattern number.
+        
+        self.tuple_dict : dict{tuple, int}
+        
+            As an example: ::
+             
+                {
+                    ('NaN', 1):     1,  # points to pattern 1
+                    (1, 'NaN'):     2,
+                    ('NaN', 'NaN'): 3
+                }
+            
         self.unique_instances : int
+            Value indicating the minimum value for a column of unique values
+            to be considered as continuous variable when having the proper dtype 
+            
             (the default is 10, which implies that columns with over 10 unique 
             values are being labeled as continuous variables if containing
             numbers).
+            
         self.pattern_predictor_dict : dict
+            Python dictionary mapping pattern strings to their 
+            independent variable names.
+            
         self.pattern_dependent_dict : dict    
+            Python dictionary mapping pattern string to their 
+            dependent variable names.
+            
     """
-    def __init__(self):
+    def __init__(self, unique_instances=10):
+        """
+        When instantiating a :mod:`impyte.Pattern` object, most values
+        are being initialized as being empty or None.
+        
+        Parameters
+        ----------
+        unique_instances : int
+            Value indicating the minimum value for a column of unique values
+            to be considered as continuous variable when having the proper dtype 
+            
+            (the default is 10, which implies that columns with over 10 unique 
+            values are being labeled as continuous variables if containing
+            decimal numbers).
+        """
         self.column_names = []
         self.complete_idx = None
         self.continuous_variables = []
@@ -161,7 +254,6 @@ class Pattern:
         self.easy_access = {}
         self.missing_per_column = None
         self.nan_checker = NanChecker()
-        self.pattern_col_names = {}
         self.pattern_index_store = {}
         self.pattern_store = {}
         self.store_tuple_columns = {}
@@ -169,17 +261,25 @@ class Pattern:
         self.tuple_counter = 0
         self.tuple_counter_dict = {}
         self.tuple_dict = {}
-        self.unique_instances = 10
+        self.unique_instances = unique_instances
         self.pattern_predictor_dict = {}
         self.pattern_dependent_dict = {}
 
     def __str__(self):
         """
         String representation of Pattern class.
-        :return: stored DataFrame
+        
+        Returns
+        -------
+        Result Table : pd.DataFrame
+            If a pattern has been computed, the resulting table will be presented.
+            
+            Otherwise, returns a String representation of empty Pattern object.
         """
         if self.pattern_store:
             return str(self.pattern_store["result"])
+        else:
+            return "<Pattern: Empty Pattern Object>"
 
     def __row_nan_pattern(self, row):
         """
@@ -188,7 +288,8 @@ class Pattern:
 
         Parameters
         ----------
-        row: any row of a data set
+        row : list or pd.Series 
+            Any row of a data set
 
         Returns
         -------
@@ -213,7 +314,6 @@ class Pattern:
                 tmp_independent_variable.append(col_name)
                 tmp_label.append(1)
         try:
-            self.store_tuple_columns[tuple(tmp_label)] = tmp_dependent_variable
             self._store_tuple(
                 tuple(tmp_label), row.name, tmp_col_lists, tmp_dependent_variable, tmp_independent_variable)
         # in case of list
@@ -376,34 +476,48 @@ class Pattern:
             self.pattern_predictor_dict[tup] = independent_variables
             self.pattern_dependent_dict[tup] = dependent_variables
 
-    def get_complete_id(self):
-        """
-        Returns pattern number of complete data points.
-        :return: int - pattern number
-        """
-        if not self.complete_idx:
-            self.get_complete_indices()
-        return self.complete_idx
-
     def get_column_name(self, patter_no):
         """
-        Return the column name(s) of a certain NaN-pattern.
-        :param patter_no: int - index of pattern
-        :return: list
+        Returns the column name(s) that contain missing information 
+        of a certain NaN-pattern.
+        
+        Parameters
+        ----------
+        patter_no : int
+            Number or identifier of pattern
+        
+        Returns
+        -------
+        Column names : list
+            If patter_no has been computed, a list of all column 
+            names associated with pattern_no are being returned.
         """
         if self.tuple_dict[patter_no] in self.easy_access:
             return self.easy_access[self.tuple_dict[patter_no]]
         else:
             raise ValueError("Pattern {} is not a valid option".format(patter_no))
 
-    def get_complete_indices(self):
+    def get_complete_id(self):
         """
-        Function to determine complete cases based on results table. 
-        Leverages pre-computed information and is quicker than dropna method.
+        Returns pattern number of observations that don't contain any missing information.
         
         Returns
         -------
-        array : indices list of complete cases
+        Pattern number : int
+        """
+        if not self.complete_idx:
+            self.get_complete_indices()
+        return self.complete_idx
+
+    def get_complete_indices(self):
+        """
+        Function to determine complete cases based on results table. 
+        Leverages pre-computed information and is quicker than pandas dropna method.
+        
+        Returns
+        -------
+        Indices : list
+            List of indices that point to rows with complete cases
         """
         complete_pattern_no = self.get_pattern().apply(self._check_complete_row, axis=1).max()
         self.complete_idx = complete_pattern_no
@@ -415,18 +529,57 @@ class Pattern:
     def get_continuous(self):
         """
         Returns copy of continuous variable names. 
-        :return: list
+        
+        Returns
+        -------
+        Continuous variable names : list
         """
         return list(self.continuous_variables)
 
     def get_discrete(self):
         """
         Returns copy of discrete variable names. 
-        :return: list
+        
+        Returns
+        -------
+        Discrete variable names : list
         """
         return list(self.discrete_variables)
 
     def get_missing_value_percentage(self, data, importance_filter=False):
+        """
+        Combines information regarding the values in the data set
+        and returns them in a concise way.
+        
+        A potential summary table could look like this.
+        
+            ===========      ==========   ===========  ==========  ======
+            Column           Complete     Missing      Percentage  Unique
+            ===========      ==========   ===========  ==========  ======
+            left_socks       21           6            19.4 %      2
+            right_socks      21           6            19.4 %      2
+            ===========      ==========   ===========  ==========  ======
+        
+        Parameters
+        ----------
+        data : pd.DataFrame
+            data refers to the information the user wants to analyze 
+            (Usually the result data set stored in :mod:`Impyte.impyter`)
+        
+        importance_filter : Boolean
+            Flag, to don't show columns that have no missing values.
+            This might make sense for data sets with a lot of columns
+            that have no missing values. 
+            
+            (default value is False, stating that all columns are important)
+         
+        Returns
+        -------
+        Summary table : pd.DataFrame
+            Contains information regarding complete, missing and unique values
+            in the data set.
+         
+        """
         return_table = pd.DataFrame(self.missing_per_column)
         return_table.index = self.column_names
         return_table.columns = ["Missing"]
@@ -447,13 +600,19 @@ class Pattern:
         
         Parameters
         ----------
-        data: pd.DataFrame
-        unique_instances: int - determines how many unique values are needed to count as continuous variable
-        recompute: Boolean - if set True, stored results are being disregarded
+        data : pd.DataFrame
+        
+        unique_instances : int
+            Determines how many unique values are needed to count as 
+            continuous variable
+        
+        recompute: Boolean
+            If set True, stored results are being disregarded
         
         Returns
         -------
-        pd.DataFrame with NaN-pattern overview
+        Pattern overview : pd.DataFrame
+            Table representation of all NaN-patterns and their counts.
         """
 
         unique_instances = self.unique_instances
@@ -469,15 +628,29 @@ class Pattern:
 
     def get_single_nan_pattern_nos(self):
         """
-        Returns all pattern numbers of single nans
-        :return: 
+        Returns all pattern numbers that contain only single nans.
+        
+        Returns
+        -------
+        Pattern Numbers : list
+            All single pattern numbers containing single-nans.
         """
         return self.get_multi_nan_pattern_nos(multi=False)
 
     def get_multi_nan_pattern_nos(self, multi=True):
         """
         Returns all pattern numbers of multi-nans or single-nans
-        :return: 
+        
+        Parameters
+        ----------
+        multi : Boolean
+            Flag indicating whether the user wants to retrieve multi or
+            single-nan pattern numbers.
+        
+        Returns
+        -------
+        Pattern Numbers : list
+            All single or multi-nan pattern numbers.
         """
         # TODO: More beautiful way of refactoring with get_single_nan_pattern_nos
         tmp = self.get_pattern().drop('Count', axis=1)
@@ -496,11 +669,13 @@ class Pattern:
 
         Parameters
         ----------
-        pattern_no: index int value that indicates pattern
+        pattern_no : int
+            Index value that indicates pattern number.
 
         Returns
         -------
-        self.data: data points that have a certain pattern
+        Indices : list   
+            Indices that correspond to a pattern number.
         """
         if not self.pattern_index_store:
             raise ValueError("Pattern needs to be computed first.")
@@ -515,11 +690,8 @@ class Pattern:
         
         Parameters
         ----------
-        pattern_no: index int value that indicates pattern
-        
-        Returns
-        -------
-        None
+        pattern_no : int 
+            Index value that indicates pattern.
         """
         if pattern_no in self.tuple_dict.keys():
             for col in self.get_column_name(pattern_no):
@@ -537,7 +709,7 @@ class Pattern:
 
 class Impyter:
     """
-        Example usage::
+        Example usage: ::
         
             import impyte
             
@@ -592,6 +764,15 @@ class Impyter:
             Python dictionary storing a pattern string and its connected list of dependent variables.     
     """
     def __init__(self, data=None):
+        """
+        
+        Parameters
+        ----------
+        data : pd.DataFrame|list[list], optional
+            When initialized, data can be loaded directly. An alternative
+            way is loading it with :mod:`impyte.Impyter.load_data`
+         
+        """
         self.data = None  # stores original data
         self.result = None  # stores result data set - in beginning a copy of data
         self.clf = {}  # stores classifier - deprecated
@@ -606,12 +787,40 @@ class Impyter:
     def __str__(self):
         """
         String representation of Impyter class.
-        :return: stored DataFrame
+        
+        Returns
+        -------
+        Impyter Data : pd.DataFrame
+            If data has been loaded, the stored data will be presented.
+            
+            Otherwise, returns a String representation of empty Impyter object.
         """
         if self.data is not None:
             return str(self.data)
+        else:
+            return "<Impyter: Empty Impyter Object>"
 
     def __drop_imputation(self, model, pattern_no, threshold, drop_pattern, verbose):
+        """
+        Method to drop imputation based on pattern number, a given threshold and
+        a specific :mod:`impyte.ImpyterModel` or :mod:`impyte.ImpyterMultiModel`.
+        
+        Parameters
+        ----------
+        model : ImpyterModel|ImpyterMultiModel
+        
+        pattern_no : int
+        
+        threshold : float
+        
+        drop_pattern : Boolean 
+        
+        verbose : Boolean 
+        
+        Returns
+        -------
+        Success Indicator : Boolean
+        """
         cur_threshold = threshold[model.get_scoring()[0]]
         avg_score = np.mean(model.get_score())
         if avg_score < cur_threshold:
@@ -628,7 +837,10 @@ class Impyter:
         """
         Exhaustive search for best estimator to predict a certain feature. 
         Work in progress and beta method. Needs further work on summaries and plotting.
-        :return: 
+        
+        Parameters
+        ----------
+        estimator_list : list
         """
 
         imp = Impyter()
@@ -641,6 +853,37 @@ class Impyter:
 
     def __impute_train(self, pattern, col_name, X_train, y_train, pred_vars,
                 auto_scale, y_scaler, threshold, result_data, cv, verbose_string, verbose):
+        """
+        Parameters
+        ----------
+        pattern : int
+         
+        col_name : str|int
+         
+        X_train : np.darray|pd.DataFrame
+        
+        y_train : np.darray|list
+        
+        pred_vars :
+          
+        auto_scale : Boolean
+         
+        y_scaler : sklearn.preprocessing.StandardScaler object 
+        
+        threshold :
+          
+        result_data : pd.DataFrame
+        
+        cv : int 
+        
+        verbose_string : str 
+        
+        param verbose : Boolean 
+        
+        Returns
+        -------
+        dict{}
+        """
         global error_count
         tmp_error_string = ""
 
@@ -808,7 +1051,80 @@ class Impyter:
         else:
             pd.set_option("display.max_rows", length)
 
+    @staticmethod
+    def compare_features(list_one, list_two):
+        """
+        Compares two lists given its objects based on 
+        a comparison of Counter dicts. The order of 
+        elements is unimportant.
+        
+        Parameters
+        ----------
+        list_one : list 
+        
+        list_two : list
+        
+        Returns
+        -------
+        True : Boolean
+            If list_one and list_two contain the same elements.
+        """
+        try:
+            return Counter(list_one) == Counter(list_two)
+        except TypeError as e:
+            return list_one == list_two
+
     def drop_imputation(self, threshold, verbose=True, drop_pattern=False):
+        """
+        Method to drop imputation results based on threshold values.
+        Threshold values are compared against the cross-validation
+        scores of all imputation models. If the score is lower than
+        the threshold value, the imputation will be dropped.
+        
+        An example: ::
+        
+            imp = impyte.imputer(data)
+            imp.impute(estimator='rf')
+            imp.drop_imputation({"f1_macro": .8, "r2": .7})
+        
+        .. note::
+                In the case of multi-nan, drop_imputation will average the score 
+                of all models. Yet, performing this method for multi-nan 
+                patterns is discouraged. 
+                
+                Further individual treatment of the data set might be more helpful 
+                in order to preprocess the information correctly. 
+                One potential action could be, to drop multi-nan columns 
+                if they contain no information.
+        
+        Parameters
+        ----------
+        threshold : dict{str, float}
+            Threshold dictionary including values for r2 and f1 scores.
+              
+            An example: ::
+                
+                {
+                    "r2" : .5,
+                    "f1_macro" : .7
+                }
+            
+            At this point only f1 and r2 scores are being supported.
+            
+        verbose : Boolean
+            Boolean flag to indicate whether results should be written
+            to stdout.
+            
+            .. note::
+                    At this point there is a verbose system that distinguishes
+                    multiple layers of verbosity. This flag can also simply set to
+                    ``True`` in order to print out the minimum verbosity.
+                    A multi verbosity level might be enforced at a later stage.
+            
+        drop_pattern : Boolean
+            Indicator if not only imputation but also pattern should be dropped.
+        
+        """
         models = dict(self.model_log)
         for pattern_no in models:
             model = self.get_model(pattern_no)
@@ -820,6 +1136,24 @@ class Impyter:
                         break  # only one score needs to be below threshold in order to break
 
     def drop_pattern(self, pattern_no, inplace=False):
+        """
+        Method to drop pattern referenced by pattern number.
+        Drops pattern from data set and returns preliminary result. 
+        If inplace flag is set to True, internal storage of impyte 
+        object is being manipulated as well. Otherwise, a copy 
+        without the dropped pattern will be returned and the 
+        stored data set stays intact.
+        
+        Parameters
+        ----------
+        pattern_no : int
+        
+        inplace : Boolean
+        
+        Returns
+        -------
+        
+        """
         temp_patterns = self.pattern_log.get_pattern_indices(pattern_no)
 
         if inplace:
@@ -827,7 +1161,7 @@ class Impyter:
             self.result = self.result[~self.result.index.isin(temp_patterns)]
             # Delete indices in pattern_log
             self.pattern_log.remove_pattern(pattern_no)
-            return self.result
+            return self.result.copy()
 
         return self.data[~self.data.index.isin(temp_patterns)].copy()
 
@@ -838,22 +1172,45 @@ class Impyter:
 
         Parameters
         ----------
-        pattern_no: index int value that indicates pattern
+        pattern_no : int
+            Index value that indicates pattern
+        
+        result : Boolean
+            Flag to show if original or result data should be sliced.
 
         Returns
         -------
-        self.data: data points that have a certain pattern
+        data : pd.DataFrame
+            Data points that have a certain pattern, if ``result`` is set to ``True`` 
+            the data is result data, otherwise a slice of the original data is being returned.
         """
         if result:
             return self.result[self.result.index.isin(
-                self.pattern_log.get_pattern_indices(pattern_no))]
+                self.pattern_log.get_pattern_indices(pattern_no))].copy()
         return self.data[self.data.index.isin(
-            self.pattern_log.get_pattern_indices(pattern_no))]
+            self.pattern_log.get_pattern_indices(pattern_no))].copy()
 
     def get_data(self):
-        return self.data
+        """
+        Returns a copy of the loaded data for quick reference.
+        
+        Returns
+        -------
+        Original Data : pd.DataFrame
+            A copy of the original data set can be retrieved through
+            this method.
+        """
+        return self.data.copy()
 
     def get_result(self):
+        """
+        Returns a copy of the result data for reference.
+
+        Returns
+        -------
+        Result Data : pd.DataFrame
+            A copy of the result data.
+        """
         if self.result is not None:
             return self.result.copy()
         else:
@@ -861,9 +1218,22 @@ class Impyter:
 
     def get_summary(self, importance_filter=True):
         """
-        Shows simple overview of missing values.
-        :param importance_filter: Show only features with at least one missing value.
-        :return: pd.DataFrame
+        Shows simple overview of missing values. Returns table 
+        with information on missing values per column, 
+        its percentage and the count of unique values within that column.
+        
+        Setting the importance filter flag to True shows only columns 
+        that have some missing values. This is helpful for data sets 
+        with a large amount of variables and only few nan-values.
+        
+        Parameters
+        ----------
+        importance_filter : Boolean
+            Show only features with at least one missing value.
+        
+        Returns
+        -------
+        Summary table : pd.DataFrame
         """
         if not self.pattern_log.pattern_store:
             self.pattern()
@@ -872,6 +1242,18 @@ class Impyter:
         return result_table
 
     def get_model(self, pattern_no):
+        """
+        Returns model that matches pattern number.
+        
+        Parameters
+        ----------
+        pattern_no : int
+            Pattern number to receive fitting model.
+        
+        Returns
+        -------
+        model : ImpyterModel|ImpyterMultiModel 
+        """
         if pattern_no in self.model_log:
             return self.model_log[pattern_no]
         else:
@@ -880,7 +1262,10 @@ class Impyter:
     def load_data(self, data):
         """
         Function to load data into Impyter class.
-        to reload and erase not needed information.
+        Requires a pandas DataFrame to load. Otherwise, 
+        the input is being transformed into a DataFrame. 
+        While loading the data is being copied into the object, 
+        to stay clear of consistency issues with the original data set.
 
         :param data: preferably pandas DataFrame 
         """
@@ -893,21 +1278,16 @@ class Impyter:
         # perform data and imputation reset when new data set is being loaded
         self.__reset(data)
 
-    def load_only(self, model):
-        """
-        Load a stored machine learning model to perform value imputation.
-        :param model: pickle object or filename of model. 
-        """
-        try:
-            mdl = joblib.load(model)
-            return mdl
-        except IOError as e:
-            print("File not found: {}".format(e))
-
     def load_model(self, filename, path='models/'):
         """
         Load a stored machine learning model to perform value imputation.
-        :param model: pickle object or filename of model. 
+        
+        Parameters
+        ----------
+        filename : str
+            Filename of model
+        path : str
+            Path to model (default value is 'models/')
         """
         # if data has no pattern yet, compute it
         if not self.pattern_log.pattern_store:
@@ -950,14 +1330,21 @@ class Impyter:
         except IOError as e:
             print("File not found: {}".format(e))
 
-    @staticmethod
-    def compare_features(list1, list2):
-        try:
-            return Counter(list1) == Counter(list2)
-        except TypeError as e:
-            return list1 == list2
-
     def map_model_to_pattern(self, mdl):
+        """
+        Checks model for similarity to stored patterns and 
+        returns pattern number if a match is found.
+        
+        Parameters
+        ----------
+        mdl : ImpyterModel
+        
+        Returns
+        -------
+        pattern_no : int
+            If no pattern number can be found, a None value 
+            will be returned.
+        """
         pred_variables = mdl.get_predictor_variables()
         dependent_variables = mdl.get_feature_name()
         pattern_no = None
@@ -978,6 +1365,20 @@ class Impyter:
             return None
 
     def map_multimodel_to_pattern(self, mmdl):
+        """
+        Checks multi-model for similarity to stored patterns and 
+        returns pattern number if a match is found.
+        
+        Parameters
+        ----------
+        mmdl : ImpyterMultiModel
+        
+        Returns
+        -------
+        pattern_no : int
+            If no pattern number can be found, a None value 
+            will be returned.
+        """
         dep_indep_store = mmdl.get_dependend_and_independent_variables()
         # dependent items
         dep_pattern_no = None
@@ -1003,8 +1404,17 @@ class Impyter:
         """
         Uses pandas get_dummies method to return a one-hot-encoded
         DataFrame.
-        :param data: 
-        :return: pd.DataFrame - with one-hot-encoded categorical values
+        
+        Parameters
+        ----------
+        data : pd.DataFrame 
+        
+        verbose : Boolean
+        
+        Returns
+        -------
+        Data set - pd.DataFrame
+            DataFrame with one-hot-encoded categorical values.
         """
         return_table = pd.DataFrame(index=data.index)
 
@@ -1023,7 +1433,17 @@ class Impyter:
         """
         Decodes one-hot-encoded features into single column again.
         Generally speaking, this function inverses the one-hot-encode function. 
-        :return: pd.DataFrame - data set with collapsed information.
+        
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame that has one-hot-encoded columns processed by 
+            :mod:`impyte.Impyter.one_hot_encode`.
+        
+        Returns
+        -------
+        Data set : pd.DataFrame
+            Data set with collapsed information.
         """
         all_columns = data.columns
         ohe_selector = []
@@ -1058,6 +1478,45 @@ class Impyter:
     def pattern(self, recompute=False):
         """
         Returns missing value patterns of data set.
+        Leverages :mod:`impyte.Pattern._compute_pattern` 
+        and `impyte.Pattern.get_pattern` methods to compute and 
+        return an overview of all existant NaN patterns in the data set. 
+        The overview shows a NaN in the column where a data point 
+        was missing and 1 for all complete slots. 
+        On the right hand side is a count variable to indicate 
+        how often that pattern was found. 
+        The patterns are always sorted by count and it is not given, 
+        that pattern 0 is always the pattern with only complete cases.
+        
+        A potential result table could look like this, where ``NaN`` 
+        indicates the column contains missing values in this pattern. 
+        The ``Count`` column shows how many observations of this NaN-pattern 
+        are in the data set.
+        
+            =======      ==========   ===========  =====
+            Pattern      left_socks   right_socks  Count
+            =======      ==========   ===========  =====
+            0            1            1            15
+            1            NaN          1            6
+            2            1            NaN          6
+            3            NaN          NaN          4
+            =======      ==========   ===========  =====
+        
+        For additional information (and a rather sad joke) please 
+        head over to :mod:`impyte.Pattern`.
+        
+        Parameters
+        ----------
+        recompute : Boolean
+            Flag to indicate whether patterns should be recomputed from
+            the original data set. This is an important feature if for
+            example a pattern has been dropped and should be incorporated
+            again.
+            
+        Returns
+        -------
+        NaN-Pattern Table : pd.DataFrame
+            Table with overview of NaN-patterns.
         """
         if self.data.empty:
             raise ValueError("Error: Load data first.")
@@ -1072,6 +1531,15 @@ class Impyter:
         return return_table
 
     def set_unique(self, unique_no):
+        """
+        Set unique values for imputation. 
+        
+        Parameters
+        ----------
+        unique_no : int
+            Positive number that indicates a threshold for unique values
+            needed in a column for it to be counted as continuous variable. 
+        """
         if unique_no > 0:
             self.pattern_log.unique_instances = unique_no
         else:
@@ -1079,8 +1547,25 @@ class Impyter:
 
     def save_model(self, pattern_no=None, filename=None, path='models/'):
         """
-        Save a learned machine learning model to disk.
-        :param name: Name of file.  
+        Stores an imputation model for either the whole data set 
+        or a particular pattern in a pickle file. If pattern_no is not set, 
+        the method stores all models. If filename is not set, 
+        an automated name is being produced including a timestamp.
+        
+        Parameters
+        ----------
+        pattern_no : int, optional
+            Pattern number that points to a certain NaN-Pattern model which
+            in turn references a :mod:`impyte.ImpyteModel` or 
+            :mod:`impyte.ImpyteMultiModel`.
+
+        filename : str, optional
+            If value is not set, an automated name is being created.
+            
+        path : str
+            
+            (default value is 'models/' which will automatically 
+            create a model for that) 
         """
         name_str = ""
         if pattern_no is None:
@@ -1111,22 +1596,75 @@ class Impyter:
                threshold={'f1_macro': None, 'r2': None},
                recompute=False):
         """
-        data: data to be imputed
-        cv: Amount of cross-validation runs.
-        verbose: Boolean value, whether prediction results should be printed out.
-        estimator:  'rf: Random Forest', 
-                    'svm: Support Vector Machine', 
-                    'sgd: Stochastic Gradient Descent'
-                    'knn: KNearest Neighbor'
-                    'bayes: (Naive) Bayes',
-                    'dt: Decision Tree',
-                    'gb: Gradient Boosting',
-                    'mlp: Multi-layer Perceptron (neural network)'
-        multi_nans: Boolean indicator if data points with multiple NaN values should be imputed as well
-        one_hoe_encode: Boolean - if set to True one-hot-encoding of categorical variables happens
-        auto_scale: Boolean - if set to True continuous variables are automatically scaled 
-                    and transformed back after imputation.
-        threshold: list - classification and regression threshold cut-offs. At this point f1 score and R2.
+        Impute is the core method of impyte. The method works out of the box 
+        and uses Random Forest estimators per default to impute missing values. 
+        It automatically performs cross-validation to showcase the 
+        potential accuracy of the imputation. 
+        
+        Scoring that is being used is f1_macro score for classifiers 
+        (supporting binary and multi-class) and r2 for regression models.
+        
+        In order to fill in only columns that surpass a certain scoring threshold 
+        (i.e. f1 score > .7), the threshold parameter can be set. 
+        The threshold values are being transmitted through a dictionary.
+        
+            .. note:: 
+                    **Multi Nans**
+                    
+                    Prediction of values with multi-nan is a last resort option. 
+                    This might be suitable for certain edge cases but if the score 
+                    values are low it should be considered dropping 
+                    the feature or the data points all together.
+                   
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Data to be imputed.
+        cv : int 
+            Amount of cross-validation runs.
+        verbose : Boolean 
+            Indicator, whether prediction results should be printed out.
+        
+        estimator: str
+            Estimators can be chosen through a simple string abbreviation.
+            This table outlines the potential options.
+            
+                ============     =======================================
+                Abbreviation     Estimator
+                ============     =======================================
+                'rf'             Random Forest
+                'svm'            Support Vector Machine 
+                'sgd'            Stochastic Gradient Descent
+                'knn'            KNearest Neighbor
+                'bayes'          (Naive) Bayes
+                'dt'             Decision Tree
+                'gb'             Gradient Boosting
+                'mlp'            Multi-layer Perceptron (neural network)
+                ============     =======================================
+        
+        multi_nans : Boolean 
+            Indicator if data points with multiple NaN values should be imputed as well
+            
+        one_hot_encode : Boolean 
+            If set to True one-hot-encoding of categorical variables happens
+            
+        auto_scale: Boolean 
+            If set to True continuous variables are automatically scaled 
+            and transformed back after imputation.
+        threshold: dict{str, float} 
+            Classification and regression threshold cut-offs. 
+            At this point f1 score and R2.
+            
+        recompute : Boolean
+            Indicator whether the system should recompute the imputation or
+            use stored models if possible. 
+        
+            .. note::
+                    Impyte will print a warning to the stdout if the data set might 
+                    contain too few rows in general to properly compute any imputation
+                    method.
+                 
+        
         """
         if data is None:
             data = self.result
@@ -1328,7 +1866,8 @@ class Impyter:
 
 class ImpyterModel:
     """
-    Stores computed Impyter machine learning models.
+    Stores computed Impyter machine learning models and relevant
+    information that is linked to the model and pattern.
     """
     def __init__(self, estimator_name,
                  model=None,
@@ -1339,6 +1878,19 @@ class ImpyterModel:
                  predictor_variables=None,
                  pattern_string=None,
                  y_scaler=None):
+        """
+        Parameters
+        ----------
+        estimator_name : str 
+        model : sklearn Machine Learning Model 
+        pattern_no : int 
+        feature_name : str|int
+        scores : list[float] 
+        scoring : str 
+        predictor_variables : list[str|int] 
+        pattern_string : tuple 
+        y_scaler : sklearn.preprocessing.StandardScaler object
+        """
         self.model = model
         self.pattern_no = pattern_no
         self.feature_name = feature_name
@@ -1348,37 +1900,6 @@ class ImpyterModel:
         self.predictor_variables = predictor_variables
         self.pattern_string = pattern_string
         self.y_scaler = y_scaler
-
-    def set_model(self, model):
-        """
-        Setter method to update machine learning model.
-        :param model: Machine Learning model
-        """
-        self.model = model
-
-    def set_pattern(self, pattern_no):
-        """
-        Setter method, updating pattern_no
-        :param pattern_no: int  
-        """
-        self.pattern_no = pattern_no
-
-    def set_feature_name(self, feature_name):
-        """
-        Setter method, updates feature names
-        :param feature_name: 
-        """
-        self.feature_name = feature_name
-
-    def set_scores(self, scores):
-        self.scores = scores
-
-    def set_predictor_variables(self, predictor_variables):
-        """
-        Setter method, updates predictor names
-        :param predictor_names: 
-        """
-        self.predictor_variables = predictor_variables
 
     def get_model(self):
         return self.model
