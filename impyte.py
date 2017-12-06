@@ -10,12 +10,14 @@ author: Andreas Rubin-Schwarz
 
 import math
 import numpy as np
+import os
 import pandas as pd
 import time
 import warnings
 
 from collections import Counter
 from datetime import date
+from pathlib import Path
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, \
      GradientBoostingRegressor, GradientBoostingClassifier
@@ -239,7 +241,7 @@ class Pattern:
             return int(row.name)
         return -1
 
-    def _compute_pattern(self, data, nan_values="", unique_instances=10):
+    def _compute_pattern(self, data, nan_values=""):
         """
         Function that checks for missing values and prints out 
         a quick table of a summary of missing values.
@@ -255,6 +257,8 @@ class Pattern:
                     'table': pandas DataFrame with pattern overview
                     'indices': dict with indices list
         """
+        unique_instances = self.unique_instances
+
         if not isinstance(data, pd.DataFrame):
             raise ValueError("Input has to be DataFrame")
         if data.empty:
@@ -436,7 +440,7 @@ class Pattern:
             return_table = return_table[return_table["Missing"] > 0]
         return return_table[["Complete", "Missing", "Percentage", "Unique"]]
 
-    def get_pattern(self, data=None, unique_instances=10, recompute=False):
+    def get_pattern(self, data=None, recompute=False):
         """
         Returns NaN-patterns based on primary computation or
         initiates new computation of NaN-patterns.
@@ -451,6 +455,9 @@ class Pattern:
         -------
         pd.DataFrame with NaN-pattern overview
         """
+
+        unique_instances = self.unique_instances
+
         # If pattern is already computed, return stored result
         if self.pattern_store and not recompute:
             return self.pattern_store["result"]
@@ -668,7 +675,7 @@ class Impyter:
                 scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
             except (ValueError, Warning) as e:
                 error_count += 1
-                tmp_error_string = "* (" + str(error_count) + ") " + col_name + ": " + str(e)
+                tmp_error_string = "* (" + str(error_count) + ") " + str(col_name) + ": " + str(e)
                 self.error_string += tmp_error_string + "\n"
                 scores = [0.] * cv
 
@@ -861,7 +868,7 @@ class Impyter:
         if not self.pattern_log.pattern_store:
             self.pattern()
 
-        result_table = self.pattern_log.get_missing_value_percentage(self.data, importance_filter)
+        result_table = self.pattern_log.get_missing_value_percentage(self.result, importance_filter)
         return result_table
 
     def get_model(self, pattern_no):
@@ -897,7 +904,7 @@ class Impyter:
         except IOError as e:
             print("File not found: {}".format(e))
 
-    def load_model(self, model):
+    def load_model(self, filename, path='models/'):
         """
         Load a stored machine learning model to perform value imputation.
         :param model: pickle object or filename of model. 
@@ -907,8 +914,11 @@ class Impyter:
             print("Computing NaN-patterns first ...\n")
             self.pattern()
 
+        p = Path(path)
+        p = p.joinpath(filename)
+
         try:
-            mdl = joblib.load(model)
+            mdl = joblib.load(p)
             if isinstance(mdl, dict):
                 print("Found {} models...".format(len(mdl)))
                 for m in mdl:
@@ -1045,21 +1055,29 @@ class Impyter:
         data = pd.concat([data, return_table], axis=1)
         return data
 
-    def pattern(self):
+    def pattern(self, recompute=False):
         """
         Returns missing value patterns of data set.
         """
         if self.data.empty:
             raise ValueError("Error: Load data first.")
         else:
-            return_table = self.pattern_log.get_pattern(self.data)
+            if recompute:  # if recompute is True, make sure that result data is being reset
+                self.result = self.data.copy()
+            return_table = self.pattern_log.get_pattern(self.data, recompute=recompute)
             if len(return_table.columns) > Impyter._get_display_options():
                 Impyter._set_display_options(len(return_table.columns))
             if len(return_table) > Impyter._get_display_options(False):  # check if too many rows to display
                 Impyter._set_display_options(len(return_table), False)
         return return_table
 
-    def save_model(self, pattern_no=None, name=None):
+    def set_unique(self, unique_no):
+        if unique_no > 0:
+            self.pattern_log.unique_instances = unique_no
+        else:
+            raise ValueError("Unique count has to be larger than 0.")
+
+    def save_model(self, pattern_no=None, filename=None, path='models/'):
         """
         Save a learned machine learning model to disk.
         :param name: Name of file.  
@@ -1070,10 +1088,17 @@ class Impyter:
         else:
             model = self.get_model(pattern_no)
             name_str = "_pattern_{}".format(pattern_no)
-        if name is None:
-            name = "{}{}{}{}{}".format(str(date.today()), name_str, "_impyte_mdl_", int(time.time()), ".pkl")
-            print("Saved model under {}".format(name))
-        joblib.dump(model, name)
+        if filename is None:
+            filename = "{}{}{}{}{}".format(str(date.today()), name_str, "_impyte_mdl_", int(time.time()), ".pkl")
+            print("Saved model under {}".format(filename))
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+        # create path for file
+        p = Path(path)
+        p = p.joinpath(Path(filename))
+
+        joblib.dump(model, p)
 
     def impute(self,
                data=None,
