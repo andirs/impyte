@@ -816,6 +816,29 @@ needed in a column for it to be counted as continuous variable.</td>
 <em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">ImpyterModel</code><span class="sig-paren">(</span><em>estimator_name</em>, <em>model=None</em>, <em>pattern_no=None</em>, <em>feature_name=None</em>, <em>scores=None</em>, <em>scoring=None</em>, <em>predictor_variables=None</em>, <em>pattern_string=None</em>, <em>y_scaler=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stores computed Impyter machine learning models and relevant
 information that is linked to the model and pattern.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> (<em>sklearn Machine Learning Model</em>) &#8211; Contains a trained machine learning model for given imputation task.</li>
+<li><strong>pattern_no</strong> (<em>int</em>) &#8211; Indicator for pattern number.</li>
+<li><strong>feature_name</strong> (<em>str|int</em>) &#8211; Name of the dependent variable.</li>
+<li><strong>scores</strong> (<em>list</em>) &#8211; List of all cross-validation scores. The average of this list is being
+used as the threshold score.</li>
+<li><strong>estimator_name</strong> (<em>str</em>) &#8211; String representation of the Machine Learning model.</li>
+<li><strong>scoring</strong> (<em>str</em>) &#8211; String representation of the scoring measurement
+(&#8216;r2&#8217; or &#8216;f1_macro&#8217; right now)</li>
+<li><strong>predictor_variables</strong> (<em>list</em>) &#8211; Contains names of all independent variables used for the imputation task.</li>
+<li><strong>pattern_string</strong> (<em>tuple</em>) &#8211; Tuple representation of pattern string. Can be used for identification of
+patterns.</li>
+<li><strong>y_scaler</strong> (<em>sklearn.preprocessing.StandardScaler object</em>) &#8211; StandardScaler object that contains additional information
+in case the model was used with <code class="docutils literal"><span class="pre">auto_scale</span> <span class="pre">=</span> <span class="pre">True</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="impyte.ImpyterModel.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>estimator_name</em>, <em>model=None</em>, <em>pattern_no=None</em>, <em>feature_name=None</em>, <em>scores=None</em>, <em>scoring=None</em>, <em>predictor_variables=None</em>, <em>pattern_string=None</em>, <em>y_scaler=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.__init__" title="Permalink to this definition">¶</a></dt>
@@ -825,7 +848,7 @@ information that is linked to the model and pattern.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>estimator_name</strong> (<em>str</em>)</li>
-<li><strong>model</strong> (<em>Machine Learning Model</em>)</li>
+<li><strong>model</strong> (<em>sklearn Machine Learning Model</em>)</li>
 <li><strong>pattern_no</strong> (<em>int</em>)</li>
 <li><strong>feature_name</strong> (<em>str|int</em>)</li>
 <li><strong>scores</strong> (<em>list[float]</em>)</li>
@@ -885,49 +908,25 @@ information that is linked to the model and pattern.</p>
 <code class="descname">get_y_scaler</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_y_scaler" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt id="impyte.ImpyterModel.set_feature_name">
-<code class="descname">set_feature_name</code><span class="sig-paren">(</span><em>feature_name</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.set_feature_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Setter method, updates feature names
-:param feature_name:</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.set_model">
-<code class="descname">set_model</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.set_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Setter method to update machine learning model.
-:param model: Machine Learning model</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.set_pattern">
-<code class="descname">set_pattern</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.set_pattern" title="Permalink to this definition">¶</a></dt>
-<dd><p>Setter method, updating pattern_no
-:param pattern_no: int</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.set_predictor_variables">
-<code class="descname">set_predictor_variables</code><span class="sig-paren">(</span><em>predictor_variables</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.set_predictor_variables" title="Permalink to this definition">¶</a></dt>
-<dd><p>Setter method, updates predictor names
-:param predictor_names:</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.set_scores">
-<code class="descname">set_scores</code><span class="sig-paren">(</span><em>scores</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.set_scores" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="class">
 <dt id="impyte.ImpyterMultiModel">
 <em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">ImpyterMultiModel</code><span class="sig-paren">(</span><em>pattern_string</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores multi-nan-models</p>
+<dd><p>Stores multi-nan imputations in the form of a list
+of <a class="reference internal" href="#impyte.ImpyterModel" title="impyte.ImpyterModel"><code class="xref py py-mod docutils literal"><span class="pre">impyte.ImpyterModel</span></code></a> objects.</p>
 <dl class="method">
 <dt id="impyte.ImpyterMultiModel.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>pattern_string</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.__init__" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_string</strong> (<em>tuple</em>) &#8211; References a pattern by tuple.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="impyte.ImpyterMultiModel.append">
@@ -1006,13 +1005,13 @@ given which of the element is null.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><strong>self.column_names</strong> (<em>list</em>) &#8211; Python list storing names of all columns that are in data set.</li>
-<li><strong>self.complete_idx</strong> (<em>int</em>) &#8211; Integer containing pattern number with only complete cases</li>
-<li><strong>self.continuous_variables</strong> (<em>list</em>) &#8211; Python list containing column names of all continuous variables.
+<li><strong>column_names</strong> (<em>list</em>) &#8211; Python list storing names of all columns that are in data set.</li>
+<li><strong>complete_idx</strong> (<em>int</em>) &#8211; Integer containing pattern number with only complete cases</li>
+<li><strong>continuous_variables</strong> (<em>list</em>) &#8211; Python list containing column names of all continuous variables.
 (i.e. columns that contain values in a range from 0.0 to 1.0)</li>
-<li><strong>self.discrete_variables</strong> (<em>list</em>) &#8211; Python list containing column names of all discrete variables.
+<li><strong>discrete_variables</strong> (<em>list</em>) &#8211; Python list containing column names of all discrete variables.
 (i.e. columns that contain values such as &#8220;red&#8221;, &#8220;blue&#8221;, &#8220;green&#8221;)</li>
-<li><strong>self.easy_access</strong> (<em>dict{tuple, list}</em>) &#8211; <p>Python dictionary holding NaN-pattern strings and mapping them
+<li><strong>easy_access</strong> (<em>dict{tuple, list}</em>) &#8211; <p>Python dictionary holding NaN-pattern strings and mapping them
 to a list of the names of columns that contain NaN values
 in the given NaN-pattern.</p>
 <p>As an example:</p>
@@ -1024,12 +1023,12 @@ in the given NaN-pattern.</p>
 </pre></div>
 </div>
 </li>
-<li><strong>self.missing_per_column</strong> (<em>list</em>) &#8211; Python list used to store summarization results, to make the use
+<li><strong>missing_per_column</strong> (<em>list</em>) &#8211; Python list used to store summarization results, to make the use
 of <a class="reference internal" href="#impyte.Pattern.get_missing_value_percentage" title="impyte.Pattern.get_missing_value_percentage"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Pattern.get_missing_value_percentage</span></code></a>
 more efficient (the default is None)</li>
-<li><strong>self.nan_checker</strong> (<em>NanChecker object</em>) &#8211; An instantiated <a class="reference internal" href="#impyte.NanChecker" title="impyte.NanChecker"><code class="xref py py-mod docutils literal"><span class="pre">impyte.NanChecker</span></code></a> object, that can be used
+<li><strong>nan_checker</strong> (<em>NanChecker object</em>) &#8211; An instantiated <a class="reference internal" href="#impyte.NanChecker" title="impyte.NanChecker"><code class="xref py py-mod docutils literal"><span class="pre">impyte.NanChecker</span></code></a> object, that can be used
 to analyze values and rows regarding their NaN values.</li>
-<li><strong>self.pattern_index_store</strong> (<em>dict{int, list}</em>) &#8211; <p>Python dictionary holding a list of indices for every pattern number.
+<li><strong>pattern_index_store</strong> (<em>dict{int, list}</em>) &#8211; <p>Python dictionary holding a list of indices for every pattern number.
 This dictionary is being used to look up the corresponding
 data points in a pandas DataFrame.</p>
 <p>As an example:</p>
@@ -1042,7 +1041,7 @@ data points in a pandas DataFrame.</p>
 <p>This pattern log consists out of 2 patterns (0 and 1)
 each pointing to 5 indices.</p>
 </li>
-<li><strong>self.pattern_store</strong> (<em>dict{str, pd.DataFrame}</em>) &#8211; <p>Python dictionary storing the pattern table. The table
+<li><strong>pattern_store</strong> (<em>dict{str, pd.DataFrame}</em>) &#8211; <p>Python dictionary storing the pattern table. The table
 (in pd.DataFrame form) can be accessed by <code class="docutils literal"><span class="pre">self.pattern_store['result']</span></code>.</p>
 <p>A potential result table could look like this, where <code class="docutils literal"><span class="pre">NaN</span></code>
 indicates the column contains missing values in this pattern.
@@ -1089,12 +1088,12 @@ are in the data set.</p>
 </div></blockquote>
 <p>Let&#8217;s hope these left and right socks are of the same color at least...</p>
 </li>
-<li><strong>self.result_pattern</strong> (<em>dict{tuple, int}</em>) &#8211; Python dictionary version of pattern counts. Makes computation
+<li><strong>result_pattern</strong> (<em>dict{tuple, int}</em>) &#8211; Python dictionary version of pattern counts. Makes computation
 and alterations easier.</li>
-<li><strong>self.tuple_counter</strong> (<em>int</em>) &#8211; Value storing the amount of different patterns after performing
+<li><strong>tuple_counter</strong> (<em>int</em>) &#8211; Value storing the amount of different patterns after performing
 pattern analysis. (the default is 0)</li>
-<li><strong>self.tuple_counter_dict</strong> (<em>dict</em>) &#8211; Python dictionary mapping pattern strings to pattern number.</li>
-<li><strong>self.tuple_dict</strong> (<em>dict{tuple, int}</em>) &#8211; <p>As an example:</p>
+<li><strong>tuple_counter_dict</strong> (<em>dict</em>) &#8211; Python dictionary mapping pattern strings to pattern number.</li>
+<li><strong>tuple_dict</strong> (<em>dict{tuple, int}</em>) &#8211; <p>As an example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span>
     <span class="p">(</span><span class="s1">&#39;NaN&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>     <span class="mi">1</span><span class="p">,</span>  <span class="c1"># points to pattern 1</span>
     <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;NaN&#39;</span><span class="p">):</span>     <span class="mi">2</span><span class="p">,</span>
@@ -1103,15 +1102,15 @@ pattern analysis. (the default is 0)</li>
 </pre></div>
 </div>
 </li>
-<li><strong>self.unique_instances</strong> (<em>int</em>) &#8211; <p>Value indicating the minimum value for a column of unique values
+<li><strong>unique_instances</strong> (<em>int</em>) &#8211; <p>Value indicating the minimum value for a column of unique values
 to be considered as continuous variable when having the proper dtype</p>
 <p>(the default is 10, which implies that columns with over 10 unique
 values are being labeled as continuous variables if containing
 numbers).</p>
 </li>
-<li><strong>self.pattern_predictor_dict</strong> (<em>dict</em>) &#8211; Python dictionary mapping pattern strings to their
+<li><strong>pattern_predictor_dict</strong> (<em>dict</em>) &#8211; Python dictionary mapping pattern strings to their
 independent variable names.</li>
-<li><strong>self.pattern_dependent_dict</strong> (<em>dict</em>) &#8211; Python dictionary mapping pattern string to their
+<li><strong>pattern_dependent_dict</strong> (<em>dict</em>) &#8211; Python dictionary mapping pattern string to their
 dependent variable names.</li>
 </ul>
 </td>

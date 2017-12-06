@@ -123,21 +123,21 @@ class Pattern:
 
         Attributes
         ----------
-        self.column_names : list
+        column_names : list
             Python list storing names of all columns that are in data set.
             
-        self.complete_idx : int
+        complete_idx : int
             Integer containing pattern number with only complete cases
         
-        self.continuous_variables : list
+        continuous_variables : list
             Python list containing column names of all continuous variables. 
             (i.e. columns that contain values in a range from 0.0 to 1.0)
         
-        self.discrete_variables : list
+        discrete_variables : list
             Python list containing column names of all discrete variables.
             (i.e. columns that contain values such as "red", "blue", "green") 
             
-        self.easy_access : dict{tuple, list}
+        easy_access : dict{tuple, list}
             Python dictionary holding NaN-pattern strings and mapping them 
             to a list of the names of columns that contain NaN values 
             in the given NaN-pattern.
@@ -150,16 +150,16 @@ class Pattern:
                     ('NaN', 'NaN'): ['left_socks', 'right_socks']
                 }
         
-        self.missing_per_column : list
+        missing_per_column : list
             Python list used to store summarization results, to make the use 
             of :mod:`impyte.Pattern.get_missing_value_percentage` 
             more efficient (the default is None)
         
-        self.nan_checker : NanChecker object
+        nan_checker : NanChecker object
             An instantiated :mod:`impyte.NanChecker` object, that can be used 
             to analyze values and rows regarding their NaN values.
             
-        self.pattern_index_store : dict{int, list}
+        pattern_index_store : dict{int, list}
             Python dictionary holding a list of indices for every pattern number. 
             This dictionary is being used to look up the corresponding 
             data points in a pandas DataFrame.
@@ -174,7 +174,7 @@ class Pattern:
             This pattern log consists out of 2 patterns (0 and 1) 
             each pointing to 5 indices. 
             
-        self.pattern_store : dict{str, pd.DataFrame}
+        pattern_store : dict{str, pd.DataFrame}
             Python dictionary storing the pattern table. The table 
             (in pd.DataFrame form) can be accessed by ``self.pattern_store['result']``.
             
@@ -194,18 +194,18 @@ class Pattern:
                 
             Let's hope these left and right socks are of the same color at least...
         
-        self.result_pattern : dict{tuple, int}
+        result_pattern : dict{tuple, int}
             Python dictionary version of pattern counts. Makes computation 
             and alterations easier.
         
-        self.tuple_counter : int
+        tuple_counter : int
             Value storing the amount of different patterns after performing 
             pattern analysis. (the default is 0)
         
-        self.tuple_counter_dict : dict
+        tuple_counter_dict : dict
             Python dictionary mapping pattern strings to pattern number.
         
-        self.tuple_dict : dict{tuple, int}
+        tuple_dict : dict{tuple, int}
         
             As an example: ::
              
@@ -215,7 +215,7 @@ class Pattern:
                     ('NaN', 'NaN'): 3
                 }
             
-        self.unique_instances : int
+        unique_instances : int
             Value indicating the minimum value for a column of unique values
             to be considered as continuous variable when having the proper dtype 
             
@@ -223,11 +223,11 @@ class Pattern:
             values are being labeled as continuous variables if containing
             numbers).
             
-        self.pattern_predictor_dict : dict
+        pattern_predictor_dict : dict
             Python dictionary mapping pattern strings to their 
             independent variable names.
             
-        self.pattern_dependent_dict : dict    
+        pattern_dependent_dict : dict    
             Python dictionary mapping pattern string to their 
             dependent variable names.
             
@@ -821,12 +821,12 @@ class Impyter:
         -------
         Success Indicator : Boolean
         """
-        cur_threshold = threshold[model.get_scoring()[0]]
-        avg_score = np.mean(model.get_score())
+        cur_threshold = threshold[model.scoring[0]]
+        avg_score = np.mean(model.score)
         if avg_score < cur_threshold:
             if verbose:
                 print("Dropping pattern {} ({} < {} {})".format(
-                    pattern_no, avg_score, cur_threshold, model.get_scoring()[0]))
+                    pattern_no, avg_score, cur_threshold, model.scoring[0]))
 
             if drop_pattern:
                 self.drop_pattern(pattern_no, inplace=True)
@@ -945,11 +945,11 @@ class Impyter:
     def __impute_predict(self, model, pattern, col_name, X_test, scores,
                          auto_scale, result_data, threshold, verbose):
         # prediction takes place here
-        to_append = model.get_model()[0].predict(X_test)
+        to_append = model.model[0].predict(X_test)
         return_verbose_string = ""
 
-        if model.get_scoring()[0] == 'r2' and auto_scale:
-            y_scaler = model.get_y_scaler()
+        if model.scoring[0] == 'r2' and auto_scale:
+            y_scaler = model.y_scaler
             to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
 
         indices = self.pattern_log.get_pattern_indices(pattern)
@@ -1131,7 +1131,7 @@ class Impyter:
             if isinstance(model, ImpyterModel):
                 self.__drop_imputation(model, pattern_no, threshold, drop_pattern, verbose)
             if isinstance(model, ImpyterMultiModel):
-                for model in model.get_model():
+                for model in model.model_list:
                     if self.__drop_imputation(model, pattern_no, threshold, drop_pattern, verbose):
                         break  # only one score needs to be below threshold in order to break
 
@@ -1345,8 +1345,8 @@ class Impyter:
             If no pattern number can be found, a None value 
             will be returned.
         """
-        pred_variables = mdl.get_predictor_variables()
-        dependent_variables = mdl.get_feature_name()
+        pred_variables = mdl.predictor_variables
+        dependent_variables = mdl.feature_name
         pattern_no = None
         pattern_string = ""
 
@@ -1777,11 +1777,11 @@ class Impyter:
                 else:
                     # predict with existing models
                     model = self.model_log[pattern]
-                    scores = model.get_scores()
-                    cur_threshold = threshold[model.get_scoring()[0]]
+                    scores = model.scores
+                    cur_threshold = threshold[model.scoring[0]]
                     verbose_string = self.__print_results_line(
-                        model.get_scores()[0], model.get_scoring()[0], pattern, model.get_feature_name()[0],
-                        "", model.get_model()[0], 0)
+                        model.scores[0], model.scoring[0], pattern, model.feature_name[0],
+                        "", model.model[0], 0)
                     verbose_string += self.__impute_predict(model, pattern, col_name, X_test, scores,
                                           auto_scale, result_data, cur_threshold, verbose)
                     if verbose:
@@ -1843,12 +1843,12 @@ class Impyter:
                         # predict with existing models
                         multi_model = self.model_log[pattern_no]
                         for model in multi_model.model_list:
-                            if col_name in model.get_feature_name():
-                                scores = model.get_scores()
-                                cur_threshold = threshold[model.get_scoring()[0]]
+                            if col_name in model.feature_name:
+                                scores = model.scores
+                                cur_threshold = threshold[model.scoring[0]]
                                 verbose_string = self.__print_results_line(
-                                    model.get_scores()[0], model.get_scoring()[0],
-                                    pattern_no, model.get_feature_name()[0], "", model.get_model()[0], 0)
+                                    model.scores[0], model.scoring[0],
+                                    pattern_no, model.feature_name[0], "", model.model[0], 0)
                                 verbose_string += self.__impute_predict(model, pattern_no, col_name, X_test, scores,
                                                       auto_scale, result_data, cur_threshold, verbose)
                     if verbose:
@@ -1868,6 +1868,39 @@ class ImpyterModel:
     """
     Stores computed Impyter machine learning models and relevant
     information that is linked to the model and pattern.
+    
+    Attributes
+    ----------
+    model : sklearn Machine Learning Model
+        Contains a trained machine learning model for given imputation task.
+    
+    pattern_no : int
+        Indicator for pattern number.
+    
+    feature_name : str|int
+        Name of the dependent variable.
+    
+    scores : list
+        List of all cross-validation scores. The average of this list is being
+        used as the threshold score.
+    
+    estimator_name : str
+        String representation of the Machine Learning model. 
+    
+    scoring : str
+        String representation of the scoring measurement 
+        ('r2' or 'f1_macro' right now) 
+    
+    predictor_variables : list
+        Contains names of all independent variables used for the imputation task. 
+    
+    pattern_string : tuple
+        Tuple representation of pattern string. Can be used for identification of 
+        patterns. 
+        
+    y_scaler : sklearn.preprocessing.StandardScaler object
+        StandardScaler object that contains additional information 
+        in case the model was used with ``auto_scale = True``. 
     """
     def __init__(self, estimator_name,
                  model=None,
@@ -1891,53 +1924,72 @@ class ImpyterModel:
         pattern_string : tuple 
         y_scaler : sklearn.preprocessing.StandardScaler object
         """
-        self.model = model
-        self.pattern_no = pattern_no
-        self.feature_name = feature_name
-        self.scores = scores
-        self.estimator_name = estimator_name
-        self.scoring = scoring
-        self.predictor_variables = predictor_variables
-        self.pattern_string = pattern_string
-        self.y_scaler = y_scaler
+        self._model = model
+        self._pattern_no = pattern_no
+        self._feature_name = feature_name
+        self._scores = scores
+        self._estimator_name = estimator_name
+        self._scoring = scoring
+        self._predictor_variables = predictor_variables
+        self._pattern_string = pattern_string
+        self._y_scaler = y_scaler
 
-    def get_model(self):
-        return self.model
+    @property
+    def model(self):
+        return self._model
 
-    def get_pattern_no(self):
-        return self.pattern_no
+    @property
+    def pattern_no(self):
+        return self._pattern_no
 
-    def get_feature_name(self):
-        return self.feature_name
+    @property
+    def feature_name(self):
+        return self._feature_name
 
-    def get_predictor_variables(self):
-        return self.predictor_variables
+    @property
+    def predictor_variables(self):
+        return self._predictor_variables
 
-    def get_score(self):
+    @property
+    def score(self):
         ret_list = []
         for score_list in self.scores:
             ret_list.append(np.mean(score_list))
         return ret_list
 
-    def get_scores(self):
-        return self.scores
+    @property
+    def scores(self):
+        return self._scores
 
-    def get_scoring(self):
-        return self.scoring
+    @property
+    def scoring(self):
+        return self._scoring
 
-    def get_estimator_name(self):
-        return self.estimator_name
+    @property
+    def estimator_name(self):
+        return self._estimator_name
 
-    def get_y_scaler(self):
-        return self.y_scaler
+    @property
+    def y_scaler(self):
+        return self._y_scaler
 
 
-class ImpyterMultiModel():
+class ImpyterMultiModel:
     """
-    Stores multi-nan-models
+    Stores multi-nan imputations in the form of a list 
+    of :mod:`impyte.ImpyterModel` objects. 
     """
     def __init__(self, pattern_string):
-        self.model_list = []
+        """
+        
+        Parameters
+        ----------
+        pattern_string : tuple
+            References a pattern by tuple.
+            
+        
+        """
+        self._model_list = []
         self.count = 0
         self.pattern_string = pattern_string
 
@@ -1945,7 +1997,7 @@ class ImpyterMultiModel():
         if not isinstance(model, ImpyterModel):
             raise ValueError("Only objects of type ImpyterModel allowed")
         self.count += 1
-        self.model_list.append(model)
+        self._model_list.append(model)
 
     @staticmethod
     def combine_in_list(input_list, *args):
@@ -1967,9 +2019,9 @@ class ImpyterMultiModel():
     def get_dependend_and_independent_variables(self):
         dependent_variables = []
         independent_variables = []
-        for mdl in self.model_list:
-            tmp_feature_name = mdl.get_feature_name()
-            tmp_predictor_name = mdl.get_predictor_variables()
+        for mdl in self._model_list:
+            tmp_feature_name = mdl.feature_name
+            tmp_predictor_name = mdl.predictor_variables
             dependent_variables = ImpyterMultiModel.check_and_append(
                 tmp_feature_name, dependent_variables)
             independent_variables = ImpyterMultiModel.check_and_append(
@@ -1977,5 +2029,6 @@ class ImpyterMultiModel():
         return {"independent_variables": independent_variables,
                 "dependent_variables": dependent_variables}
 
-    def get_model(self):
-        return self.model_list
+    @property
+    def model_list(self):
+        return self._model_list
