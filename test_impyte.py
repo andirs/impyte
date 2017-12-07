@@ -1,9 +1,9 @@
 import unittest
-import impyte3
+import impyte
 import numpy as np
 import pandas as pd
-from impyte3 import NanChecker
-from impyte3 import Pattern
+from impyte import NanChecker
+from impyte import Pattern
 import pandas.util.testing as pdt
 import numpy.testing as npt
 
