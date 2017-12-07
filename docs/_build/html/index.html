@@ -87,15 +87,18 @@
             
               <!-- Local TOC -->
               <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">Welcome to impyter</a></li>
-<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#">Welcome to impyter</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
-<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#requirements">Requirements</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#api-reference">API Reference</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+<li><a class="reference internal" href="#module-impyte">API Reference</a></li>
+<li><a class="reference internal" href="#help">Help</a><ul>
+<li><a class="reference internal" href="#faqs">FAQs</a></li>
+<li><a class="reference internal" href="#index">Index</a></li>
+</ul>
+</li>
 </ul>
 </div>
             
@@ -162,14 +165,10 @@
   <div class="section" id="welcome-to-impyter">
 <h1>Welcome to impyter<a class="headerlink" href="#welcome-to-impyter" title="Permalink to this headline">¶</a></h1>
 <p>Impyter is a Python module to impute missing values by prediction using machine learning algorithms.</p>
-</div>
-<div class="section" id="contents">
-<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
-</div>
 <div class="section" id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>One essential problem for any person dealing with data is missing values.
 There are several possibilities to deal with missing information, ranging
 from dropping data points to estimating the value based on other values
@@ -177,22 +176,42 @@ in that column (i.e. average or median values).
 A more recent method involves machine-learning algorithms.
 This module offers a lightweight Python solution to calculate missing
 information based on the underlying relationship between data points.</p>
-<p>This is some additional cool text.:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">print</span> <span class="s1">&#39;Hello world&#39;</span>
-<span class="o">&gt;&gt;</span> <span class="n">Hello</span> <span class="n">world</span>
+<p>The main goal of this module is to support people who are dealing
+with missing information to gather additional insights about the
+different patterns and impute them in an easy way.</p>
+<p>There are two essential features to this module:</p>
+<ol class="arabic simple">
+<li>Visualization of Patterns</li>
+<li>Imputation of missing information</li>
+</ol>
+<p>Yet <a class="reference internal" href="#module-impyte" title="impyte"><code class="xref py py-mod docutils literal"><span class="pre">impyte</span></code></a> is only one piece of the equation. In order to
+maximize the return in any value imputation process a deep understanding
+of the data is needed. As well as thorough pre-processing and cleaning
+of the data. Imyte takes on some of the challenges but tends to work best
+in concert with additional data science endeavors.</p>
+<p>To get started with impyte is as simple as:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">impyte</span>
+<span class="n">imp</span> <span class="o">=</span> <span class="n">impyte</span><span class="o">.</span><span class="n">Impyter</span><span class="p">()</span>
+<span class="n">imp</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">missing_data</span><span class="p">)</span>
+<span class="n">imp</span><span class="o">.</span><span class="n">impute</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>Since this module is still in beta, you can install the latest version through its <a class="reference external" href="https://github.com/andirs/impyter">github</a> repository via pip.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">git</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">andirs</span><span class="o">/</span><span class="n">impyter</span><span class="o">.</span><span class="n">git</span>
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Since this module is still in beta, you can install the latest version
+through its <a class="reference external" href="https://github.com/andirs/impyter">github</a> repository via pip.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">git</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">andirs</span><span class="o">/</span><span class="n">impyter</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
+</div>
+<p>There is also a manual way of importing the module in your project,
+by downloading the <a class="reference external" href="https://github.com/andirs/impyter">repository</a> and saving the files in your project
+folder.</p>
 </div>
 <div class="section" id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
-<p>The requirements are listed in <code class="docutils literal"><span class="pre">requirements.txt</span></code> and will usually be installed when
-proceeding through pip. When installing manual,
+<p>The requirements are listed in <code class="docutils literal"><span class="pre">requirements.txt</span></code> and will usually
+be installed when proceeding through pip. When installing manually,
 please make sure following modules are already installed:</p>
 <ul class="simple">
 <li><a class="reference external" href="https://www.python.org/">Python 3.6</a></li>
@@ -201,11 +220,8 @@ please make sure following modules are already installed:</p>
 </ul>
 </div>
 </div>
-<div class="section" id="api-reference">
-<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
-<p><code class="xref py py-mod docutils literal"></code> Module</p>
-<span class="target" id="module-impyte"></span><p>Module to impute missing values using machine learning algorithms.
-author: Andreas Rubin-Schwarz</p>
+<div class="section" id="module-impyte">
+<span id="api-reference"></span><h1>API Reference<a class="headerlink" href="#module-impyte" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="impyte.Impyter">
 <em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">Impyter</code><span class="sig-paren">(</span><em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter" title="Permalink to this definition">¶</a></dt>
@@ -847,66 +863,22 @@ in case the model was used with <code class="docutils literal"><span class="pre"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>estimator_name</strong> (<em>str</em>)</li>
-<li><strong>model</strong> (<em>sklearn Machine Learning Model</em>)</li>
-<li><strong>pattern_no</strong> (<em>int</em>)</li>
-<li><strong>feature_name</strong> (<em>str|int</em>)</li>
-<li><strong>scores</strong> (<em>list[float]</em>)</li>
-<li><strong>scoring</strong> (<em>str</em>)</li>
-<li><strong>predictor_variables</strong> (<em>list[str|int]</em>)</li>
-<li><strong>pattern_string</strong> (<em>tuple</em>)</li>
-<li><strong>y_scaler</strong> (<em>sklearn.preprocessing.StandardScaler object</em>)</li>
+<li><strong>estimator_name</strong> (<em>str</em>) &#8211; Name of machine learning model</li>
+<li><strong>model</strong> (<em>sklearn Machine Learning Model</em>) &#8211; Sklearn machine learning estimator object</li>
+<li><strong>pattern_no</strong> (<em>int</em>) &#8211; Pattern number associated with nan-pattern.</li>
+<li><strong>feature_name</strong> (<em>str|int</em>) &#8211; Name of dependent variable.</li>
+<li><strong>scores</strong> (<em>list[float]</em>) &#8211; Collection of all cross-validation scores.</li>
+<li><strong>scoring</strong> (<em>str</em>) &#8211; String representation of scoring function. (i.e. &#8220;r2&#8221; or &#8220;f1_macro&#8221;)</li>
+<li><strong>predictor_variables</strong> (<em>list[str|int]</em>) &#8211; List of names of all independent variables.</li>
+<li><strong>pattern_string</strong> (<em>tuple</em>) &#8211; Tuple representation of a certain pattern.</li>
+<li><strong>y_scaler</strong> (<em>sklearn.preprocessing.StandardScaler object</em>) &#8211; StandardScaler object that contains additional information
+in case the model was used with <code class="docutils literal"><span class="pre">auto_scale</span> <span class="pre">=</span> <span class="pre">True</span></code>.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.get_estimator_name">
-<code class="descname">get_estimator_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_estimator_name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.get_feature_name">
-<code class="descname">get_feature_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_feature_name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.get_model">
-<code class="descname">get_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_model" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.get_pattern_no">
-<code class="descname">get_pattern_no</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_pattern_no" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.get_predictor_variables">
-<code class="descname">get_predictor_variables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_predictor_variables" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.get_score">
-<code class="descname">get_score</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_score" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.get_scores">
-<code class="descname">get_scores</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_scores" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.get_scoring">
-<code class="descname">get_scoring</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_scoring" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterModel.get_y_scaler">
-<code class="descname">get_y_scaler</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.get_y_scaler" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -915,6 +887,20 @@ in case the model was used with <code class="docutils literal"><span class="pre"
 <em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">ImpyterMultiModel</code><span class="sig-paren">(</span><em>pattern_string</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stores multi-nan imputations in the form of a list
 of <a class="reference internal" href="#impyte.ImpyterModel" title="impyte.ImpyterModel"><code class="xref py py-mod docutils literal"><span class="pre">impyte.ImpyterModel</span></code></a> objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>_model_list</strong> (<em>list</em>) &#8211; Collection of all ImpyterModel that are needed to
+compute the given multi-nan pattern.</li>
+<li><strong>count</strong> (<em>int</em>) &#8211; Amount of models that are stored in ImpyterModels.</li>
+<li><strong>pattern_string</strong> (<em>tuple</em>) &#8211; Tuple representation of multi-nan pattern.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="impyte.ImpyterMultiModel.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>pattern_string</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.__init__" title="Permalink to this definition">¶</a></dt>
@@ -931,27 +917,94 @@ of <a class="reference internal" href="#impyte.ImpyterModel" title="impyte.Impyt
 <dl class="method">
 <dt id="impyte.ImpyterMultiModel.append">
 <code class="descname">append</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.append" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Appends an additional ImpyterModel object to the list of models.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> (<em>ImpyterModel object</em>) &#8211; The model to be appended to the model list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="staticmethod">
 <dt id="impyte.ImpyterMultiModel.check_and_append">
 <em class="property">static </em><code class="descname">check_and_append</code><span class="sig-paren">(</span><em>input_list</em>, <em>storage_list</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.check_and_append" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Extension helper method to append items
+to a pre-existing list if not included.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input_list</strong> (<em>list</em>) &#8211; List with items to append.</li>
+<li><strong>storage_list</strong> (<em>list</em>) &#8211; List that serves as storage item for all items.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>storage_list</strong> &#8211; Collection of all unique elements from input_list and storage_list</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="staticmethod">
 <dt id="impyte.ImpyterMultiModel.combine_in_list">
 <em class="property">static </em><code class="descname">combine_in_list</code><span class="sig-paren">(</span><em>input_list</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.combine_in_list" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Extension helper method to add multiple and
+single arguments to a pre-existing list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input_list</strong> (<em>list</em>) &#8211; Pre-existing list.</li>
+<li><strong>args</strong> (<em>list</em>) &#8211; List or single values to be extended to list.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>extended input_list</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="impyte.ImpyterMultiModel.get_dependend_and_independent_variables">
 <code class="descname">get_dependend_and_independent_variables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.get_dependend_and_independent_variables" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="impyte.ImpyterMultiModel.get_model">
-<code class="descname">get_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.get_model" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>For all models stored in the object, collect their
+dependent and independent variables.</p>
+<p>As an example, if we had a multi-nan model that stored two
+ImpyterModels to predict <code class="docutils literal"><span class="pre">right_socks</span></code> and <code class="docutils literal"><span class="pre">left_socks</span></code>,
+the variables stored in the response would look like this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;independent_variables&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;time_of_year&quot;</span><span class="p">,</span> <span class="s2">&quot;pants&quot;</span><span class="p">,</span> <span class="s2">&quot;hat&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;dependent_variables&quot;</span><span class="p">:</span>   <span class="p">[</span><span class="s2">&quot;right_socks&quot;</span><span class="p">,</span> <span class="s2">&quot;left_socks&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Variables</strong> &#8211; Dictionary including independent and dependent variables.
+Can be accessed through &#8220;independent_variables&#8221; and
+&#8220;dependent_variables&#8221;.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict{str, list}</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
@@ -1387,13 +1440,32 @@ as well as drops the entry in the results table.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="help">
+<h1>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="faqs">
+<h2>FAQs<a class="headerlink" href="#faqs" title="Permalink to this headline">¶</a></h2>
+<p>Below are some pointers towards the right direction if something breaks.
+If you encounter any other error please feel free to reach out.</p>
+<p><strong>When imputing my estimator raises ValueError: Unknown label type: &#8216;continuous&#8217;</strong></p>
+<blockquote>
+<div><div class="admonition hint">
+<p class="first admonition-title">Hint</p>
+<p>This might happen, if there is too little information for impyte to
+correctly distinguish your data type. This error essentially means,
+you&#8217;re handing a continuous data type [i.e. a float] to a classifier
+which expects a class or discrete value.</p>
+<p class="last">To solve this problem, you can set the unique value threshold to a
+lower value. (standard value is 10 unique instances).</p>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="index">
+<h2>Index<a class="headerlink" href="#index" title="Permalink to this headline">¶</a></h2>
+<p>The index stores an alphabetical list of the API reference.</p>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
 </ul>
+</div>
 </div>
 
 

@@ -2,14 +2,11 @@ Welcome to impyter
 ==================
 Impyter is a Python module to impute missing values by prediction using machine learning algorithms.
 
-Contents
-========
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
 Introduction
-============
+^^^^^^^^^^^^
 One essential problem for any person dealing with data is missing values.
 There are several possibilities to deal with missing information, ranging
 from dropping data points to estimating the value based on other values
@@ -18,25 +15,45 @@ A more recent method involves machine-learning algorithms.
 This module offers a lightweight Python solution to calculate missing
 information based on the underlying relationship between data points.
 
-This is some additional cool text.::
+The main goal of this module is to support people who are dealing
+with missing information to gather additional insights about the
+different patterns and impute them in an easy way.
 
-    print 'Hello world'
-    >> Hello world
+There are two essential features to this module:
+
+1. Visualization of Patterns
+2. Imputation of missing information
+
+Yet :mod:`impyte` is only one piece of the equation. In order to
+maximize the return in any value imputation process a deep understanding
+of the data is needed. As well as thorough pre-processing and cleaning
+of the data. Imyte takes on some of the challenges but tends to work best
+in concert with additional data science endeavors.
+
+To get started with impyte is as simple as::
+
+    import impyte
+    imp = impyte.Impyter()
+    imp.load_data(missing_data)
+    imp.impute()
 
 
 Installation
-============
+^^^^^^^^^^^^
 
-Since this module is still in beta, you can install the latest version through its `github`_ repository via pip.
-
-.. code-block:: python
+Since this module is still in beta, you can install the latest version
+through its `github`_ repository via pip. ::
 
    pip install git+git://github.com/andirs/impyter.git
 
+There is also a manual way of importing the module in your project,
+by downloading the `repository`_ and saving the files in your project
+folder.
+
 Requirements
 ^^^^^^^^^^^^
-The requirements are listed in ``requirements.txt`` and will usually be installed when
-proceeding through pip. When installing manual,
+The requirements are listed in ``requirements.txt`` and will usually
+be installed when proceeding through pip. When installing manually,
 please make sure following modules are already installed:
 
 - `Python 3.6`_
@@ -44,25 +61,43 @@ please make sure following modules are already installed:
 - `pandas 0.21`_
 
 .. _github: https://github.com/andirs/impyter
+.. _repository: https://github.com/andirs/impyter
 .. _Python 3.6: https://www.python.org/
 .. _sklearn 0.19: https://scikit-learn.org/
 .. _pandas 0.21: http://pandas.pydata.org/
 
 API Reference
 =============
-:mod:`.` Module
-
 .. automodule:: impyte
     :members:
     :undoc-members:
     :special-members: __init__
+    :exclude-members: estimator_name, feature_name, model, pattern_no,
+                      predictor_variables, score, scores, scoring, y_scaler, model_list
     :show-inheritance:
 
+Help
+====
 
-Indices and tables
-==================
+FAQs
+^^^^
+Below are some pointers towards the right direction if something breaks.
+If you encounter any other error please feel free to reach out.
+
+**When imputing my estimator raises ValueError: Unknown label type: 'continuous'**
+
+    .. hint::
+            This might happen, if there is too little information for impyte to
+            correctly distinguish your data type. This error essentially means,
+            you're handing a continuous data type [i.e. a float] to a classifier
+            which expects a class or discrete value.
+
+            To solve this problem, you can set the unique value threshold to a
+            lower value. (standard value is 10 unique instances).
+
+Index
+^^^^^
+The index stores an alphabetical list of the API reference.
 
 * :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 

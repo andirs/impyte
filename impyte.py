@@ -1,13 +1,3 @@
-"""
-Module to impute missing values using machine learning algorithms.
-author: Andreas Rubin-Schwarz
-"""
-
-# Documentation:
-# https://goldilocks.readthedocs.io/en/latest/source/goldilocks.html#module-goldilocks.cmd
-# https://samnicholls.net/2016/06/15/how-to-sphinx-readthedocs/
-# https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
-
 import math
 import numpy as np
 import os
@@ -1914,15 +1904,33 @@ class ImpyterModel:
         """
         Parameters
         ----------
-        estimator_name : str 
-        model : sklearn Machine Learning Model 
+        estimator_name : str
+            Name of machine learning model
+        
+        model : sklearn Machine Learning Model
+            Sklearn machine learning estimator object
+            
         pattern_no : int 
+            Pattern number associated with nan-pattern.
+            
         feature_name : str|int
+            Name of dependent variable.
+            
         scores : list[float] 
+            Collection of all cross-validation scores.
+            
         scoring : str 
+            String representation of scoring function. (i.e. "r2" or "f1_macro")
+            
         predictor_variables : list[str|int] 
-        pattern_string : tuple 
+            List of names of all independent variables.
+            
+        pattern_string : tuple
+            Tuple representation of a certain pattern.
+            
         y_scaler : sklearn.preprocessing.StandardScaler object
+            StandardScaler object that contains additional information 
+            in case the model was used with ``auto_scale = True``.
         """
         self._model = model
         self._pattern_no = pattern_no
@@ -1977,23 +1985,40 @@ class ImpyterModel:
 class ImpyterMultiModel:
     """
     Stores multi-nan imputations in the form of a list 
-    of :mod:`impyte.ImpyterModel` objects. 
+    of :mod:`impyte.ImpyterModel` objects.
+    
+    Attributes
+    ----------
+    _model_list : list
+        Collection of all ImpyterModel that are needed to 
+        compute the given multi-nan pattern.
+        
+    count : int
+        Amount of models that are stored in ImpyterModels.
+        
+    pattern_string : tuple
+        Tuple representation of multi-nan pattern.
     """
     def __init__(self, pattern_string):
         """
-        
         Parameters
         ----------
         pattern_string : tuple
             References a pattern by tuple.
-            
-        
         """
         self._model_list = []
         self.count = 0
         self.pattern_string = pattern_string
 
     def append(self, model):
+        """
+        Appends an additional ImpyterModel object to the list of models. 
+         
+        Parameters
+        ----------
+        model : ImpyterModel object
+            The model to be appended to the model list
+        """
         if not isinstance(model, ImpyterModel):
             raise ValueError("Only objects of type ImpyterModel allowed")
         self.count += 1
@@ -2001,10 +2026,41 @@ class ImpyterMultiModel:
 
     @staticmethod
     def combine_in_list(input_list, *args):
+        """
+        Extension helper method to add multiple and 
+        single arguments to a pre-existing list.
+         
+        Parameters
+        ----------
+        input_list : list
+            Pre-existing list.
+        args : list
+            List or single values to be extended to list.
+        
+        Returns
+        -------
+        extended input_list : list
+        """
         return input_list.extend(args)
 
     @staticmethod
     def check_and_append(input_list, storage_list):
+        """
+        Extension helper method to append items 
+        to a pre-existing list if not included.
+         
+        Parameters
+        ----------
+        input_list : list
+            List with items to append.
+        storage_list : list
+            List that serves as storage item for all items.
+        
+        Returns
+        -------
+        storage_list : list
+            Collection of all unique elements from input_list and storage_list
+        """
         if isinstance(input_list, list):
             for item in input_list:
                 if item not in storage_list:
@@ -2017,6 +2073,27 @@ class ImpyterMultiModel:
         return storage_list
 
     def get_dependend_and_independent_variables(self):
+        """
+        For all models stored in the object, collect their
+        dependent and independent variables.
+        
+        As an example, if we had a multi-nan model that stored two
+        ImpyterModels to predict ``right_socks`` and ``left_socks``,
+        the variables stored in the response would look like this: ::
+            
+           {
+               "independent_variables": ["time_of_year", "pants", "hat"],
+               "dependent_variables":   ["right_socks", "left_socks"]
+           }
+        
+        Returns
+        -------
+        Variables : dict{str, list}
+            Dictionary including independent and dependent variables. 
+            Can be accessed through "independent_variables" and 
+            "dependent_variables".
+        
+        """
         dependent_variables = []
         independent_variables = []
         for mdl in self._model_list:
