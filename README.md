@@ -1,6 +1,7 @@
 # impyte
 
 [![Documentation Status](https://readthedocs.org/projects/impyte/badge/?version=latest)](http://impyte.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/andirs/impyte.svg?branch=master)](https://travis-ci.org/andirs/impyte)
 
 Python module to impute missing values by prediction using machine learning algorithms.
 
