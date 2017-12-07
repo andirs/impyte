@@ -5,4 +5,6 @@ rvm:
  - pandas
  - numpy
 install:
-  - pip install -r requirements.txt
+ - pip install -r requirements.txt
+script:
+ - pytest
