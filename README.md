@@ -1,4 +1,7 @@
 # impyte
+
+[![Documentation Status](https://readthedocs.org/projects/impyte/badge/?version=latest)](http://impyte.readthedocs.io/en/latest/?badge=latest)
+
 Python module to impute missing values by prediction using machine learning algorithms.
 
 ## Value Imputation
