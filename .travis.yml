@@ -1,6 +1,8 @@
 language: python
 rvm:
- - 3.6
+ - 3.5
  - scikit-learn
  - pandas
  - numpy
+install:
+  - pip install -r requirements.txt
