@@ -1,6 +1,6 @@
-Welcome to impyter
-==================
-Impyter is a Python module to impute missing values by prediction using machine learning algorithms.
+Welcome to impyte
+=================
+Impyte is a Python module to impute missing values by prediction using machine learning algorithms.
 
 .. toctree::
    :maxdepth: 1
@@ -44,7 +44,7 @@ Installation
 Since this module is still in beta, you can install the latest version
 through its `github`_ repository via pip. ::
 
-   pip install git+git://github.com/andirs/impyter.git
+   pip install git+git://github.com/andirs/impyte.git
 
 There is also a manual way of importing the module in your project,
 by downloading the `repository`_ and saving the files in your project
@@ -60,8 +60,8 @@ please make sure following modules are already installed:
 - `sklearn 0.19`_
 - `pandas 0.21`_
 
-.. _github: https://github.com/andirs/impyter
-.. _repository: https://github.com/andirs/impyter
+.. _github: https://github.com/andirs/impyte
+.. _repository: https://github.com/andirs/impyte
 .. _Python 3.6: https://www.python.org/
 .. _sklearn 0.19: https://scikit-learn.org/
 .. _pandas 0.21: http://pandas.pydata.org/
