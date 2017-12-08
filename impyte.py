@@ -934,6 +934,26 @@ class Impyter:
 
     def __impute_predict(self, model, pattern, col_name, X_test, scores,
                          auto_scale, result_data, threshold, verbose):
+        """
+        Prediction function. Applies model, alters result data 
+        and stores information about success in log.
+        
+        Parameters
+        ----------
+        :param model: 
+        :param pattern: 
+        :param col_name: 
+        :param X_test: 
+        :param scores: 
+        :param auto_scale: 
+        :param result_data: 
+        :param threshold: 
+        :param verbose:
+        
+        Returns
+        -------
+        :return: 
+        """
         # prediction takes place here
         to_append = model.model[0].predict(X_test)
         return_verbose_string = ""
@@ -957,6 +977,23 @@ class Impyter:
             return return_verbose_string
 
     def __preprocess_data(self, X_train, X_test, col_name, verbose, one_hot_encode, auto_scale):
+        """
+        Preprocessing method that applies one-hot-encoding 
+        and auto-scaling if flags are set to ``True``.
+         
+        Parameters
+        ----------
+        :param X_train: 
+        :param X_test: 
+        :param col_name: 
+        :param verbose: 
+        :param one_hot_encode: 
+        :param auto_scale:
+         
+        Returns
+        -------
+        :return: 
+        """
         X_scaler, y_scaler = None, None
         # Pre-processing of data
         if one_hot_encode:
@@ -977,6 +1014,12 @@ class Impyter:
 
     @staticmethod
     def __print_header(threshold):
+        """
+        Method to print header of error log to stdout.
+        
+        :param threshold: 
+        :return: 
+        """
         # print threshold:
         print("{:<30}{:<30}{:<30}".format("Scoring Threshold", "Classification", "Regression"))
         print("=" * 90)
