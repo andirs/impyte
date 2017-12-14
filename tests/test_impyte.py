@@ -1,5 +1,5 @@
 import sys
-sys.path.append(sys.path[0] + "/..")  # to enable impyte import
+sys.path.append(sys.path[0] + "/../impyte")  # to enable impyte import
 import unittest
 from impyte import impyte
 print(impyte)
