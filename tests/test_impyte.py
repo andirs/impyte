@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')  # to enable impyte import
 import unittest
-import impyte
+from impyte import impyte
 import numpy as np
 import pandas as pd
 from impyte import NanChecker
