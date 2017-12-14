@@ -1,3 +1,5 @@
+import sys
+sys.path.append('..')  # to enable impyte import
 import unittest
 import impyte
 import numpy as np
