@@ -22,9 +22,6 @@ from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.base import clone
 
 
-# TODO: Use __future__ bindings to include Python 2 and Python 3 users
-# http://python-future.org/compatible_idioms.html
-
 class NanChecker:
     """
     Class that checks data set, lists or single
@@ -305,7 +302,8 @@ class Pattern:
                 tmp_label.append(1)
         try:
             self._store_tuple(
-                tuple(tmp_label), row.name, tmp_col_lists, tmp_dependent_variable, tmp_independent_variable)
+                tuple(tmp_label), row.name, tmp_col_lists,
+                tmp_dependent_variable, tmp_independent_variable)
         # in case of list
         except AttributeError:
             return tuple(tmp_label)
@@ -374,7 +372,8 @@ class Pattern:
         data.apply(self.__row_nan_pattern, axis=1)
 
         # Beautification of result
-        result_pattern = pd.DataFrame.from_dict(self.result_pattern, orient='index')
+        result_pattern = pd.DataFrame.from_dict(
+            self.result_pattern, orient='index')
         final_result = []
         index_list = []
         for tuple_val in result_pattern.index:
@@ -446,7 +445,8 @@ class Pattern:
 
         return unique_vals
 
-    def _store_tuple(self, tup, row_idx, tmp_col_names, dependent_variables, independent_variables):
+    def _store_tuple(self, tup, row_idx, tmp_col_names,
+                     dependent_variables, independent_variables):
         if tup in self.result_pattern:
             self.result_pattern[tup] += 1
             # Get corresponding label number from dict
@@ -509,7 +509,8 @@ class Pattern:
         Indices : list
             List of indices that point to rows with complete cases
         """
-        complete_pattern_no = self.get_pattern().apply(self._check_complete_row, axis=1).max()
+        complete_pattern_no = self.get_pattern().apply(
+            self._check_complete_row, axis=1).max()
         self.complete_idx = complete_pattern_no
         if complete_pattern_no >= 0:
             return self.get_pattern_indices(complete_pattern_no)
@@ -577,7 +578,8 @@ class Pattern:
         return_table["Complete"] = len(data) - return_table["Missing"]
         return_table["Percentage"] = (return_table["Missing"] / len(data))
         return_table["Percentage"] = pd.Series(
-            ["{0:.2f} %".format(val * 100) for val in return_table["Percentage"]], index=return_table.index)
+            ["{0:.2f} %".format(val * 100) for val in return_table["Percentage"]],
+            index=return_table.index)
         return_table.sort_values("Missing", inplace=True)
         if importance_filter:
             return_table = return_table[return_table["Missing"] > 0]
@@ -591,10 +593,6 @@ class Pattern:
         Parameters
         ----------
         data : pd.DataFrame
-        
-        unique_instances : int
-            Determines how many unique values are needed to count as 
-            continuous variable
         
         recompute: Boolean
             If set True, stored results are being disregarded
@@ -642,7 +640,6 @@ class Pattern:
         Pattern Numbers : list
             All single or multi-nan pattern numbers.
         """
-        # TODO: More beautiful way of refactoring with get_single_nan_pattern_nos
         tmp = self.get_pattern().drop('Count', axis=1)
         tmp.replace('NaN', 0, inplace=True)
         tmp = len(tmp.columns) - tmp.sum(axis=1)
@@ -697,6 +694,7 @@ class Pattern:
         else:
             raise ValueError("Pattern not found")
 
+
 class Impyter:
     """
         Example usage: ::
@@ -730,7 +728,8 @@ class Impyter:
         Attributes
         ----------
         data : pd.DataFrame
-            The original data, loaded by user through instantiation or :mod:`impyte.Impyter.load_data` method.
+            The original data, loaded by user through 
+            instantiation or :mod:`impyte.Impyter.load_data` method.
         
         result : pd.DataFrame
             Copy of original data on which imputation is being performed.
@@ -739,19 +738,24 @@ class Impyter:
             Holds estimator for given imputation. `(Deprecated)`
             
         self.pattern_log : Pattern object 
-            An instantiated :mod:`impyte.Pattern` object, that holds information about the NaN-pattern.
+            An instantiated :mod:`impyte.Pattern` object, 
+            that holds information about the NaN-pattern.
         
         self.model_log : dict  
-            Python dictionary, storing all models once :mod:`impyte.Impyter.impute` has been run
+            Python dictionary, storing all models once 
+            :mod:`impyte.Impyter.impute` has been run
         
         self.error_string : str
-            String representation of error messages that occured during the imputation process.
+            String representation of error messages that 
+            occured during the imputation process.
             
         self.pattern_predictor_dict : dict
-            Python dictionary storing a pattern string and its connected list of predictors.
+            Python dictionary storing a pattern string and 
+            its connected list of predictors.
         
         self.pattern_dependent_variable_dict : dict
-            Python dictionary storing a pattern string and its connected list of dependent variables.     
+            Python dictionary storing a pattern string and 
+            its connected list of dependent variables.     
     """
     def __init__(self, data=None):
         """
@@ -792,8 +796,9 @@ class Impyter:
 
     def __drop_imputation(self, model, pattern_no, threshold, drop_pattern, verbose):
         """
-        Method to drop imputation based on pattern number, a given threshold and
-        a specific :mod:`impyte.ImpyterModel` or :mod:`impyte.ImpyterMultiModel`.
+        Method to drop imputation based on pattern number, 
+        a given threshold and a specific :mod:`impyte.ImpyterModel` 
+        or :mod:`impyte.ImpyterMultiModel`.
         
         Parameters
         ----------
@@ -826,7 +831,8 @@ class Impyter:
     def __ensemble(self, estimator_list=["rf", "dt"]):
         """
         Exhaustive search for best estimator to predict a certain feature. 
-        Work in progress and beta method. Needs further work on summaries and plotting.
+        Work in progress and beta method. 
+        Needs further work on summaries and plotting.
         
         Parameters
         ----------
@@ -835,40 +841,50 @@ class Impyter:
 
         imp = Impyter()
         imp.load_data(self.data.copy())
-        # ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
+        # ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb"]
         if not estimator_list:
-            estimator_list = ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb", "mlp"]
+            estimator_list = ["rf", "svm", "sgd", "knn", "bayes", "dt", "gb"]
         for estimator in estimator_list:
             _ = self.impute(estimator=estimator, recompute=True)
 
-    def __impute_train(self, pattern, col_name, X_train, y_train, pred_vars,
-                auto_scale, y_scaler, threshold, result_data, cv, verbose_string, verbose):
+    def __impute_train(
+            self, pattern, col_name, x_train, y_train,
+            pred_vars, auto_scale, y_scaler, cv, verbose):
         """
         Parameters
         ----------
         pattern : int
+            Pattern number to train for
          
         col_name : str|int
+            Column indicator of feature variable
          
-        X_train : np.darray|pd.DataFrame
+        x_train : np.darray|pd.DataFrame
+            Training data set
         
         y_train : np.darray|list
+            Label set for training data
         
-        pred_vars :
+        pred_vars : list
+            Names of all predictors used for this model
           
         auto_scale : Boolean
+            Flag indicating whether to auto-scale or not.
          
-        y_scaler : sklearn.preprocessing.StandardScaler object 
+        y_scaler : sklearn.preprocessing.StandardScaler object
+            Scaler object that stores information about y_scaling
         
         threshold :
+            Threshold dict
           
         result_data : pd.DataFrame
+            Data copy that will be completed
         
         cv : int 
+            Cross-validation indicator
         
         verbose_string : str 
-        
-        param verbose : Boolean 
+            Print helper
         
         Returns
         -------
@@ -890,12 +906,10 @@ class Impyter:
                 y_train = y_scaler.fit_transform(y_train.values.reshape(-1, 1))  # scale continuous
                 y_train = y_train.ravel()  # turn 1d array back into matching format
             model = clone(self.clf["Regression"])
-            tmp_threshold_cutoff = threshold["r2"]  # for regression
         else:
             # use classifier
             scoring = "f1_macro"
             model = clone(self.clf["Classification"])
-            tmp_threshold_cutoff = threshold["f1_macro"]  # for classification
 
         # This is where the imputation happens
         if verbose > 3:
@@ -903,9 +917,9 @@ class Impyter:
 
         with warnings.catch_warnings():
             warnings.simplefilter('error')
-            model.fit(X_train, y_train)
+            model.fit(x_train, y_train)
             try:
-                scores = cross_val_score(model, X_train, y_train, cv=cv, scoring=scoring)
+                scores = cross_val_score(model, x_train, y_train, cv=cv, scoring=scoring)
             except (ValueError, Warning) as e:
                 error_count += 1
                 tmp_error_string = "* (" + str(error_count) + ") " + str(col_name) + ": " + str(e)
@@ -931,34 +945,50 @@ class Impyter:
                 "y_scaler": y_scaler,
                 "verbose_string": verbose_string}
 
-    def __impute_predict(self, model, pattern, col_name, X_test, scores,
-                         auto_scale, result_data, threshold, verbose):
+    def __impute_predict(self, imp_model, pattern, col_name, x_test,
+                         scores, auto_scale, result_data, threshold):
         """
         Prediction function. Applies model, alters result data 
         and stores information about success in log.
         
         Parameters
         ----------
-        :param model: 
-        :param pattern: 
-        :param col_name: 
-        :param X_test: 
-        :param scores: 
-        :param auto_scale: 
-        :param result_data: 
-        :param threshold: 
-        :param verbose:
+        imp_model : ImpyteModel object
+        
+        pattern : int
+            Pattern number
+        
+        col_name : int|str
+            Name of feature or label
+            
+        x_test : np.ndarray|pd.DataFrame 
+            Prediction data set
+        
+        scores : list
+            Cross-validation scores from training
+        
+        auto_scale : boole
+            Flag to indicate auto scaling
+        
+        result_data : pd.DataFrame
+            Result data that's being completed
+            
+        threshold : dict
+            Threshold indicators for imputation method
+            
+        verbose : bool
         
         Returns
         -------
-        :return: 
+        return: str
+            Message with information regarding imputation status
         """
         # prediction takes place here
-        to_append = model.model[0].predict(X_test)
+        to_append = imp_model.model[0].predict(x_test)
         return_verbose_string = ""
 
-        if model.scoring[0] == 'r2' and auto_scale:
-            y_scaler = model.y_scaler
+        if imp_model.scoring[0] == 'r2' and auto_scale:
+            y_scaler = imp_model.y_scaler
             to_append = y_scaler.inverse_transform(to_append)  # unscale continuous
 
         indices = self.pattern_log.get_pattern_indices(pattern)
@@ -974,15 +1004,15 @@ class Impyter:
 
         return return_verbose_string
 
-    def __preprocess_data(self, X_train, X_test, col_name, verbose, one_hot_encode, auto_scale):
+    def __preprocess_data(self, x_train, x_test, col_name, verbose, one_hot_encode, auto_scale):
         """
-        Preprocessing method that applies one-hot-encoding 
+        Pre-processing method that applies one-hot-encoding 
         and auto-scaling if flags are set to ``True``.
          
         Parameters
         ----------
-        :param X_train: 
-        :param X_test: 
+        :param x_train: 
+        :param x_test: 
         :param col_name: 
         :param verbose: 
         :param one_hot_encode: 
@@ -992,23 +1022,23 @@ class Impyter:
         -------
         :return: 
         """
-        X_scaler, y_scaler = None, None
+        x_scaler, y_scaler = None, None
         # Pre-processing of data
         if one_hot_encode:
             if verbose > 3:
                 print("One-hot encoding for {}...".format(col_name))
-            test = X_train.append(X_test)
+            test = x_train.append(x_test)
             test = self.one_hot_encode(test, verbose)
-            X_train = test[test.index.isin(X_train.index)]
-            X_test = test[test.index.isin(X_test.index)]
+            x_train = test[test.index.isin(x_train.index)]
+            x_test = test[test.index.isin(x_test.index)]
 
-        # Scaling for ml pre-processing X_train
+        # Scaling for ml pre-processing x_train
         if auto_scale:
-            X_scaler = StandardScaler()
+            x_scaler = StandardScaler()
             y_scaler = StandardScaler()
-            X_train = X_scaler.fit_transform(X_train)
+            x_train = x_scaler.fit_transform(x_train)
 
-        return X_train, X_test, X_scaler, y_scaler
+        return x_train, x_test, x_scaler, y_scaler
 
     @staticmethod
     def __print_header(threshold):
@@ -1019,9 +1049,11 @@ class Impyter:
         :return: 
         """
         # print threshold:
-        print("{:<30}{:<30}{:<30}".format("Scoring Threshold", "Classification", "Regression"))
+        print("{:<30}{:<30}{:<30}".format(
+            "Scoring Threshold", "Classification", "Regression"))
         print("=" * 90)
-        print("{:<30}{:<30}{:<30}".format("", str(threshold["f1_macro"]), str(threshold["r2"])))
+        print("{:<30}{:<30}{:<30}".format(
+            "", str(threshold["f1_macro"]), str(threshold["r2"])))
         print("")
         print("{:<30}{:<30}{:<30}".format(
             "Pattern: Label",
@@ -1030,7 +1062,8 @@ class Impyter:
         print("=" * 90)
 
     @staticmethod
-    def __print_results_line(scores, scoring, pattern, col_name, tmp_error_string, model, error_count):
+    def __print_results_line(scores, scoring, pattern, col_name,
+                             tmp_error_string, model, error_count):
         score_temp = "{:.3f} ({})".format(np.mean(scores), scoring)
         col_temp = "{}: {}".format(pattern, col_name)
         if tmp_error_string:
@@ -1051,11 +1084,11 @@ class Impyter:
         self.result = self.data.copy()
         self.pattern_log = Pattern()
 
-
     @staticmethod
     def _data_check(data):
         """
-        Checks if data is pandas DataFrame. Otherwise the data will be transformed.
+        Checks if data is pandas DataFrame. 
+        Otherwise the data will be transformed.
         """
         # perform instance check on data if available in constructor
         if not isinstance(data, pd.DataFrame):
@@ -1081,6 +1114,16 @@ class Impyter:
 
     @staticmethod
     def _set_display_options(length, cols=True):
+        """
+        Method to set pandas display options.
+        
+        Parameters
+        ----------
+        length : int
+            Number of rows or columns
+        cols : bool 
+            Flag to indicate whether columns or rows should be extended 
+        """
         if cols:
             pd.set_option("display.max_columns", length)
         else:
@@ -1106,7 +1149,7 @@ class Impyter:
         """
         try:
             return Counter(list_one) == Counter(list_two)
-        except TypeError as e:
+        except TypeError:
             return list_one == list_two
 
     def drop_imputation(self, threshold, verbose=True, drop_pattern=False):
@@ -1164,10 +1207,14 @@ class Impyter:
         for pattern_no in models:
             model = self.get_model(pattern_no)
             if isinstance(model, ImpyterModel):
-                self.__drop_imputation(model, pattern_no, threshold, drop_pattern, verbose)
+                self.__drop_imputation(
+                    model, pattern_no, threshold,
+                    drop_pattern, verbose)
             if isinstance(model, ImpyterMultiModel):
                 for model in model.model_list:
-                    if self.__drop_imputation(model, pattern_no, threshold, drop_pattern, verbose):
+                    if self.__drop_imputation(
+                            model, pattern_no, threshold,
+                            drop_pattern, verbose):
                         break  # only one score needs to be below threshold in order to break
 
     def drop_pattern(self, pattern_no, inplace=False):
@@ -1216,8 +1263,10 @@ class Impyter:
         Returns
         -------
         data : pd.DataFrame
-            Data points that have a certain pattern, if ``result`` is set to ``True`` 
-            the data is result data, otherwise a slice of the original data is being returned.
+            Data points that have a certain pattern, 
+            if ``result`` is set to ``True`` 
+            the data is result data, otherwise a slice 
+            of the original data is being returned.
         """
         if result:
             return self.result[self.result.index.isin(
@@ -1273,7 +1322,8 @@ class Impyter:
         if not self.pattern_log.pattern_store:
             self.pattern()
 
-        result_table = self.pattern_log.get_missing_value_percentage(self.result, importance_filter)
+        result_table = self.pattern_log.get_missing_value_percentage(
+            self.result, importance_filter)
         return result_table
 
     def get_model(self, pattern_no):
@@ -1292,7 +1342,8 @@ class Impyter:
         if pattern_no in self.model_log:
             return self.model_log[pattern_no]
         else:
-            raise ValueError("There is no model for pattern {}".format(pattern_no))
+            raise ValueError(
+                "There is no model for pattern {}".format(pattern_no))
 
     def load_data(self, data):
         """
@@ -1361,7 +1412,8 @@ class Impyter:
                     print("No matching pattern found for {}".format(mdl))
             else:
                 raise ValueError(
-                    "Wrong format. Model log must be pickle file and contain dict i.e. {1 : ImpyteModel, ...}")
+                    "Wrong format. Model log must be pickle file and \
+                    contain dict i.e. {1 : ImpyteModel, ...}")
         except IOError as e:
             print("File not found: {}".format(e))
 
@@ -1457,7 +1509,8 @@ class Impyter:
             # If data type is categorical, convert to dummy variables
             if col_data.dtype == object:
                 if verbose > 3:
-                    print("Getting dummies for {} (Unique: {})".format(col, len(data[col].unique())))
+                    print("Getting dummies for {} (Unique: {})".format(
+                        col, len(data[col].unique())))
                 col_data = pd.get_dummies(col_data, prefix=col + "_ohe")
 
             # Collect the revised columns
@@ -1556,12 +1609,14 @@ class Impyter:
         if self.data.empty:
             raise ValueError("Error: Load data first.")
         else:
-            if recompute:  # if recompute is True, make sure that result data is being reset
+            # if recompute is True, make sure that result data is being reset
+            if recompute:
                 self.result = self.data.copy()
             return_table = self.pattern_log.get_pattern(self.data, recompute=recompute)
             if len(return_table.columns) > Impyter._get_display_options():
                 Impyter._set_display_options(len(return_table.columns))
-            if len(return_table) > Impyter._get_display_options(False):  # check if too many rows to display
+                # check if too many rows to display
+            if len(return_table) > Impyter._get_display_options(False):
                 Impyter._set_display_options(len(return_table), False)
         return return_table
 
@@ -1609,7 +1664,8 @@ class Impyter:
             model = self.get_model(pattern_no)
             name_str = "_pattern_{}".format(pattern_no)
         if filename is None:
-            filename = "{}{}{}{}{}".format(str(date.today()), name_str, "_impyte_mdl_", int(time.time()), ".pkl")
+            filename = "{}{}{}{}{}".format(str(
+                date.today()), name_str, "_impyte_mdl_", int(time.time()), ".pkl")
             print("Saved model under {}".format(filename))
 
         if not os.path.exists(path):
@@ -1674,7 +1730,6 @@ class Impyter:
                 'bayes'          (Naive) Bayes
                 'dt'             Decision Tree
                 'gb'             Gradient Boosting
-                'mlp'            Multi-layer Perceptron (neural network)
                 ============     =======================================
         
         multi_nans : Boolean 
@@ -1710,7 +1765,9 @@ class Impyter:
         if not data.empty and len(data) < 50:
             with warnings.catch_warnings():
                 warnings.simplefilter('always')
-                warnings.warn("There might be too few data points for imputation. (Threshold >= 50)\n", UserWarning)
+                warnings.warn(
+                    "There might be too few data points for imputation. \
+                    (Threshold >= 50)\n", UserWarning)
 
         # If data has no pattern yet, simply compute it
         if not self.pattern_log.pattern_store:
@@ -1725,7 +1782,8 @@ class Impyter:
         if verbose:
             self.__print_header(threshold)
 
-        clf = {}
+        clf = {}  # initialize new clf dict
+        verbose_string = ""  # initialize verbose string
 
         # Decide which classifier to use and initialize
         if estimator is not None:
@@ -1744,9 +1802,6 @@ class Impyter:
             elif estimator == 'knn':
                 clf["Regression"] = KNeighborsRegressor()
                 clf["Classification"] = KNeighborsClassifier()
-            elif estimator == 'mlp':
-                clf["Regression"] = MLPRegressor()
-                clf["Classification"] = MLPClassifier()
             elif estimator == 'sgd':
                 clf["Regression"] = SGDRegressor(max_iter=1000, tol=1e-3)
                 clf["Classification"] = SGDClassifier(max_iter=1000, tol=1e-3)
@@ -1775,27 +1830,27 @@ class Impyter:
 
         # impute single-nan patterns
         for pattern in self.pattern_log.get_single_nan_pattern_nos():
-            tmp_error_string = ""
             pattern_string = self.pattern_log.tuple_dict[pattern]
             # filter out complete cases
             if complete_idx != pattern:
                 col_name = self.pattern_log.get_column_name(pattern)[0]
-                X_train = complete_cases.drop(col_name, axis=1)
+                x_train = complete_cases.drop(col_name, axis=1)
                 y_train = complete_cases[col_name]
                 # Get data of pattern for prediction
-                X_test = self.get_pattern(pattern).drop(col_name, axis=1)
-                pred_vars = X_train.columns
+                x_test = self.get_pattern(pattern).drop(col_name, axis=1)
+                pred_vars = x_train.columns
 
                 # preprocessing
-                X_train, X_test, X_scaler, y_scaler = self.__preprocess_data(
-                    X_train, X_test, col_name, verbose, one_hot_encode, auto_scale)
+                x_train, x_test, x_scaler, y_scaler = self.__preprocess_data(
+                    x_train, x_test, col_name, verbose, one_hot_encode, auto_scale)
 
                 if pattern not in self.model_log or recompute:  # train and predict
                     self.pattern_dependent_variable_dict[pattern] = [col_name]
 
                     tmp_results = self.__impute_train(
-                        pattern, col_name, X_train, y_train, pred_vars, auto_scale,
-                        y_scaler, threshold, result_data, cv, tmp_error_string, verbose)
+                        pattern=pattern, col_name=col_name, x_train=x_train,
+                        y_train=y_train, pred_vars=pred_vars, auto_scale=auto_scale,
+                        y_scaler=y_scaler, cv=cv, verbose=verbose)
 
                     scores = tmp_results["store_scores"]
 
@@ -1816,8 +1871,9 @@ class Impyter:
 
                     cur_threshold = threshold[tmp_results["store_scoring"][0]]
 
-                    verbose_string += self.__impute_predict(model, pattern, col_name, X_test, scores,
-                                          auto_scale, result_data, cur_threshold, verbose)
+                    verbose_string += self.__impute_predict(
+                        model, pattern, col_name, x_test, scores,
+                        auto_scale, result_data, cur_threshold)
                     if verbose:
                         print(verbose_string)
                 else:
@@ -1828,11 +1884,11 @@ class Impyter:
                     verbose_string = self.__print_results_line(
                         model.scores[0], model.scoring[0], pattern, model.feature_name[0],
                         "", model.model[0], 0)
-                    verbose_string += self.__impute_predict(model, pattern, col_name, X_test, scores,
-                                          auto_scale, result_data, cur_threshold, verbose)
+                    verbose_string += self.__impute_predict(
+                        model, pattern, col_name, x_test, scores,
+                        auto_scale, result_data, cur_threshold)
                     if verbose:
                         print(verbose_string)
-
 
         # impute multi-nan patterns
         multi_nan_patterns = self.pattern_log.get_multi_nan_pattern_nos()
@@ -1843,26 +1899,26 @@ class Impyter:
             for pattern_no in multi_nan_patterns:
                 pattern_string = self.pattern_log.tuple_dict[pattern_no]
                 multi_model = ImpyterMultiModel(pattern_string)
-                tmp_error_string = ""
                 multi_nan_columns = self.pattern_log.get_column_name(pattern_no)
                 self.pattern_dependent_variable_dict[pattern_no] = multi_nan_columns
                 for col_name in multi_nan_columns:
 
                     # Get data of pattern for prediction
-                    X_train = complete_cases.drop(multi_nan_columns, axis=1)
+                    x_train = complete_cases.drop(multi_nan_columns, axis=1)
                     y_train = complete_cases[col_name]
                     # Get data of pattern for prediction
-                    X_test = self.get_pattern(pattern_no).drop(multi_nan_columns, axis=1)
-                    pred_vars = X_train.columns
+                    x_test = self.get_pattern(pattern_no).drop(multi_nan_columns, axis=1)
+                    pred_vars = x_train.columns
 
                     # preprocessing
-                    X_train, X_test, X_scaler, y_scaler = self.__preprocess_data(
-                        X_train, X_test, col_name, verbose, one_hot_encode, auto_scale)
+                    x_train, x_test, x_scaler, y_scaler = self.__preprocess_data(
+                        x_train, x_test, col_name, verbose, one_hot_encode, auto_scale)
 
                     if pattern_no not in self.model_log or recompute:  # train and predict
                         tmp_results = self.__impute_train(
-                            pattern_no, col_name, X_train, y_train, pred_vars, auto_scale,
-                            y_scaler, threshold, result_data, cv, tmp_error_string, verbose)
+                                pattern=pattern_no, col_name=col_name, x_train=x_train,
+                                y_train=y_train, pred_vars=pred_vars, auto_scale=auto_scale,
+                                y_scaler=y_scaler, cv=cv, verbose=verbose)
                         store_estimator_names = tmp_results["store_estimator_names"]
                         store_models = tmp_results["store_models"]
                         scores = tmp_results["store_scores"]
@@ -1883,8 +1939,9 @@ class Impyter:
                         cur_threshold = threshold[tmp_results["store_scoring"][0]]
                         verbose_string = tmp_results["verbose_string"]
 
-                        verbose_string += self.__impute_predict(tmp_model, pattern_no, col_name, X_test, scores,
-                                              auto_scale, result_data, cur_threshold, verbose)
+                        verbose_string += self.__impute_predict(
+                            tmp_model, pattern_no, col_name, x_test, scores,
+                            auto_scale, result_data, cur_threshold)
                     else:
                         # predict with existing models
                         multi_model = self.model_log[pattern_no]
@@ -1895,8 +1952,9 @@ class Impyter:
                                 verbose_string = self.__print_results_line(
                                     model.scores[0], model.scoring[0],
                                     pattern_no, model.feature_name[0], "", model.model[0], 0)
-                                verbose_string += self.__impute_predict(model, pattern_no, col_name, X_test, scores,
-                                                      auto_scale, result_data, cur_threshold, verbose)
+                                verbose_string += self.__impute_predict(
+                                    model, pattern_no, col_name, x_test, scores,
+                                    auto_scale, result_data, cur_threshold)
                     if verbose:
                         print(verbose_string)
                 self.model_log[pattern_no] = multi_model

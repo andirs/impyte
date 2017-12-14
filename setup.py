@@ -22,13 +22,13 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.1',
+    version='0.1.0',
 
     description='Value imputation using machine learning.',
     long_description='Python module to impute missing values using state-of-the-art machine learning algorithms and visualize patterns of missing information.',
 
     # The project's main homepage.
-    url='https://github.com/andirs/impyter',
+    url='https://github.com/andirs/impyte',
 
     # Author details
     author='Andreas Rubin-Schwarz',
@@ -63,11 +63,11 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='machine learning value imputation statistics',
+    keywords='machine learning value imputation statistics mice',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(exclude=['contrib', 'docs', 'tests']),
+    packages=find_packages(exclude=['tests']),
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
