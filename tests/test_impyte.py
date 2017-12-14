@@ -2,6 +2,7 @@ import sys
 sys.path.append(sys.path[0] + "/..")  # to enable impyte import
 import unittest
 from impyte import impyte
+print(impyte)
 import numpy as np
 import pandas as pd
 from impyte import NanChecker
