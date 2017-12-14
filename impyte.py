@@ -919,9 +919,8 @@ class Impyter:
         store_estimator_names.append(model.__class__.__name__)
 
         # prepare statement line for verbose printout
-        if verbose:
-            verbose_string = self.__print_results_line(
-                np.mean(scores), scoring, pattern, col_name, tmp_error_string, model, error_count)
+        verbose_string = self.__print_results_line(
+            np.mean(scores), scoring, pattern, col_name, tmp_error_string, model, error_count)
 
         return {"store_estimator_names": store_estimator_names,
                 "store_models": store_models,
@@ -973,8 +972,7 @@ class Impyter:
         # update result data
         self.result = result_data
 
-        if verbose:
-            return return_verbose_string
+        return return_verbose_string
 
     def __preprocess_data(self, X_train, X_test, col_name, verbose, one_hot_encode, auto_scale):
         """
@@ -1712,14 +1710,16 @@ class Impyter:
 
         # If data has no pattern yet, simply compute it
         if not self.pattern_log.pattern_store:
-            print("Computing NaN-patterns first ...\n")
+            if verbose:
+                print("Computing NaN-patterns first ...\n")
             self.pattern()
 
         # reset error string
         self.error_string = ""
 
         # print output header
-        self.__print_header(threshold)
+        if verbose:
+            self.__print_header(threshold)
 
         # Decide which classifier to use and initialize
         if estimator is not None:
