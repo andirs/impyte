@@ -32,6 +32,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="impyte 0.0.1 documentation" href="#"/> 
 
   
@@ -93,7 +96,7 @@
 <li><a class="reference internal" href="#requirements">Requirements</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-impyte">API Reference</a></li>
+<li><a class="reference internal" href="#module-impyte.impyte">API Reference</a></li>
 <li><a class="reference internal" href="#help">Help</a><ul>
 <li><a class="reference internal" href="#faqs">FAQs</a></li>
 <li><a class="reference internal" href="#index">Index</a></li>
@@ -149,7 +152,7 @@
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/index.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -184,13 +187,13 @@ different patterns and impute them in an easy way.</p>
 <li>Visualization of Patterns</li>
 <li>Imputation of missing information</li>
 </ol>
-<p>Yet <a class="reference internal" href="#module-impyte" title="impyte"><code class="xref py py-mod docutils literal"><span class="pre">impyte</span></code></a> is only one piece of the equation. In order to
+<p>Yet <code class="xref py py-mod docutils literal"><span class="pre">impyte</span></code> is only one piece of the equation. In order to
 maximize the return in any value imputation process a deep understanding
 of the data is needed. As well as thorough pre-processing and cleaning
 of the data. Imyte takes on some of the challenges but tends to work best
 in concert with additional data science endeavors.</p>
 <p>To get started with impyte is as simple as:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">impyte</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">impyte</span> <span class="k">import</span> <span class="n">impyte</span>
 <span class="n">imp</span> <span class="o">=</span> <span class="n">impyte</span><span class="o">.</span><span class="n">Impyter</span><span class="p">()</span>
 <span class="n">imp</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">missing_data</span><span class="p">)</span>
 <span class="n">imp</span><span class="o">.</span><span class="n">impute</span><span class="p">()</span>
@@ -204,9 +207,10 @@ through its <a class="reference external" href="https://github.com/andirs/impyte
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">git</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">andirs</span><span class="o">/</span><span class="n">impyte</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
 </div>
-<p>There is also a manual way of importing the module in your project,
-by downloading the <a class="reference external" href="https://github.com/andirs/impyte">repository</a> and saving the files in your project
-folder.</p>
+<p>There is also a manual way of importing the module in your project. To do so, download the <a class="reference external" href="https://github.com/andirs/impyte">repository</a> to the folder you are performing your data work in. Afterwards you’ll be able to import the <code class="xref py py-mod docutils literal"><span class="pre">impyte</span></code> functionality through following command:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">impyte</span> <span class="k">import</span> <span class="n">impyte</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
@@ -217,15 +221,18 @@ please make sure following modules are already installed:</p>
 <li><a class="reference external" href="https://www.python.org/">Python 3.6</a></li>
 <li><a class="reference external" href="https://scikit-learn.org/">sklearn 0.19</a></li>
 <li><a class="reference external" href="http://pandas.pydata.org/">pandas 0.21</a></li>
+<li><a class="reference external" href="https://www.scipy.org/">scipy 0.19</a></li>
+<li><a class="reference external" href="https://pypi.python.org/pypi/pathlib/">pathlib 1.0.1</a></li>
 </ul>
 </div>
 </div>
-<div class="section" id="module-impyte">
-<span id="api-reference"></span><h1>API Reference<a class="headerlink" href="#module-impyte" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-impyte.impyte">
+<span id="api-reference"></span><h1>API Reference<a class="headerlink" href="#module-impyte.impyte" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="impyte.Impyter">
-<em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">Impyter</code><span class="sig-paren">(</span><em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Example usage:</p>
+<dt id="impyte.impyte.Impyter">
+<em class="property">class </em><code class="descclassname">impyte.impyte.</code><code class="descname">Impyter</code><span class="sig-paren">(</span><em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Example usage:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">impyte</span>
 
 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;missing_values.csv&quot;</span><span class="p">)</span>
@@ -248,43 +255,49 @@ please make sure following modules are already installed:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> (<em>pd.DataFrame, optional</em>) &#8211; Data on which to perform imputation.</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> (<em>pd.DataFrame, optional</em>) – Data on which to perform imputation.</p>
 <p>The data can also be a list of lists but will be converted
 into a pandas DataFrame once loaded. If none, data can be loaded
-at a later point through <a class="reference internal" href="#impyte.Impyter.load_data" title="impyte.Impyter.load_data"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.load_data</span></code></a>.</p>
+at a later point through <code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.load_data</span></code>.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><strong>data</strong> (<em>pd.DataFrame</em>) &#8211; The original data, loaded by user through instantiation or <a class="reference internal" href="#impyte.Impyter.load_data" title="impyte.Impyter.load_data"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.load_data</span></code></a> method.</li>
-<li><strong>result</strong> (<em>pd.DataFrame</em>) &#8211; Copy of original data on which imputation is being performed.</li>
-<li><strong>clf</strong> (<em>dict</em>) &#8211; Holds estimator for given imputation. <cite>(Deprecated)</cite></li>
-<li><strong>self.pattern_log</strong> (<em>Pattern object</em>) &#8211; An instantiated <a class="reference internal" href="#impyte.Pattern" title="impyte.Pattern"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Pattern</span></code></a> object, that holds information about the NaN-pattern.</li>
-<li><strong>self.model_log</strong> (<em>dict</em>) &#8211; Python dictionary, storing all models once <a class="reference internal" href="#impyte.Impyter.impute" title="impyte.Impyter.impute"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.impute</span></code></a> has been run</li>
-<li><strong>self.error_string</strong> (<em>str</em>) &#8211; String representation of error messages that occured during the imputation process.</li>
-<li><strong>self.pattern_predictor_dict</strong> (<em>dict</em>) &#8211; Python dictionary storing a pattern string and its connected list of predictors.</li>
-<li><strong>self.pattern_dependent_variable_dict</strong> (<em>dict</em>) &#8211; Python dictionary storing a pattern string and its connected list of dependent variables.</li>
+<li><strong>data</strong> (<em>pd.DataFrame</em>) – The original data, loaded by user through
+instantiation or <code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.load_data</span></code> method.</li>
+<li><strong>result</strong> (<em>pd.DataFrame</em>) – Copy of original data on which imputation is being performed.</li>
+<li><strong>clf</strong> (<em>dict</em>) – Holds estimator for given imputation. <cite>(Deprecated)</cite></li>
+<li><strong>self.pattern_log</strong> (<em>Pattern object</em>) – An instantiated <code class="xref py py-mod docutils literal"><span class="pre">impyte.Pattern</span></code> object,
+that holds information about the NaN-pattern.</li>
+<li><strong>self.model_log</strong> (<em>dict</em>) – Python dictionary, storing all models once
+<code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.impute</span></code> has been run</li>
+<li><strong>self.error_string</strong> (<em>str</em>) – String representation of error messages that
+occured during the imputation process.</li>
+<li><strong>self.pattern_predictor_dict</strong> (<em>dict</em>) – Python dictionary storing a pattern string and
+its connected list of predictors.</li>
+<li><strong>self.pattern_dependent_variable_dict</strong> (<em>dict</em>) – Python dictionary storing a pattern string and
+its connected list of dependent variables.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
-<dt id="impyte.Impyter.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.__init__" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>pd.DataFrame|list[list], optional</em>) &#8211; When initialized, data can be loaded directly. An alternative
-way is loading it with <a class="reference internal" href="#impyte.Impyter.load_data" title="impyte.Impyter.load_data"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.load_data</span></code></a></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>pd.DataFrame|list[list], optional</em>) – When initialized, data can be loaded directly. An alternative
+way is loading it with <code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.load_data</span></code></td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="staticmethod">
-<dt id="impyte.Impyter.compare_features">
-<em class="property">static </em><code class="descname">compare_features</code><span class="sig-paren">(</span><em>list_one</em>, <em>list_two</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.compare_features" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.compare_features">
+<em class="property">static </em><code class="descname">compare_features</code><span class="sig-paren">(</span><em>list_one</em>, <em>list_two</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.compare_features" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compares two lists given its objects based on
 a comparison of Counter dicts. The order of
 elements is unimportant.</p>
@@ -298,7 +311,7 @@ elements is unimportant.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>True</strong> &#8211; If list_one and list_two contain the same elements.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>True</strong> – If list_one and list_two contain the same elements.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Boolean</p>
@@ -309,8 +322,8 @@ elements is unimportant.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.drop_imputation">
-<code class="descname">drop_imputation</code><span class="sig-paren">(</span><em>threshold</em>, <em>verbose=True</em>, <em>drop_pattern=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.drop_imputation" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.drop_imputation">
+<code class="descname">drop_imputation</code><span class="sig-paren">(</span><em>threshold</em>, <em>verbose=True</em>, <em>drop_pattern=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.drop_imputation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to drop imputation results based on threshold values.
 Threshold values are compared against the cross-validation
 scores of all imputation models. If the score is lower than
@@ -336,7 +349,7 @@ if they contain no information.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last">
-<li><p class="first"><strong>threshold</strong> (<em>dict{str, float}</em>) &#8211; Threshold dictionary including values for r2 and f1 scores.</p>
+<li><p class="first"><strong>threshold</strong> (<em>dict{str, float}</em>) – Threshold dictionary including values for r2 and f1 scores.</p>
 <p>An example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span>
     <span class="s2">&quot;r2&quot;</span> <span class="p">:</span> <span class="o">.</span><span class="mi">5</span><span class="p">,</span>
@@ -346,7 +359,7 @@ if they contain no information.</p>
 </div>
 <p>At this point only f1 and r2 scores are being supported.</p>
 </li>
-<li><p class="first"><strong>verbose</strong> (<em>Boolean</em>) &#8211; Boolean flag to indicate whether results should be written
+<li><p class="first"><strong>verbose</strong> (<em>Boolean</em>) – Boolean flag to indicate whether results should be written
 to stdout.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -356,7 +369,7 @@ multiple layers of verbosity. This flag can also simply set to
 A multi verbosity level might be enforced at a later stage.</p>
 </div>
 </li>
-<li><p class="first"><strong>drop_pattern</strong> (<em>Boolean</em>) &#8211; Indicator if not only imputation but also pattern should be dropped.</p>
+<li><p class="first"><strong>drop_pattern</strong> (<em>Boolean</em>) – Indicator if not only imputation but also pattern should be dropped.</p>
 </li>
 </ul>
 </td>
@@ -366,8 +379,8 @@ A multi verbosity level might be enforced at a later stage.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.drop_pattern">
-<code class="descname">drop_pattern</code><span class="sig-paren">(</span><em>pattern_no</em>, <em>inplace=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.drop_pattern" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.drop_pattern">
+<code class="descname">drop_pattern</code><span class="sig-paren">(</span><em>pattern_no</em>, <em>inplace=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.drop_pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to drop pattern referenced by pattern number.
 Drops pattern from data set and returns preliminary result.
 If inplace flag is set to True, internal storage of impyte
@@ -389,14 +402,14 @@ stored data set stays intact.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.get_data">
-<code class="descname">get_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.get_data" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.get_data">
+<code class="descname">get_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.get_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a copy of the loaded data for quick reference.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Original Data</strong> &#8211; A copy of the original data set can be retrieved through
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Original Data</strong> – A copy of the original data set can be retrieved through
 this method.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">pd.DataFrame</td>
@@ -406,14 +419,14 @@ this method.</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.get_model">
-<code class="descname">get_model</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.get_model" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.get_model">
+<code class="descname">get_model</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.get_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns model that matches pattern number.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_no</strong> (<em>int</em>) &#8211; Pattern number to receive fitting model.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_no</strong> (<em>int</em>) – Pattern number to receive fitting model.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>model</strong></td>
 </tr>
@@ -424,8 +437,8 @@ this method.</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.get_pattern">
-<code class="descname">get_pattern</code><span class="sig-paren">(</span><em>pattern_no</em>, <em>result=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.get_pattern" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.get_pattern">
+<code class="descname">get_pattern</code><span class="sig-paren">(</span><em>pattern_no</em>, <em>result=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.get_pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns data points for a specific pattern_no for further
 investigation.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -433,13 +446,15 @@ investigation.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pattern_no</strong> (<em>int</em>) &#8211; Index value that indicates pattern</li>
-<li><strong>result</strong> (<em>Boolean</em>) &#8211; Flag to show if original or result data should be sliced.</li>
+<li><strong>pattern_no</strong> (<em>int</em>) – Index value that indicates pattern</li>
+<li><strong>result</strong> (<em>Boolean</em>) – Flag to show if original or result data should be sliced.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>data</strong> &#8211; Data points that have a certain pattern, if <code class="docutils literal"><span class="pre">result</span></code> is set to <code class="docutils literal"><span class="pre">True</span></code>
-the data is result data, otherwise a slice of the original data is being returned.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>data</strong> – Data points that have a certain pattern,
+if <code class="docutils literal"><span class="pre">result</span></code> is set to <code class="docutils literal"><span class="pre">True</span></code>
+the data is result data, otherwise a slice
+of the original data is being returned.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
@@ -450,14 +465,14 @@ the data is result data, otherwise a slice of the original data is being returne
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.get_result">
-<code class="descname">get_result</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.get_result" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.get_result">
+<code class="descname">get_result</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.get_result" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a copy of the result data for reference.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Result Data</strong> &#8211; A copy of the result data.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Result Data</strong> – A copy of the result data.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">pd.DataFrame</td>
 </tr>
@@ -466,8 +481,8 @@ the data is result data, otherwise a slice of the original data is being returne
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.get_summary">
-<code class="descname">get_summary</code><span class="sig-paren">(</span><em>importance_filter=True</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.get_summary" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.get_summary">
+<code class="descname">get_summary</code><span class="sig-paren">(</span><em>importance_filter=True</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.get_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shows simple overview of missing values. Returns table
 with information on missing values per column,
 its percentage and the count of unique values within that column.</p>
@@ -478,7 +493,7 @@ with a large amount of variables and only few nan-values.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>importance_filter</strong> (<em>Boolean</em>) &#8211; Show only features with at least one missing value.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>importance_filter</strong> (<em>Boolean</em>) – Show only features with at least one missing value.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Summary table</strong></td>
 </tr>
@@ -489,8 +504,8 @@ with a large amount of variables and only few nan-values.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.impute">
-<code class="descname">impute</code><span class="sig-paren">(</span><em>data=None</em>, <em>cv=5</em>, <em>verbose=True</em>, <em>estimator='rf'</em>, <em>multi_nans=False</em>, <em>one_hot_encode=True</em>, <em>auto_scale=True</em>, <em>threshold={'f1_macro': None</em>, <em>'r2': None}</em>, <em>recompute=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.impute" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.impute">
+<code class="descname">impute</code><span class="sig-paren">(</span><em>data=None</em>, <em>cv=5</em>, <em>verbose=True</em>, <em>estimator='rf'</em>, <em>multi_nans=False</em>, <em>one_hot_encode=True</em>, <em>auto_scale=True</em>, <em>threshold={'f1_macro': None</em>, <em>'r2': None}</em>, <em>recompute=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.impute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Impute is the core method of impyte. The method works out of the box
 and uses Random Forest estimators per default to impute missing values.
 It automatically performs cross-validation to showcase the
@@ -515,13 +530,13 @@ the feature or the data points all together.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last">
-<li><p class="first"><strong>data</strong> (<em>pd.DataFrame</em>) &#8211; Data to be imputed.</p>
+<li><p class="first"><strong>data</strong> (<em>pd.DataFrame</em>) – Data to be imputed.</p>
 </li>
-<li><p class="first"><strong>cv</strong> (<em>int</em>) &#8211; Amount of cross-validation runs.</p>
+<li><p class="first"><strong>cv</strong> (<em>int</em>) – Amount of cross-validation runs.</p>
 </li>
-<li><p class="first"><strong>verbose</strong> (<em>Boolean</em>) &#8211; Indicator, whether prediction results should be printed out.</p>
+<li><p class="first"><strong>verbose</strong> (<em>Boolean</em>) – Indicator, whether prediction results should be printed out.</p>
 </li>
-<li><p class="first"><strong>estimator</strong> (<em>str</em>) &#8211; Estimators can be chosen through a simple string abbreviation.
+<li><p class="first"><strong>estimator</strong> (<em>str</em>) – Estimators can be chosen through a simple string abbreviation.
 This table outlines the potential options.</p>
 <blockquote>
 <div><table border="1" class="docutils">
@@ -535,45 +550,42 @@ This table outlines the potential options.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td>&#8216;rf&#8217;</td>
+<tr class="row-even"><td>‘rf’</td>
 <td>Random Forest</td>
 </tr>
-<tr class="row-odd"><td>&#8216;svm&#8217;</td>
+<tr class="row-odd"><td>‘svm’</td>
 <td>Support Vector Machine</td>
 </tr>
-<tr class="row-even"><td>&#8216;sgd&#8217;</td>
+<tr class="row-even"><td>‘sgd’</td>
 <td>Stochastic Gradient Descent</td>
 </tr>
-<tr class="row-odd"><td>&#8216;knn&#8217;</td>
+<tr class="row-odd"><td>‘knn’</td>
 <td>KNearest Neighbor</td>
 </tr>
-<tr class="row-even"><td>&#8216;bayes&#8217;</td>
+<tr class="row-even"><td>‘bayes’</td>
 <td>(Naive) Bayes</td>
 </tr>
-<tr class="row-odd"><td>&#8216;dt&#8217;</td>
+<tr class="row-odd"><td>‘dt’</td>
 <td>Decision Tree</td>
 </tr>
-<tr class="row-even"><td>&#8216;gb&#8217;</td>
+<tr class="row-even"><td>‘gb’</td>
 <td>Gradient Boosting</td>
-</tr>
-<tr class="row-odd"><td>&#8216;mlp&#8217;</td>
-<td>Multi-layer Perceptron (neural network)</td>
 </tr>
 </tbody>
 </table>
 </div></blockquote>
 </li>
-<li><p class="first"><strong>multi_nans</strong> (<em>Boolean</em>) &#8211; Indicator if data points with multiple NaN values should be imputed as well</p>
+<li><p class="first"><strong>multi_nans</strong> (<em>Boolean</em>) – Indicator if data points with multiple NaN values should be imputed as well</p>
 </li>
-<li><p class="first"><strong>one_hot_encode</strong> (<em>Boolean</em>) &#8211; If set to True one-hot-encoding of categorical variables happens</p>
+<li><p class="first"><strong>one_hot_encode</strong> (<em>Boolean</em>) – If set to True one-hot-encoding of categorical variables happens</p>
 </li>
-<li><p class="first"><strong>auto_scale</strong> (<em>Boolean</em>) &#8211; If set to True continuous variables are automatically scaled
+<li><p class="first"><strong>auto_scale</strong> (<em>Boolean</em>) – If set to True continuous variables are automatically scaled
 and transformed back after imputation.</p>
 </li>
-<li><p class="first"><strong>threshold</strong> (<em>dict{str, float}</em>) &#8211; Classification and regression threshold cut-offs.
+<li><p class="first"><strong>threshold</strong> (<em>dict{str, float}</em>) – Classification and regression threshold cut-offs.
 At this point f1 score and R2.</p>
 </li>
-<li><p class="first"><strong>recompute</strong> (<em>Boolean</em>) &#8211; Indicator whether the system should recompute the imputation or
+<li><p class="first"><strong>recompute</strong> (<em>Boolean</em>) – Indicator whether the system should recompute the imputation or
 use stored models if possible.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -590,8 +602,8 @@ method.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.load_data">
-<code class="descname">load_data</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.load_data" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.load_data">
+<code class="descname">load_data</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.load_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to load data into Impyter class.
 Requires a pandas DataFrame to load. Otherwise,
 the input is being transformed into a DataFrame.
@@ -601,23 +613,23 @@ to stay clear of consistency issues with the original data set.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> &#8211; preferably pandas DataFrame</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> – preferably pandas DataFrame</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.load_model">
-<code class="descname">load_model</code><span class="sig-paren">(</span><em>filename</em>, <em>path='models/'</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.load_model" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.load_model">
+<code class="descname">load_model</code><span class="sig-paren">(</span><em>filename</em>, <em>path='models/'</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.load_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a stored machine learning model to perform value imputation.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>filename</strong> (<em>str</em>) &#8211; Filename of model</li>
-<li><strong>path</strong> (<em>str</em>) &#8211; Path to model (default value is &#8216;models/&#8217;)</li>
+<li><strong>filename</strong> (<em>str</em>) – Filename of model</li>
+<li><strong>path</strong> (<em>str</em>) – Path to model (default value is ‘models/’)</li>
 </ul>
 </td>
 </tr>
@@ -626,8 +638,8 @@ to stay clear of consistency issues with the original data set.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.map_model_to_pattern">
-<code class="descname">map_model_to_pattern</code><span class="sig-paren">(</span><em>mdl</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.map_model_to_pattern" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.map_model_to_pattern">
+<code class="descname">map_model_to_pattern</code><span class="sig-paren">(</span><em>mdl</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.map_model_to_pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks model for similarity to stored patterns and
 returns pattern number if a match is found.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -636,7 +648,7 @@ returns pattern number if a match is found.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mdl</strong> (<em>ImpyterModel</em>)</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>pattern_no</strong> &#8211; If no pattern number can be found, a None value
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>pattern_no</strong> – If no pattern number can be found, a None value
 will be returned.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
@@ -646,8 +658,8 @@ will be returned.</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.map_multimodel_to_pattern">
-<code class="descname">map_multimodel_to_pattern</code><span class="sig-paren">(</span><em>mmdl</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.map_multimodel_to_pattern" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.map_multimodel_to_pattern">
+<code class="descname">map_multimodel_to_pattern</code><span class="sig-paren">(</span><em>mmdl</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.map_multimodel_to_pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks multi-model for similarity to stored patterns and
 returns pattern number if a match is found.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -656,7 +668,7 @@ returns pattern number if a match is found.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mmdl</strong> (<em>ImpyterMultiModel</em>)</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>pattern_no</strong> &#8211; If no pattern number can be found, a None value
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>pattern_no</strong> – If no pattern number can be found, a None value
 will be returned.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
@@ -666,18 +678,18 @@ will be returned.</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.one_hot_decode">
-<code class="descname">one_hot_decode</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.one_hot_decode" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.one_hot_decode">
+<code class="descname">one_hot_decode</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.one_hot_decode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decodes one-hot-encoded features into single column again.
 Generally speaking, this function inverses the one-hot-encode function.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>pd.DataFrame</em>) &#8211; DataFrame that has one-hot-encoded columns processed by
-<a class="reference internal" href="#impyte.Impyter.one_hot_encode" title="impyte.Impyter.one_hot_encode"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.one_hot_encode</span></code></a>.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>pd.DataFrame</em>) – DataFrame that has one-hot-encoded columns processed by
+<code class="xref py py-mod docutils literal"><span class="pre">impyte.Impyter.one_hot_encode</span></code>.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Data set</strong> &#8211; Data set with collapsed information.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Data set</strong> – Data set with collapsed information.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pd.DataFrame</td>
 </tr>
@@ -686,8 +698,8 @@ Generally speaking, this function inverses the one-hot-encode function.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.one_hot_encode">
-<code class="descname">one_hot_encode</code><span class="sig-paren">(</span><em>data</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.one_hot_encode" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.one_hot_encode">
+<code class="descname">one_hot_encode</code><span class="sig-paren">(</span><em>data</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.one_hot_encode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uses pandas get_dummies method to return a one-hot-encoded
 DataFrame.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -711,8 +723,8 @@ DataFrame.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.pattern">
-<code class="descname">pattern</code><span class="sig-paren">(</span><em>recompute=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.pattern" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.pattern">
+<code class="descname">pattern</code><span class="sig-paren">(</span><em>recompute=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns missing value patterns of data set.
 Leverages <code class="xref py py-mod docutils literal"><span class="pre">impyte.Pattern._compute_pattern</span></code>
 and <cite>impyte.Pattern.get_pattern</cite> methods to compute and
@@ -767,17 +779,17 @@ are in the data set.</p>
 </table>
 </div></blockquote>
 <p>For additional information (and a rather sad joke) please
-head over to <a class="reference internal" href="#impyte.Pattern" title="impyte.Pattern"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Pattern</span></code></a>.</p>
+head over to <code class="xref py py-mod docutils literal"><span class="pre">impyte.Pattern</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>recompute</strong> (<em>Boolean</em>) &#8211; Flag to indicate whether patterns should be recomputed from
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>recompute</strong> (<em>Boolean</em>) – Flag to indicate whether patterns should be recomputed from
 the original data set. This is an important feature if for
 example a pattern has been dropped and should be incorporated
 again.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>NaN-Pattern Table</strong> &#8211; Table with overview of NaN-patterns.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>NaN-Pattern Table</strong> – Table with overview of NaN-patterns.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pd.DataFrame</td>
 </tr>
@@ -786,8 +798,8 @@ again.</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.save_model">
-<code class="descname">save_model</code><span class="sig-paren">(</span><em>pattern_no=None</em>, <em>filename=None</em>, <em>path='models/'</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.save_model" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.save_model">
+<code class="descname">save_model</code><span class="sig-paren">(</span><em>pattern_no=None</em>, <em>filename=None</em>, <em>path='models/'</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.save_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stores an imputation model for either the whole data set
 or a particular pattern in a pickle file. If pattern_no is not set,
 the method stores all models. If filename is not set,
@@ -797,11 +809,11 @@ an automated name is being produced including a timestamp.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pattern_no</strong> (<em>int, optional</em>) &#8211; Pattern number that points to a certain NaN-Pattern model which
+<li><strong>pattern_no</strong> (<em>int, optional</em>) – Pattern number that points to a certain NaN-Pattern model which
 in turn references a <code class="xref py py-mod docutils literal"><span class="pre">impyte.ImpyteModel</span></code> or
 <code class="xref py py-mod docutils literal"><span class="pre">impyte.ImpyteMultiModel</span></code>.</li>
-<li><strong>filename</strong> (<em>str, optional</em>) &#8211; If value is not set, an automated name is being created.</li>
-<li><strong>path</strong> (<em>str</em>) &#8211; (default value is &#8216;models/&#8217; which will automatically
+<li><strong>filename</strong> (<em>str, optional</em>) – If value is not set, an automated name is being created.</li>
+<li><strong>path</strong> (<em>str</em>) – (default value is ‘models/’ which will automatically
 create a model for that)</li>
 </ul>
 </td>
@@ -811,14 +823,14 @@ create a model for that)</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Impyter.set_unique">
-<code class="descname">set_unique</code><span class="sig-paren">(</span><em>unique_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Impyter.set_unique" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Impyter.set_unique">
+<code class="descname">set_unique</code><span class="sig-paren">(</span><em>unique_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Impyter.set_unique" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set unique values for imputation.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>unique_no</strong> (<em>int</em>) &#8211; Positive number that indicates a threshold for unique values
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>unique_no</strong> (<em>int</em>) – Positive number that indicates a threshold for unique values
 needed in a column for it to be counted as continuous variable.</td>
 </tr>
 </tbody>
@@ -828,27 +840,28 @@ needed in a column for it to be counted as continuous variable.</td>
 </dd></dl>
 
 <dl class="class">
-<dt id="impyte.ImpyterModel">
-<em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">ImpyterModel</code><span class="sig-paren">(</span><em>estimator_name</em>, <em>model=None</em>, <em>pattern_no=None</em>, <em>feature_name=None</em>, <em>scores=None</em>, <em>scoring=None</em>, <em>predictor_variables=None</em>, <em>pattern_string=None</em>, <em>y_scaler=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores computed Impyter machine learning models and relevant
+<dt id="impyte.impyte.ImpyterModel">
+<em class="property">class </em><code class="descclassname">impyte.impyte.</code><code class="descname">ImpyterModel</code><span class="sig-paren">(</span><em>estimator_name</em>, <em>model=None</em>, <em>pattern_no=None</em>, <em>feature_name=None</em>, <em>scores=None</em>, <em>scoring=None</em>, <em>predictor_variables=None</em>, <em>pattern_string=None</em>, <em>y_scaler=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.ImpyterModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Stores computed Impyter machine learning models and relevant
 information that is linked to the model and pattern.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><strong>model</strong> (<em>sklearn Machine Learning Model</em>) &#8211; Contains a trained machine learning model for given imputation task.</li>
-<li><strong>pattern_no</strong> (<em>int</em>) &#8211; Indicator for pattern number.</li>
-<li><strong>feature_name</strong> (<em>str|int</em>) &#8211; Name of the dependent variable.</li>
-<li><strong>scores</strong> (<em>list</em>) &#8211; List of all cross-validation scores. The average of this list is being
+<li><strong>model</strong> (<em>sklearn Machine Learning Model</em>) – Contains a trained machine learning model for given imputation task.</li>
+<li><strong>pattern_no</strong> (<em>int</em>) – Indicator for pattern number.</li>
+<li><strong>feature_name</strong> (<em>str|int</em>) – Name of the dependent variable.</li>
+<li><strong>scores</strong> (<em>list</em>) – List of all cross-validation scores. The average of this list is being
 used as the threshold score.</li>
-<li><strong>estimator_name</strong> (<em>str</em>) &#8211; String representation of the Machine Learning model.</li>
-<li><strong>scoring</strong> (<em>str</em>) &#8211; String representation of the scoring measurement
-(&#8216;r2&#8217; or &#8216;f1_macro&#8217; right now)</li>
-<li><strong>predictor_variables</strong> (<em>list</em>) &#8211; Contains names of all independent variables used for the imputation task.</li>
-<li><strong>pattern_string</strong> (<em>tuple</em>) &#8211; Tuple representation of pattern string. Can be used for identification of
+<li><strong>estimator_name</strong> (<em>str</em>) – String representation of the Machine Learning model.</li>
+<li><strong>scoring</strong> (<em>str</em>) – String representation of the scoring measurement
+(‘r2’ or ‘f1_macro’ right now)</li>
+<li><strong>predictor_variables</strong> (<em>list</em>) – Contains names of all independent variables used for the imputation task.</li>
+<li><strong>pattern_string</strong> (<em>tuple</em>) – Tuple representation of pattern string. Can be used for identification of
 patterns.</li>
-<li><strong>y_scaler</strong> (<em>sklearn.preprocessing.StandardScaler object</em>) &#8211; StandardScaler object that contains additional information
+<li><strong>y_scaler</strong> (<em>sklearn.preprocessing.StandardScaler object</em>) – StandardScaler object that contains additional information
 in case the model was used with <code class="docutils literal"><span class="pre">auto_scale</span> <span class="pre">=</span> <span class="pre">True</span></code>.</li>
 </ul>
 </td>
@@ -856,22 +869,22 @@ in case the model was used with <code class="docutils literal"><span class="pre"
 </tbody>
 </table>
 <dl class="method">
-<dt id="impyte.ImpyterModel.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>estimator_name</em>, <em>model=None</em>, <em>pattern_no=None</em>, <em>feature_name=None</em>, <em>scores=None</em>, <em>scoring=None</em>, <em>predictor_variables=None</em>, <em>pattern_string=None</em>, <em>y_scaler=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterModel.__init__" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.ImpyterModel.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>estimator_name</em>, <em>model=None</em>, <em>pattern_no=None</em>, <em>feature_name=None</em>, <em>scores=None</em>, <em>scoring=None</em>, <em>predictor_variables=None</em>, <em>pattern_string=None</em>, <em>y_scaler=None</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.ImpyterModel.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>estimator_name</strong> (<em>str</em>) &#8211; Name of machine learning model</li>
-<li><strong>model</strong> (<em>sklearn Machine Learning Model</em>) &#8211; Sklearn machine learning estimator object</li>
-<li><strong>pattern_no</strong> (<em>int</em>) &#8211; Pattern number associated with nan-pattern.</li>
-<li><strong>feature_name</strong> (<em>str|int</em>) &#8211; Name of dependent variable.</li>
-<li><strong>scores</strong> (<em>list[float]</em>) &#8211; Collection of all cross-validation scores.</li>
-<li><strong>scoring</strong> (<em>str</em>) &#8211; String representation of scoring function. (i.e. &#8220;r2&#8221; or &#8220;f1_macro&#8221;)</li>
-<li><strong>predictor_variables</strong> (<em>list[str|int]</em>) &#8211; List of names of all independent variables.</li>
-<li><strong>pattern_string</strong> (<em>tuple</em>) &#8211; Tuple representation of a certain pattern.</li>
-<li><strong>y_scaler</strong> (<em>sklearn.preprocessing.StandardScaler object</em>) &#8211; StandardScaler object that contains additional information
+<li><strong>estimator_name</strong> (<em>str</em>) – Name of machine learning model</li>
+<li><strong>model</strong> (<em>sklearn Machine Learning Model</em>) – Sklearn machine learning estimator object</li>
+<li><strong>pattern_no</strong> (<em>int</em>) – Pattern number associated with nan-pattern.</li>
+<li><strong>feature_name</strong> (<em>str|int</em>) – Name of dependent variable.</li>
+<li><strong>scores</strong> (<em>list[float]</em>) – Collection of all cross-validation scores.</li>
+<li><strong>scoring</strong> (<em>str</em>) – String representation of scoring function. (i.e. “r2” or “f1_macro”)</li>
+<li><strong>predictor_variables</strong> (<em>list[str|int]</em>) – List of names of all independent variables.</li>
+<li><strong>pattern_string</strong> (<em>tuple</em>) – Tuple representation of a certain pattern.</li>
+<li><strong>y_scaler</strong> (<em>sklearn.preprocessing.StandardScaler object</em>) – StandardScaler object that contains additional information
 in case the model was used with <code class="docutils literal"><span class="pre">auto_scale</span> <span class="pre">=</span> <span class="pre">True</span></code>.</li>
 </ul>
 </td>
@@ -883,54 +896,55 @@ in case the model was used with <code class="docutils literal"><span class="pre"
 </dd></dl>
 
 <dl class="class">
-<dt id="impyte.ImpyterMultiModel">
-<em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">ImpyterMultiModel</code><span class="sig-paren">(</span><em>pattern_string</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores multi-nan imputations in the form of a list
-of <a class="reference internal" href="#impyte.ImpyterModel" title="impyte.ImpyterModel"><code class="xref py py-mod docutils literal"><span class="pre">impyte.ImpyterModel</span></code></a> objects.</p>
+<dt id="impyte.impyte.ImpyterMultiModel">
+<em class="property">class </em><code class="descclassname">impyte.impyte.</code><code class="descname">ImpyterMultiModel</code><span class="sig-paren">(</span><em>pattern_string</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.ImpyterMultiModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Stores multi-nan imputations in the form of a list
+of <code class="xref py py-mod docutils literal"><span class="pre">impyte.ImpyterModel</span></code> objects.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><strong>_model_list</strong> (<em>list</em>) &#8211; Collection of all ImpyterModel that are needed to
+<li><strong>_model_list</strong> (<em>list</em>) – Collection of all ImpyterModel that are needed to
 compute the given multi-nan pattern.</li>
-<li><strong>count</strong> (<em>int</em>) &#8211; Amount of models that are stored in ImpyterModels.</li>
-<li><strong>pattern_string</strong> (<em>tuple</em>) &#8211; Tuple representation of multi-nan pattern.</li>
+<li><strong>count</strong> (<em>int</em>) – Amount of models that are stored in ImpyterModels.</li>
+<li><strong>pattern_string</strong> (<em>tuple</em>) – Tuple representation of multi-nan pattern.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
-<dt id="impyte.ImpyterMultiModel.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>pattern_string</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.__init__" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.ImpyterMultiModel.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>pattern_string</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.ImpyterMultiModel.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_string</strong> (<em>tuple</em>) &#8211; References a pattern by tuple.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_string</strong> (<em>tuple</em>) – References a pattern by tuple.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.ImpyterMultiModel.append">
-<code class="descname">append</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.append" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.ImpyterMultiModel.append">
+<code class="descname">append</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.ImpyterMultiModel.append" title="Permalink to this definition">¶</a></dt>
 <dd><p>Appends an additional ImpyterModel object to the list of models.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> (<em>ImpyterModel object</em>) &#8211; The model to be appended to the model list</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> (<em>ImpyterModel object</em>) – The model to be appended to the model list</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="staticmethod">
-<dt id="impyte.ImpyterMultiModel.check_and_append">
-<em class="property">static </em><code class="descname">check_and_append</code><span class="sig-paren">(</span><em>input_list</em>, <em>storage_list</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.check_and_append" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.ImpyterMultiModel.check_and_append">
+<em class="property">static </em><code class="descname">check_and_append</code><span class="sig-paren">(</span><em>input_list</em>, <em>storage_list</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.ImpyterMultiModel.check_and_append" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extension helper method to append items
 to a pre-existing list if not included.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -938,12 +952,12 @@ to a pre-existing list if not included.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>input_list</strong> (<em>list</em>) &#8211; List with items to append.</li>
-<li><strong>storage_list</strong> (<em>list</em>) &#8211; List that serves as storage item for all items.</li>
+<li><strong>input_list</strong> (<em>list</em>) – List with items to append.</li>
+<li><strong>storage_list</strong> (<em>list</em>) – List that serves as storage item for all items.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>storage_list</strong> &#8211; Collection of all unique elements from input_list and storage_list</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>storage_list</strong> – Collection of all unique elements from input_list and storage_list</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
@@ -954,8 +968,8 @@ to a pre-existing list if not included.</p>
 </dd></dl>
 
 <dl class="staticmethod">
-<dt id="impyte.ImpyterMultiModel.combine_in_list">
-<em class="property">static </em><code class="descname">combine_in_list</code><span class="sig-paren">(</span><em>input_list</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.combine_in_list" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.ImpyterMultiModel.combine_in_list">
+<em class="property">static </em><code class="descname">combine_in_list</code><span class="sig-paren">(</span><em>input_list</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.ImpyterMultiModel.combine_in_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extension helper method to add multiple and
 single arguments to a pre-existing list.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -963,8 +977,8 @@ single arguments to a pre-existing list.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>input_list</strong> (<em>list</em>) &#8211; Pre-existing list.</li>
-<li><strong>args</strong> (<em>list</em>) &#8211; List or single values to be extended to list.</li>
+<li><strong>input_list</strong> (<em>list</em>) – Pre-existing list.</li>
+<li><strong>args</strong> (<em>list</em>) – List or single values to be extended to list.</li>
 </ul>
 </td>
 </tr>
@@ -979,8 +993,8 @@ single arguments to a pre-existing list.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.ImpyterMultiModel.get_dependend_and_independent_variables">
-<code class="descname">get_dependend_and_independent_variables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.ImpyterMultiModel.get_dependend_and_independent_variables" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.ImpyterMultiModel.get_dependend_and_independent_variables">
+<code class="descname">get_dependend_and_independent_variables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.ImpyterMultiModel.get_dependend_and_independent_variables" title="Permalink to this definition">¶</a></dt>
 <dd><p>For all models stored in the object, collect their
 dependent and independent variables.</p>
 <p>As an example, if we had a multi-nan model that stored two
@@ -996,9 +1010,9 @@ the variables stored in the response would look like this:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Variables</strong> &#8211; Dictionary including independent and dependent variables.
-Can be accessed through &#8220;independent_variables&#8221; and
-&#8220;dependent_variables&#8221;.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Variables</strong> – Dictionary including independent and dependent variables.
+Can be accessed through “independent_variables” and
+“dependent_variables”.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict{str, list}</td>
 </tr>
@@ -1009,9 +1023,10 @@ Can be accessed through &#8220;independent_variables&#8221; and
 </dd></dl>
 
 <dl class="class">
-<dt id="impyte.NanChecker">
-<em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">NanChecker</code><a class="headerlink" href="#impyte.NanChecker" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class that checks data set, lists or single
+<dt id="impyte.impyte.NanChecker">
+<em class="property">class </em><code class="descclassname">impyte.impyte.</code><code class="descname">NanChecker</code><a class="headerlink" href="#impyte.impyte.NanChecker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Class that checks data set, lists or single
 values for NaN occurrence.</p>
 <p class="rubric">Examples</p>
 <p>Testing list for NaN values:</p>
@@ -1022,21 +1037,21 @@ values for NaN occurrence.</p>
 </pre></div>
 </div>
 <dl class="staticmethod">
-<dt id="impyte.NanChecker.is_nan">
-<em class="property">static </em><code class="descname">is_nan</code><span class="sig-paren">(</span><em>data</em>, <em>nan_vals=None</em>, <em>recursive=True</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.NanChecker.is_nan" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.NanChecker.is_nan">
+<em class="property">static </em><code class="descname">is_nan</code><span class="sig-paren">(</span><em>data</em>, <em>nan_vals=None</em>, <em>recursive=True</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.NanChecker.is_nan" title="Permalink to this definition">¶</a></dt>
 <dd><p>Detect missing values (NaN in numeric arrays, empty strings in string arrays).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>data</strong> (<em>{numpy.ndarray|str|list|int|float}</em>) &#8211; Data to be investigated for NaN values.</li>
-<li><strong>nan_vals</strong> (<em>list</em>) &#8211; Array of values that count as NaN values - if empty, &#8220;&#8221; and None are being used</li>
-<li><strong>recursive</strong> (<em>boolean</em>) &#8211; Flag that determines whether the lists should be handled in recursive manner</li>
+<li><strong>data</strong> (<em>{numpy.ndarray|str|list|int|float}</em>) – Data to be investigated for NaN values.</li>
+<li><strong>nan_vals</strong> (<em>list</em>) – Array of values that count as NaN values - if empty, “” and None are being used</li>
+<li><strong>recursive</strong> (<em>boolean</em>) – Flag that determines whether the lists should be handled in recursive manner</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> &#8211; Array or bool indicating whether an object is null or if an array is
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> – Array or bool indicating whether an object is null or if an array is
 given which of the element is null.</p>
 </td>
 </tr>
@@ -1050,21 +1065,22 @@ given which of the element is null.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="impyte.Pattern">
-<em class="property">class </em><code class="descclassname">impyte.</code><code class="descname">Pattern</code><span class="sig-paren">(</span><em>unique_instances=10</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class that calculates, stores and visualizes NaN patterns and their indices.</p>
+<dt id="impyte.impyte.Pattern">
+<em class="property">class </em><code class="descclassname">impyte.impyte.</code><code class="descname">Pattern</code><span class="sig-paren">(</span><em>unique_instances=10</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Class that calculates, stores and visualizes NaN patterns and their indices.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><strong>column_names</strong> (<em>list</em>) &#8211; Python list storing names of all columns that are in data set.</li>
-<li><strong>complete_idx</strong> (<em>int</em>) &#8211; Integer containing pattern number with only complete cases</li>
-<li><strong>continuous_variables</strong> (<em>list</em>) &#8211; Python list containing column names of all continuous variables.
+<li><strong>column_names</strong> (<em>list</em>) – Python list storing names of all columns that are in data set.</li>
+<li><strong>complete_idx</strong> (<em>int</em>) – Integer containing pattern number with only complete cases</li>
+<li><strong>continuous_variables</strong> (<em>list</em>) – Python list containing column names of all continuous variables.
 (i.e. columns that contain values in a range from 0.0 to 1.0)</li>
-<li><strong>discrete_variables</strong> (<em>list</em>) &#8211; Python list containing column names of all discrete variables.
-(i.e. columns that contain values such as &#8220;red&#8221;, &#8220;blue&#8221;, &#8220;green&#8221;)</li>
-<li><strong>easy_access</strong> (<em>dict{tuple, list}</em>) &#8211; <p>Python dictionary holding NaN-pattern strings and mapping them
+<li><strong>discrete_variables</strong> (<em>list</em>) – Python list containing column names of all discrete variables.
+(i.e. columns that contain values such as “red”, “blue”, “green”)</li>
+<li><strong>easy_access</strong> (<em>dict{tuple</em><em>, </em><em>list}</em>) – <p>Python dictionary holding NaN-pattern strings and mapping them
 to a list of the names of columns that contain NaN values
 in the given NaN-pattern.</p>
 <p>As an example:</p>
@@ -1076,12 +1092,12 @@ in the given NaN-pattern.</p>
 </pre></div>
 </div>
 </li>
-<li><strong>missing_per_column</strong> (<em>list</em>) &#8211; Python list used to store summarization results, to make the use
-of <a class="reference internal" href="#impyte.Pattern.get_missing_value_percentage" title="impyte.Pattern.get_missing_value_percentage"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Pattern.get_missing_value_percentage</span></code></a>
+<li><strong>missing_per_column</strong> (<em>list</em>) – Python list used to store summarization results, to make the use
+of <code class="xref py py-mod docutils literal"><span class="pre">impyte.Pattern.get_missing_value_percentage</span></code>
 more efficient (the default is None)</li>
-<li><strong>nan_checker</strong> (<em>NanChecker object</em>) &#8211; An instantiated <a class="reference internal" href="#impyte.NanChecker" title="impyte.NanChecker"><code class="xref py py-mod docutils literal"><span class="pre">impyte.NanChecker</span></code></a> object, that can be used
+<li><strong>nan_checker</strong> (<em>NanChecker object</em>) – An instantiated <code class="xref py py-mod docutils literal"><span class="pre">impyte.NanChecker</span></code> object, that can be used
 to analyze values and rows regarding their NaN values.</li>
-<li><strong>pattern_index_store</strong> (<em>dict{int, list}</em>) &#8211; <p>Python dictionary holding a list of indices for every pattern number.
+<li><strong>pattern_index_store</strong> (<em>dict{int</em><em>, </em><em>list}</em>) – <p>Python dictionary holding a list of indices for every pattern number.
 This dictionary is being used to look up the corresponding
 data points in a pandas DataFrame.</p>
 <p>As an example:</p>
@@ -1094,7 +1110,7 @@ data points in a pandas DataFrame.</p>
 <p>This pattern log consists out of 2 patterns (0 and 1)
 each pointing to 5 indices.</p>
 </li>
-<li><strong>pattern_store</strong> (<em>dict{str, pd.DataFrame}</em>) &#8211; <p>Python dictionary storing the pattern table. The table
+<li><strong>pattern_store</strong> (<em>dict{str</em><em>, </em><em>pd.DataFrame}</em>) – <p>Python dictionary storing the pattern table. The table
 (in pd.DataFrame form) can be accessed by <code class="docutils literal"><span class="pre">self.pattern_store['result']</span></code>.</p>
 <p>A potential result table could look like this, where <code class="docutils literal"><span class="pre">NaN</span></code>
 indicates the column contains missing values in this pattern.
@@ -1139,14 +1155,14 @@ are in the data set.</p>
 </tbody>
 </table>
 </div></blockquote>
-<p>Let&#8217;s hope these left and right socks are of the same color at least...</p>
+<p>Let’s hope these left and right socks are of the same color at least…</p>
 </li>
-<li><strong>result_pattern</strong> (<em>dict{tuple, int}</em>) &#8211; Python dictionary version of pattern counts. Makes computation
+<li><strong>result_pattern</strong> (<em>dict{tuple</em><em>, </em><em>int}</em>) – Python dictionary version of pattern counts. Makes computation
 and alterations easier.</li>
-<li><strong>tuple_counter</strong> (<em>int</em>) &#8211; Value storing the amount of different patterns after performing
+<li><strong>tuple_counter</strong> (<em>int</em>) – Value storing the amount of different patterns after performing
 pattern analysis. (the default is 0)</li>
-<li><strong>tuple_counter_dict</strong> (<em>dict</em>) &#8211; Python dictionary mapping pattern strings to pattern number.</li>
-<li><strong>tuple_dict</strong> (<em>dict{tuple, int}</em>) &#8211; <p>As an example:</p>
+<li><strong>tuple_counter_dict</strong> (<em>dict</em>) – Python dictionary mapping pattern strings to pattern number.</li>
+<li><strong>tuple_dict</strong> (<em>dict{tuple</em><em>, </em><em>int}</em>) – <p>As an example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span>
     <span class="p">(</span><span class="s1">&#39;NaN&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>     <span class="mi">1</span><span class="p">,</span>  <span class="c1"># points to pattern 1</span>
     <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;NaN&#39;</span><span class="p">):</span>     <span class="mi">2</span><span class="p">,</span>
@@ -1155,15 +1171,15 @@ pattern analysis. (the default is 0)</li>
 </pre></div>
 </div>
 </li>
-<li><strong>unique_instances</strong> (<em>int</em>) &#8211; <p>Value indicating the minimum value for a column of unique values
+<li><strong>unique_instances</strong> (<em>int</em>) – <p>Value indicating the minimum value for a column of unique values
 to be considered as continuous variable when having the proper dtype</p>
 <p>(the default is 10, which implies that columns with over 10 unique
 values are being labeled as continuous variables if containing
 numbers).</p>
 </li>
-<li><strong>pattern_predictor_dict</strong> (<em>dict</em>) &#8211; Python dictionary mapping pattern strings to their
+<li><strong>pattern_predictor_dict</strong> (<em>dict</em>) – Python dictionary mapping pattern strings to their
 independent variable names.</li>
-<li><strong>pattern_dependent_dict</strong> (<em>dict</em>) &#8211; Python dictionary mapping pattern string to their
+<li><strong>pattern_dependent_dict</strong> (<em>dict</em>) – Python dictionary mapping pattern string to their
 dependent variable names.</li>
 </ul>
 </td>
@@ -1171,15 +1187,15 @@ dependent variable names.</li>
 </tbody>
 </table>
 <dl class="method">
-<dt id="impyte.Pattern.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>unique_instances=10</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>When instantiating a <a class="reference internal" href="#impyte.Pattern" title="impyte.Pattern"><code class="xref py py-mod docutils literal"><span class="pre">impyte.Pattern</span></code></a> object, most values
+<dt id="impyte.impyte.Pattern.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>unique_instances=10</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>When instantiating a <code class="xref py py-mod docutils literal"><span class="pre">impyte.Pattern</span></code> object, most values
 are being initialized as being empty or None.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>unique_instances</strong> (<em>int</em>) &#8211; Value indicating the minimum value for a column of unique values
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>unique_instances</strong> (<em>int</em>) – Value indicating the minimum value for a column of unique values
 to be considered as continuous variable when having the proper dtype</p>
 <p class="last">(the default is 10, which implies that columns with over 10 unique
 values are being labeled as continuous variables if containing
@@ -1191,17 +1207,17 @@ decimal numbers).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Pattern.get_column_name">
-<code class="descname">get_column_name</code><span class="sig-paren">(</span><em>patter_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_column_name" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Pattern.get_column_name">
+<code class="descname">get_column_name</code><span class="sig-paren">(</span><em>patter_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.get_column_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the column name(s) that contain missing information
 of a certain NaN-pattern.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>patter_no</strong> (<em>int</em>) &#8211; Number or identifier of pattern</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>patter_no</strong> (<em>int</em>) – Number or identifier of pattern</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Column names</strong> &#8211; If patter_no has been computed, a list of all column
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Column names</strong> – If patter_no has been computed, a list of all column
 names associated with pattern_no are being returned.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
@@ -1211,9 +1227,9 @@ names associated with pattern_no are being returned.</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Pattern.get_complete_id">
-<code class="descname">get_complete_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_complete_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns pattern number of observations that don&#8217;t contain any missing information.</p>
+<dt id="impyte.impyte.Pattern.get_complete_id">
+<code class="descname">get_complete_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.get_complete_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns pattern number of observations that don’t contain any missing information.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1227,15 +1243,15 @@ names associated with pattern_no are being returned.</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Pattern.get_complete_indices">
-<code class="descname">get_complete_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_complete_indices" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Pattern.get_complete_indices">
+<code class="descname">get_complete_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.get_complete_indices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to determine complete cases based on results table.
 Leverages pre-computed information and is quicker than pandas dropna method.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Indices</strong> &#8211; List of indices that point to rows with complete cases</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Indices</strong> – List of indices that point to rows with complete cases</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
@@ -1244,8 +1260,8 @@ Leverages pre-computed information and is quicker than pandas dropna method.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Pattern.get_continuous">
-<code class="descname">get_continuous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_continuous" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Pattern.get_continuous">
+<code class="descname">get_continuous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.get_continuous" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns copy of continuous variable names.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1260,8 +1276,8 @@ Leverages pre-computed information and is quicker than pandas dropna method.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Pattern.get_discrete">
-<code class="descname">get_discrete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_discrete" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Pattern.get_discrete">
+<code class="descname">get_discrete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.get_discrete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns copy of discrete variable names.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1276,8 +1292,8 @@ Leverages pre-computed information and is quicker than pandas dropna method.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Pattern.get_missing_value_percentage">
-<code class="descname">get_missing_value_percentage</code><span class="sig-paren">(</span><em>data</em>, <em>importance_filter=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_missing_value_percentage" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Pattern.get_missing_value_percentage">
+<code class="descname">get_missing_value_percentage</code><span class="sig-paren">(</span><em>data</em>, <em>importance_filter=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.get_missing_value_percentage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Combines information regarding the values in the data set
 and returns them in a concise way.</p>
 <p>A potential summary table could look like this.</p>
@@ -1319,10 +1335,10 @@ and returns them in a concise way.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first">
-<li><p class="first"><strong>data</strong> (<em>pd.DataFrame</em>) &#8211; data refers to the information the user wants to analyze
+<li><p class="first"><strong>data</strong> (<em>pd.DataFrame</em>) – data refers to the information the user wants to analyze
 (Usually the result data set stored in <code class="xref py py-mod docutils literal"><span class="pre">Impyte.impyter</span></code>)</p>
 </li>
-<li><p class="first"><strong>importance_filter</strong> (<em>Boolean</em>) &#8211; Flag, to don&#8217;t show columns that have no missing values.
+<li><p class="first"><strong>importance_filter</strong> (<em>Boolean</em>) – Flag, to don’t show columns that have no missing values.
 This might make sense for data sets with a lot of columns
 that have no missing values.</p>
 <p>(default value is False, stating that all columns are important)</p>
@@ -1330,7 +1346,7 @@ that have no missing values.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Summary table</strong> &#8211; Contains information regarding complete, missing and unique values
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Summary table</strong> – Contains information regarding complete, missing and unique values
 in the data set.</p>
 </td>
 </tr>
@@ -1342,17 +1358,17 @@ in the data set.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Pattern.get_multi_nan_pattern_nos">
-<code class="descname">get_multi_nan_pattern_nos</code><span class="sig-paren">(</span><em>multi=True</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_multi_nan_pattern_nos" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Pattern.get_multi_nan_pattern_nos">
+<code class="descname">get_multi_nan_pattern_nos</code><span class="sig-paren">(</span><em>multi=True</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.get_multi_nan_pattern_nos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns all pattern numbers of multi-nans or single-nans</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>multi</strong> (<em>Boolean</em>) &#8211; Flag indicating whether the user wants to retrieve multi or
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>multi</strong> (<em>Boolean</em>) – Flag indicating whether the user wants to retrieve multi or
 single-nan pattern numbers.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Pattern Numbers</strong> &#8211; All single or multi-nan pattern numbers.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Pattern Numbers</strong> – All single or multi-nan pattern numbers.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
@@ -1361,8 +1377,8 @@ single-nan pattern numbers.</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Pattern.get_pattern">
-<code class="descname">get_pattern</code><span class="sig-paren">(</span><em>data=None</em>, <em>recompute=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_pattern" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Pattern.get_pattern">
+<code class="descname">get_pattern</code><span class="sig-paren">(</span><em>data=None</em>, <em>recompute=False</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.get_pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns NaN-patterns based on primary computation or
 initiates new computation of NaN-patterns.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1371,13 +1387,11 @@ initiates new computation of NaN-patterns.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>data</strong> (<em>pd.DataFrame</em>)</li>
-<li><strong>unique_instances</strong> (<em>int</em>) &#8211; Determines how many unique values are needed to count as
-continuous variable</li>
-<li><strong>recompute</strong> (<em>Boolean</em>) &#8211; If set True, stored results are being disregarded</li>
+<li><strong>recompute</strong> (<em>Boolean</em>) – If set True, stored results are being disregarded</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Pattern overview</strong> &#8211; Table representation of all NaN-patterns and their counts.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Pattern overview</strong> – Table representation of all NaN-patterns and their counts.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
@@ -1388,17 +1402,17 @@ continuous variable</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Pattern.get_pattern_indices">
-<code class="descname">get_pattern_indices</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_pattern_indices" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Pattern.get_pattern_indices">
+<code class="descname">get_pattern_indices</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.get_pattern_indices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns data points for a specific pattern_no for further
 investigation.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_no</strong> (<em>int</em>) &#8211; Index value that indicates pattern number.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_no</strong> (<em>int</em>) – Index value that indicates pattern number.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Indices</strong> &#8211; Indices that correspond to a pattern number.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Indices</strong> – Indices that correspond to a pattern number.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
@@ -1407,14 +1421,14 @@ investigation.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Pattern.get_single_nan_pattern_nos">
-<code class="descname">get_single_nan_pattern_nos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.get_single_nan_pattern_nos" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Pattern.get_single_nan_pattern_nos">
+<code class="descname">get_single_nan_pattern_nos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.get_single_nan_pattern_nos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns all pattern numbers that contain only single nans.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Pattern Numbers</strong> &#8211; All single pattern numbers containing single-nans.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>Pattern Numbers</strong> – All single pattern numbers containing single-nans.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
@@ -1423,15 +1437,15 @@ investigation.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="impyte.Pattern.remove_pattern">
-<code class="descname">remove_pattern</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.Pattern.remove_pattern" title="Permalink to this definition">¶</a></dt>
+<dt id="impyte.impyte.Pattern.remove_pattern">
+<code class="descname">remove_pattern</code><span class="sig-paren">(</span><em>pattern_no</em><span class="sig-paren">)</span><a class="headerlink" href="#impyte.impyte.Pattern.remove_pattern" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes a certain pattern. Deletes dictionary entry in the pattern index store
 as well as drops the entry in the results table.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_no</strong> (<em>int</em>) &#8211; Index value that indicates pattern.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pattern_no</strong> (<em>int</em>) – Index value that indicates pattern.</td>
 </tr>
 </tbody>
 </table>
@@ -1446,13 +1460,13 @@ as well as drops the entry in the results table.</p>
 <h2>FAQs<a class="headerlink" href="#faqs" title="Permalink to this headline">¶</a></h2>
 <p>Below are some pointers towards the right direction if something breaks.
 If you encounter any other error please feel free to reach out.</p>
-<p><strong>When imputing my estimator raises ValueError: Unknown label type: &#8216;continuous&#8217;</strong></p>
+<p><strong>When imputing my estimator raises ValueError: Unknown label type: ‘continuous’</strong></p>
 <blockquote>
 <div><div class="admonition hint">
 <p class="first admonition-title">Hint</p>
 <p>This might happen, if there is too little information for impyte to
 correctly distinguish your data type. This error essentially means,
-you&#8217;re handing a continuous data type [i.e. a float] to a classifier
+you’re handing a continuous data type [i.e. a float] to a classifier
 which expects a class or discrete value.</p>
 <p class="last">To solve this problem, you can set the unique value threshold to a
 lower value. (standard value is 10 unique instances).</p>
@@ -1507,7 +1521,7 @@ lower value. (standard value is 10 unique instances).</p>
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: ''
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
