@@ -1062,10 +1062,14 @@ class Impyter:
             # if data is not a DataFrame, try turning it into one
             try:
                 return_data = pd.DataFrame(data)
+                if return_data.shape[0] < 2 or return_data.shape[1] < 2:
+                    raise ValueError("1 dimensional array.")
                 return return_data
             except ValueError as e:
                 print("Value Error: {}".format(e))
                 return pd.DataFrame()
+        if data.shape[0] < 2 or data.shape[1] < 2:
+            raise ValueError("1 dimensional array.")
         return data
 
     @staticmethod
@@ -1721,34 +1725,43 @@ class Impyter:
         if verbose:
             self.__print_header(threshold)
 
+        clf = {}
+
         # Decide which classifier to use and initialize
         if estimator is not None:
             if estimator == 'rf':
-                self.clf["Regression"] = RandomForestRegressor()
-                self.clf["Classification"] = RandomForestClassifier()
+                clf["Regression"] = RandomForestRegressor()
+                clf["Classification"] = RandomForestClassifier()
             elif estimator == 'bayes':
-                self.clf["Regression"] = BayesianRidge()
-                self.clf["Classification"] = GaussianNB()
+                clf["Regression"] = BayesianRidge()
+                clf["Classification"] = GaussianNB()
             elif estimator == 'dt':
-                self.clf["Regression"] = DecisionTreeRegressor()
-                self.clf["Classification"] = DecisionTreeClassifier()
+                clf["Regression"] = DecisionTreeRegressor()
+                clf["Classification"] = DecisionTreeClassifier()
             elif estimator == 'gb':
-                self.clf["Regression"] = GradientBoostingRegressor()
-                self.clf["Classification"] = GradientBoostingClassifier()
+                clf["Regression"] = GradientBoostingRegressor()
+                clf["Classification"] = GradientBoostingClassifier()
             elif estimator == 'knn':
-                self.clf["Regression"] = KNeighborsRegressor()
-                self.clf["Classification"] = KNeighborsClassifier()
+                clf["Regression"] = KNeighborsRegressor()
+                clf["Classification"] = KNeighborsClassifier()
             elif estimator == 'mlp':
-                self.clf["Regression"] = MLPRegressor()
-                self.clf["Classification"] = MLPClassifier()
+                clf["Regression"] = MLPRegressor()
+                clf["Classification"] = MLPClassifier()
             elif estimator == 'sgd':
-                self.clf["Regression"] = SGDRegressor()
-                self.clf["Classification"] = SGDClassifier()
+                clf["Regression"] = SGDRegressor(max_iter=1000, tol=1e-3)
+                clf["Classification"] = SGDClassifier(max_iter=1000, tol=1e-3)
             elif estimator == 'svm':
-                self.clf["Regression"] = SVR()
-                self.clf["Classification"] = SVC()
+                clf["Regression"] = SVR()
+                clf["Classification"] = SVC()
             else:
                 raise ValueError('Classifier unknown')
+        else:
+            raise ValueError('Please name classifier')
+
+        # Check if estimator has changed, if so, recompute
+        if not self.clf or self.clf["Regression"] != clf["Regression"]:
+            self.clf = clf
+            recompute = True
 
         result_data = self.data.copy()
 
