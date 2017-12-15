@@ -5,6 +5,11 @@
 
 Python module to impute missing values by prediction using machine learning algorithms.
 
+## Documentation
+A full documentation can be found on [ReadTheDocs](https://impyte.readthedocs.org) or in `docs/_build/html/index.html`. The symlink `documentation.html` in the root directory leads to this file. 
+
+For additional tutorials and usage scenarios please head over to `tutorials` where you'll find a static tutorial version as well as an interactive jupyter notebook.
+
 ## Value Imputation
 One essential problem for any person dealing with data is missing values. There are several possibilities to deal with missing information, ranging from dropping data points to estimating the value based on other values in that column (i.e. average or median values). A more recent method involves machine-learning algorithms. This module offers a lightweight Python solution to calculate missing information based on the underlying relationship between data points.
 
@@ -12,13 +17,25 @@ One essential problem for any person dealing with data is missing values. There 
 - [Python 3.6](https://www.python.org/)
 - [sklearn 0.19](https://scikit-learn.org/)
 - [pandas 0.21](http://pandas.pydata.org/)
+- [scipy 0.19](https://www.scipy.org/)
+- [pathlib 1.0.1](https://pypi.python.org/pypi/pathlib/)
 
 ## Files
-- `impyte.py` - contains main classes
-- `sandbox.ipynb` - documentation and examples
-- `testing.ipynb` - additional functionality tests
-- `tools/` - secondary tools for module
+Below are the most important files and a quick one line summary:
+
+- `docs/`
+    - `_build/html/index.html` - static documentation
+- `impyte/`
+    - `impyte.py` - contains main classes
 - `requirements.txt` - requirements file, install dependencies with `pip install -r requirements.txt` 
+- `tests/`
+    - `testing.ipynb` - interactive testing notebook
+    - `testing.html` - html version of jupyter notebook
+    - `test_impyte.py` - automated pytest script
+- `tools/` - contains scripts for development (i.e. fake data generation)
+- `tutorials/`
+    - `tutorials.ipynb` - notebook with common tutorial tasks
+    - `tutorials.html` - static html version of notebook
 
 ## Functions
 impyte focuses on two main goals: 
