@@ -1240,13 +1240,13 @@ class Impyter:
         temp_patterns = self.pattern_log.get_pattern_indices(pattern_no)
 
         if inplace:
-            # Drop self.data with overwrite function
+            # Drop self.result with overwrite function
             self.result = self.result[~self.result.index.isin(temp_patterns)]
             # Delete indices in pattern_log
             self.pattern_log.remove_pattern(pattern_no)
             return self.result.copy()
 
-        return self.data[~self.data.index.isin(temp_patterns)].copy()
+        return self.result[~self.result.index.isin(temp_patterns)].copy()
 
     def get_pattern(self, pattern_no, result=False):
         """
@@ -1819,7 +1819,7 @@ class Impyter:
             self.clf = clf
             recompute = True
 
-        result_data = self.data.copy()
+        result_data = self.result.copy()
 
         # Get complete cases
         complete_idx = self.pattern_log.get_complete_id()

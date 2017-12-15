@@ -61,4 +61,4 @@ impyte focuses on two main goals:
     imp.impute(estimator='rf', threshold={"r2": .7, "f1_macro": .7})
 
 ## Limits and Notes
-The current version is a work in progress. First imputation methods are implemented but pre-processing steps need additional documentation. 
+The current version is a work in progress. If you discover any errors or bugs don't hesitate to reach out!
