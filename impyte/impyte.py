@@ -19,7 +19,6 @@ from sklearn.linear_model import SGDRegressor, SGDClassifier, BayesianRidge
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
-from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.base import clone
 
 
@@ -353,7 +352,7 @@ class Pattern:
         if data.empty:
             raise ValueError("DataFrame can't be empty")
 
-        # NaN Values
+        # List of missing values
         nan_vals = [""]
 
         # Add additional custom NaN Values
@@ -603,15 +602,12 @@ class Pattern:
         Pattern overview : pd.DataFrame
             Table representation of all NaN-patterns and their counts.
         """
-
-        unique_instances = self.unique_instances
-
         # If pattern is already computed, return stored result
         if self.pattern_store and not recompute:
             return self.pattern_store["result"]
         # compute new pattern analysis
         if not data.empty:
-            return self._compute_pattern(data, unique_instances)['table']
+            return self._compute_pattern(data)['table']
         else:
             raise ValueError("No pattern stored and missing data to compute pattern.")
 
@@ -700,7 +696,7 @@ class Impyter:
     """
         Example usage: ::
         
-            import impyte
+            from impyte import impyte
             
             df = pd.read_csv("missing_values.csv")
             imp = impyte.Impyter(df)
@@ -1883,8 +1879,8 @@ class Impyter:
                     scores = model.scores
                     cur_threshold = threshold[model.scoring[0]]
                     verbose_string = self.__print_results_line(
-                        model.scores[0], model.scoring[0], pattern, model.feature_name[0],
-                        "", model.model[0], 0)
+                        model.scores[0], model.scoring[0], pattern,
+                        model.feature_name[0], "", model.model[0], 0)
                     verbose_string += self.__impute_predict(
                         model, pattern, col_name, x_test, scores,
                         auto_scale, result_data, cur_threshold)
@@ -1951,8 +1947,8 @@ class Impyter:
                                 scores = model.scores
                                 cur_threshold = threshold[model.scoring[0]]
                                 verbose_string = self.__print_results_line(
-                                    model.scores[0], model.scoring[0],
-                                    pattern_no, model.feature_name[0], "", model.model[0], 0)
+                                    model.scores[0], model.scoring[0], pattern_no,
+                                    model.feature_name[0], "", model.model[0], 0)
                                 verbose_string += self.__impute_predict(
                                     model, pattern_no, col_name, x_test, scores,
                                     auto_scale, result_data, cur_threshold)
